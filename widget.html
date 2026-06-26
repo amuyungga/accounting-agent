@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Accounting Firm Chat Widget</title>
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Launcher button ── */
+    #acct-chat-launcher {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #1a3c6e;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9998;
+      transition: transform 0.2s, background 0.2s;
+    }
+    #acct-chat-launcher:hover { background: #15315e; transform: scale(1.07); }
+    #acct-chat-launcher svg { width: 28px; height: 28px; }
+
+    /* ── Chat window ── */
+    #acct-chat-window {
+      position: fixed;
+      bottom: 96px;
+      right: 24px;
+      width: 370px;
+      max-height: 560px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+      display: flex;
+      flex-direction: column;
+      z-index: 9999;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow: hidden;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    #acct-chat-window.hidden { opacity: 0; pointer-events: none; transform: translateY(12px); }
+
+    /* Header */
+    #acct-chat-header {
+      background: #1a3c6e;
+      color: #fff;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .acct-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #2d5fa6;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .acct-header-text h3 { font-size: 15px; font-weight: 600; }
+    .acct-header-text p  { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+    .acct-online-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #4ade80; display: inline-block;
+      margin-right: 4px;
+    }
+
+    /* Messages */
+    #acct-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #f8fafc;
+      scroll-behavior: smooth;
+    }
+    .acct-msg {
+      max-width: 82%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.45;
+      word-wrap: break-word;
+    }
+    .acct-msg.bot {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    .acct-msg.user {
+      background: #1a3c6e;
+      color: #fff;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    .acct-msg.typing { color: #94a3b8; font-style: italic; }
+
+    /* Quick replies */
+    #acct-quick-replies {
+      padding: 8px 16px 4px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      background: #f8fafc;
+    }
+    .acct-qr-btn {
+      background: #fff;
+      border: 1px solid #1a3c6e;
+      color: #1a3c6e;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .acct-qr-btn:hover { background: #1a3c6e; color: #fff; }
+
+    /* Input area */
+    #acct-chat-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      gap: 8px;
+      background: #fff;
+    }
+    #acct-input {
+      flex: 1;
+      border: 1px solid #cbd5e1;
+      border-radius: 20px;
+      padding: 9px 14px;
+      font-size: 14px;
+      outline: none;
+      resize: none;
+      font-family: inherit;
+      line-height: 1.4;
+      max-height: 80px;
+    }
+    #acct-input:focus { border-color: #1a3c6e; }
+    #acct-send-btn {
+      width: 38px; height: 38px;
+      background: #1a3c6e;
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s;
+      align-self: flex-end;
+    }
+    #acct-send-btn:hover { background: #15315e; }
+    #acct-send-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+    #acct-send-btn svg { width: 16px; height: 16px; }
+
+    /* Scrollbar */
+    #acct-messages::-webkit-scrollbar { width: 4px; }
+    #acct-messages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+
+    /* Mobile */
+    @media (max-width: 420px) {
+      #acct-chat-window { right: 0; left: 0; bottom: 0; width: 100%; border-radius: 16px 16px 0 0; max-height: 75vh; }
+      #acct-chat-launcher { bottom: 16px; right: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     CHAT WIDGET  —  Paste the code below
+     into your GoDaddy "Custom HTML" block
+     ══════════════════════════════════════ -->
+
+<!-- Launcher -->
+<button id="acct-chat-launcher" aria-label="Open chat">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <path stroke-linecap="round" stroke-linejoin="round"
+      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+  </svg>
+</button>
+
+<!-- Chat window -->
+<div id="acct-chat-window" class="hidden">
+  <!-- Header -->
+  <div id="acct-chat-header">
+    <div class="acct-avatar">💼</div>
+    <div class="acct-header-text">
+      <h3>Ask Us Anything</h3>
+      <p><span class="acct-online-dot"></span>Typically replies in seconds</p>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div id="acct-messages"></div>
+
+  <!-- Quick replies -->
+  <div id="acct-quick-replies"></div>
+
+  <!-- Input -->
+  <div id="acct-chat-footer">
+    <textarea id="acct-input" placeholder="Type your message…" rows="1"></textarea>
+    <button id="acct-send-btn" disabled>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ── CONFIG ─────────────────────────────────────────────────────────────
+  // Replace with your actual server URL when deployed.
+  // For local testing: http://localhost:3000
+  const API_URL = 'https://accounting-agent-production-cf69.up.railway.app/chat';
+  // ───────────────────────────────────────────────────────────────────────
+
+  const launcher    = document.getElementById('acct-chat-launcher');
+  const chatWindow  = document.getElementById('acct-chat-window');
+  const messages    = document.getElementById('acct-messages');
+  const quickReply  = document.getElementById('acct-quick-replies');
+  const input       = document.getElementById('acct-input');
+  const sendBtn     = document.getElementById('acct-send-btn');
+
+  let sessionId = 'session-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+  let isOpen    = false;
+  let isWaiting = false;
+
+  // ── Toggle window ──────────────────────────────────────────────────────
+  launcher.addEventListener('click', () => {
+    isOpen = !isOpen;
+    chatWindow.classList.toggle('hidden', !isOpen);
+    if (isOpen && messages.children.length === 0) greet();
+    if (isOpen) setTimeout(() => input.focus(), 200);
+    launcher.innerHTML = isOpen
+      ? `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+         </svg>`
+      : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+           <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+         </svg>`;
+  });
+
+  // ── Greeting ───────────────────────────────────────────────────────────
+  function greet() {
+    appendMessage('bot', "👋 Hi! I'm the virtual assistant for our accounting firm. I can help you with questions about our services or get you set up with a free consultation.\n\nWhat brings you here today?");
+    showQuickReplies([
+      'Tax preparation',
+      'Bookkeeping services',
+      'CFO / Advisory',
+      'Payroll & compliance',
+      'Pricing info',
+      'Book a consultation',
+    ]);
+  }
+
+  // ── Quick replies ──────────────────────────────────────────────────────
+  function showQuickReplies(options) {
+    quickReply.innerHTML = '';
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'acct-qr-btn';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => {
+        quickReply.innerHTML = '';
+        sendMessage(opt);
+      });
+      quickReply.appendChild(btn);
+    });
+  }
+
+  // ── Append message bubble ──────────────────────────────────────────────
+  function appendMessage(role, text) {
+    const div = document.createElement('div');
+    div.className = `acct-msg ${role}`;
+    div.textContent = text;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+    return div;
+  }
+
+  // ── Typing indicator ───────────────────────────────────────────────────
+  function showTyping() {
+    const div = document.createElement('div');
+    div.className = 'acct-msg bot typing';
+    div.id = 'acct-typing';
+    div.textContent = 'Typing…';
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+  }
+  function hideTyping() {
+    const el = document.getElementById('acct-typing');
+    if (el) el.remove();
+  }
+
+  // ── Send message ───────────────────────────────────────────────────────
+  async function sendMessage(text) {
+    const trimmed = text.trim();
+    if (!trimmed || isWaiting) return;
+
+    input.value = '';
+    input.style.height = 'auto';
+    sendBtn.disabled = true;
+    quickReply.innerHTML = '';
+
+    appendMessage('user', trimmed);
+    showTyping();
+    isWaiting = true;
+
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, message: trimmed }),
+      });
+
+      if (!res.ok) throw new Error('Server error ' + res.status);
+      const data = await res.json();
+
+      hideTyping();
+      appendMessage('bot', data.reply);
+
+      if (data.quickReplies && data.quickReplies.length) {
+        showQuickReplies(data.quickReplies);
+      }
+      if (data.calendlyUrl) {
+        openCalendly(data.calendlyUrl);
+      }
+    } catch (err) {
+      hideTyping();
+      appendMessage('bot', "Sorry, I'm having trouble connecting right now. Please call us directly or try again in a moment.");
+      console.error('Chat error:', err);
+    } finally {
+      isWaiting = false;
+      updateSendBtn();
+    }
+  }
+
+  // ── Calendly popup ─────────────────────────────────────────────────────
+  function openCalendly(url) {
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  // ── Input handling ─────────────────────────────────────────────────────
+  function updateSendBtn() {
+    sendBtn.disabled = !input.value.trim() || isWaiting;
+  }
+
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 80) + 'px';
+    updateSendBtn();
+  });
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(input.value);
+    }
+  });
+
+  sendBtn.addEventListener('click', () => sendMessage(input.value));
+
+})();
+</script>
+
+</body>
+</html>

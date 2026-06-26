@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lead Dashboard — Accounting Firm AI Agent</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #1a3c6e;
+      color: #fff;
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+    header h1 { font-size: 20px; font-weight: 700; }
+    header p  { font-size: 13px; opacity: 0.75; margin-top: 3px; }
+
+    .export-btn {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s;
+    }
+    .export-btn:hover { background: rgba(255,255,255,0.25); }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      padding: 24px 32px;
+    }
+    .stat-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px 22px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .stat-card .label { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-card .value { font-size: 32px; font-weight: 700; color: #1a3c6e; margin-top: 6px; }
+
+    .table-wrap {
+      padding: 0 32px 32px;
+    }
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .table-header h2 { font-size: 16px; font-weight: 600; }
+    #search {
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 13px;
+      outline: none;
+      width: 220px;
+    }
+    #search:focus { border-color: #1a3c6e; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      font-size: 14px;
+    }
+    thead { background: #f8fafc; }
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    td {
+      padding: 13px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+    .badge.tax { background: #dcfce7; color: #166534; }
+    .badge.book { background: #fef9c3; color: #854d0e; }
+    .badge.cfo { background: #ede9fe; color: #5b21b6; }
+    .badge.pay { background: #fee2e2; color: #991b1b; }
+
+    .empty {
+      text-align: center;
+      padding: 48px;
+      color: #94a3b8;
+      font-size: 15px;
+    }
+
+    .refresh-btn {
+      background: #1a3c6e;
+      color: #fff;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .refresh-btn:hover { background: #15315e; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>💼 Lead Dashboard</h1>
+    <p>AI Marketing & Sales Agent — Accounting Firm</p>
+  </div>
+  <a class="export-btn" href="/leads/export.csv" download>
+    ↓ Export CSV
+  </a>
+</header>
+
+<div class="stats">
+  <div class="stat-card">
+    <div class="label">Total Leads</div>
+    <div class="value" id="stat-total">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Today</div>
+    <div class="value" id="stat-today">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">This Week</div>
+    <div class="value" id="stat-week">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Top Service</div>
+    <div class="value" id="stat-top" style="font-size:18px;padding-top:8px;">—</div>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <div class="table-header">
+    <h2>All Leads</h2>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <input id="search" type="text" placeholder="Search name, email, service…" />
+      <button class="refresh-btn" onclick="loadLeads()">⟳ Refresh</button>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Service</th>
+        <th>Notes</th>
+        <th>Captured</th>
+      </tr>
+    </thead>
+    <tbody id="leads-tbody">
+      <tr><td colspan="6" class="empty">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+let allLeads = [];
+
+async function loadLeads() {
+  try {
+    const res = await fetch('/leads');
+    allLeads = await res.json();
+    renderStats(allLeads);
+    renderTable(allLeads);
+  } catch {
+    document.getElementById('leads-tbody').innerHTML =
+      '<tr><td colspan="6" class="empty">Could not load leads. Make sure the server is running.</td></tr>';
+  }
+}
+
+function renderStats(leads) {
+  const today = new Date().toDateString();
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+
+  document.getElementById('stat-total').textContent = leads.length;
+  document.getElementById('stat-today').textContent = leads.filter(l => new Date(l.capturedAt).toDateString() === today).length;
+  document.getElementById('stat-week').textContent  = leads.filter(l => new Date(l.capturedAt) > weekAgo).length;
+
+  // Top service
+  const counts = {};
+  leads.forEach(l => { if (l.service) counts[l.service] = (counts[l.service] || 0) + 1; });
+  const top = Object.entries(counts).sort((a,b) => b[1]-a[1])[0];
+  document.getElementById('stat-top').textContent = top ? top[0] : '—';
+}
+
+function badgeClass(service = '') {
+  const s = service.toLowerCase();
+  if (s.includes('tax')) return 'badge tax';
+  if (s.includes('book')) return 'badge book';
+  if (s.includes('cfo') || s.includes('advis')) return 'badge cfo';
+  if (s.includes('payroll') || s.includes('comp')) return 'badge pay';
+  return 'badge';
+}
+
+function renderTable(leads) {
+  const tbody = document.getElementById('leads-tbody');
+  if (!leads.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">No leads yet. Your chatbot will capture them automatically.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = [...leads].reverse().map(l => `
+    <tr>
+      <td><strong>${esc(l.name || '—')}</strong></td>
+      <td><a href="mailto:${esc(l.email)}">${esc(l.email || '—')}</a></td>
+      <td>${esc(l.phone || '—')}</td>
+      <td><span class="${badgeClass(l.service)}">${esc(l.service || '—')}</span></td>
+      <td style="color:#64748b;font-size:13px;">${esc(l.notes || '—')}</td>
+      <td style="color:#94a3b8;font-size:12px;">${fmt(l.capturedAt)}</td>
+    </tr>
+  `).join('');
+}
+
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmt(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+       + ' ' + d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+}
+
+// Search
+document.getElementById('search').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  renderTable(allLeads.filter(l =>
+    (l.name||'').toLowerCase().includes(q) ||
+    (l.email||'').toLowerCase().includes(q) ||
+    (l.service||'').toLowerCase().includes(q) ||
+    (l.phone||'').includes(q)
+  ));
+});
+
+loadLeads();
+</script>
+
+</body>
+</html>
