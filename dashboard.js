@@ -1,4 +1,3 @@
-
 var BASE = window.location.origin;
 var chatLeads = [], outboundLeads = [], callLogs = [];
 var obCurFilter = 'all', caCurFilter = 'all';
@@ -235,8 +234,7 @@ function updateOverview() {
           '<td>' + e.t + '</td>' +
           '<td><strong>' + E(e.n) + '</strong></td>' +
           '<td class="td-sm">' + E(e.c) + '</td>' +
-          '<td style="
-;">' + E(e.d) + '</td>' +
+          '<td class="td-cap">' + E(e.d) + '</td>' +
           '<td class="td-xs">' + D(e.dt) + '</td>' +
           '</tr>';
       }).join('')
