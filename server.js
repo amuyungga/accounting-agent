@@ -231,6 +231,43 @@ app.get('/leads', (req, res) => {
   res.json(loadLeads());
 });
 
+// GET /outbound-leads — return all outbound (proactively found) leads
+app.get('/outbound-leads', (req, res) => {
+  const file = path.join(__dirname, 'outbound-leads.json');
+  if (!fs.existsSync(file)) return res.json([]);
+  try { res.json(JSON.parse(fs.readFileSync(file, 'utf8'))); }
+  catch { res.json([]); }
+});
+
+// GET /calls — proxy Vapi call logs
+app.get('/calls', async (req, res) => {
+  const vapiKey = process.env.VAPI_API_KEY;
+  if (!vapiKey) return res.status(500).json({ error: 'VAPI_API_KEY not set' });
+  try {
+    const https = require('https');
+    const limit = req.query.limit || 100;
+    const data = await new Promise((resolve, reject) => {
+      const options = {
+        hostname: 'api.vapi.ai',
+        path: `/call?limit=${limit}`,
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${vapiKey}` },
+      };
+      const request = https.request(options, (r) => {
+        let body = '';
+        r.on('data', chunk => body += chunk);
+        r.on('end', () => { try { resolve(JSON.parse(body)); } catch { reject(new Error('Invalid JSON')); } });
+      });
+      request.on('error', reject);
+      request.end();
+    });
+    res.json(data);
+  } catch (err) {
+    console.error('[Vapi] Error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /leads/export.csv — CSV export
 app.get('/leads/export.csv', (req, res) => {
   const leads = loadLeads();

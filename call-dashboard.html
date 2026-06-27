@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Call Dashboard — Spectrum Financial Solutions</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; }
+
+    header {
+      background: #1e3a5f;
+      color: white;
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 { font-size: 1.2rem; font-weight: 600; }
+    header span { font-size: 0.85rem; opacity: 0.7; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      padding: 24px 32px 8px;
+    }
+    .stat {
+      background: white;
+      border-radius: 10px;
+      padding: 18px 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.07);
+    }
+    .stat .label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: .05em; }
+    .stat .value { font-size: 2rem; font-weight: 700; color: #1e3a5f; margin-top: 4px; }
+    .stat .sub { font-size: 0.78rem; color: #94a3b8; margin-top: 2px; }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      padding: 16px 32px;
+      align-items: center;
+    }
+    .filter-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      font-size: 0.82rem;
+      cursor: pointer;
+      color: #475569;
+      transition: all .15s;
+    }
+    .filter-btn.active { background: #1e3a5f; color: white; border-color: #1e3a5f; }
+    .refresh-btn {
+      margin-left: auto;
+      padding: 7px 16px;
+      background: #1e3a5f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+    .refresh-btn:hover { background: #2d4f7c; }
+
+    .table-wrap { padding: 0 32px 32px; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.07); }
+    thead { background: #f1f5f9; }
+    th { padding: 12px 16px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: .05em; color: #64748b; font-weight: 600; }
+    td { padding: 14px 16px; font-size: 0.875rem; border-top: 1px solid #f1f5f9; vertical-align: middle; }
+    tr:hover td { background: #f8fafc; cursor: pointer; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .badge-ended      { background: #dcfce7; color: #16a34a; }
+    .badge-missed     { background: #fee2e2; color: #dc2626; }
+    .badge-in-progress { background: #dbeafe; color: #2563eb; }
+    .badge-unknown    { background: #f1f5f9; color: #64748b; }
+
+    .caller { font-weight: 500; }
+    .duration { color: #475569; }
+    .time { color: #94a3b8; font-size: 0.8rem; }
+    .cost { color: #64748b; }
+
+    /* Transcript modal */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 12px;
+      width: 640px;
+      max-width: 95vw;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+    .modal-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .modal-header h2 { font-size: 1rem; color: #1e293b; }
+    .modal-header .meta { font-size: 0.8rem; color: #94a3b8; margin-top: 3px; }
+    .modal-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #94a3b8; line-height: 1; }
+    .modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+    .modal-section { margin-bottom: 20px; }
+    .modal-section h3 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .05em; color: #94a3b8; margin-bottom: 8px; }
+    .summary-text { font-size: 0.9rem; line-height: 1.6; color: #334155; background: #f8fafc; padding: 12px 14px; border-radius: 8px; }
+    .transcript-text { font-size: 0.85rem; line-height: 1.7; color: #475569; white-space: pre-wrap; max-height: 300px; overflow-y: auto; background: #f8fafc; padding: 12px 14px; border-radius: 8px; }
+    .no-data { color: #94a3b8; font-style: italic; font-size: 0.85rem; }
+
+    .loading { text-align: center; padding: 60px; color: #94a3b8; }
+    .empty { text-align: center; padding: 60px; color: #94a3b8; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📞 Call Dashboard — Spectrum Financial Solutions</h1>
+  <span id="last-updated">Loading...</span>
+</header>
+
+<div class="stats">
+  <div class="stat">
+    <div class="label">Total Calls</div>
+    <div class="value" id="stat-total">—</div>
+    <div class="sub">All time</div>
+  </div>
+  <div class="stat">
+    <div class="label">Answered</div>
+    <div class="value" id="stat-answered">—</div>
+    <div class="sub">Completed calls</div>
+  </div>
+  <div class="stat">
+    <div class="label">Avg Duration</div>
+    <div class="value" id="stat-duration">—</div>
+    <div class="sub">Minutes per call</div>
+  </div>
+  <div class="stat">
+    <div class="label">Total Cost</div>
+    <div class="value" id="stat-cost">—</div>
+    <div class="sub">Vapi usage</div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <button class="filter-btn active" data-filter="all">All</button>
+  <button class="filter-btn" data-filter="ended">Answered</button>
+  <button class="filter-btn" data-filter="missed">Missed</button>
+  <button class="refresh-btn" onclick="loadCalls()">↻ Refresh</button>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Caller</th>
+        <th>Date & Time</th>
+        <th>Duration</th>
+        <th>Status</th>
+        <th>Ended Reason</th>
+        <th>Cost</th>
+      </tr>
+    </thead>
+    <tbody id="calls-body">
+      <tr><td colspan="6" class="loading">Loading calls...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Transcript Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h2 id="modal-title">Call Details</h2>
+        <div class="meta" id="modal-meta"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section" id="summary-section">
+        <h3>Summary</h3>
+        <div class="summary-text" id="modal-summary"></div>
+      </div>
+      <div class="modal-section" id="transcript-section">
+        <h3>Transcript</h3>
+        <div class="transcript-text" id="modal-transcript"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_URL = 'https://accounting-agent-production-cf69.up.railway.app/calls';
+  let allCalls = [];
+  let currentFilter = 'all';
+
+  async function loadCalls() {
+    document.getElementById('calls-body').innerHTML = '<tr><td colspan="6" class="loading">Loading...</td></tr>';
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      allCalls = Array.isArray(data) ? data : (data.results || []);
+      document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+      updateStats();
+      renderTable();
+    } catch (err) {
+      document.getElementById('calls-body').innerHTML = `<tr><td colspan="6" class="empty">Error loading calls: ${err.message}</td></tr>`;
+    }
+  }
+
+  function fmtDuration(secs) {
+    if (!secs) return '—';
+    const m = Math.floor(secs / 60), s = Math.floor(secs % 60);
+    return m > 0 ? `${m}m ${s}s` : `${s}s`;
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+  }
+
+  function getStatus(call) {
+    if (call.status === 'in-progress') return 'in-progress';
+    if (!call.endedAt) return 'missed';
+    const reason = (call.endedReason || '').toLowerCase();
+    if (reason.includes('no-answer') || reason.includes('voicemail') || reason.includes('busy')) return 'missed';
+    return 'ended';
+  }
+
+  function badgeHtml(status) {
+    const map = { ended: ['badge-ended','Answered'], missed: ['badge-missed','Missed'], 'in-progress': ['badge-in-progress','Live'] };
+    const [cls, label] = map[status] || ['badge-unknown', status];
+    return `<span class="badge ${cls}">${label}</span>`;
+  }
+
+  function updateStats() {
+    const total = allCalls.length;
+    const answered = allCalls.filter(c => getStatus(c) === 'ended').length;
+    const durations = allCalls.filter(c => c.duration > 0).map(c => c.duration);
+    const avgDur = durations.length ? durations.reduce((a,b)=>a+b,0)/durations.length : 0;
+    const totalCost = allCalls.reduce((sum, c) => sum + (c.cost || 0), 0);
+
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-answered').textContent = answered;
+    document.getElementById('stat-duration').textContent = avgDur ? fmtDuration(avgDur) : '—';
+    document.getElementById('stat-cost').textContent = totalCost ? '$' + totalCost.toFixed(2) : '$0.00';
+  }
+
+  function renderTable() {
+    const filtered = currentFilter === 'all' ? allCalls : allCalls.filter(c => getStatus(c) === currentFilter);
+    if (!filtered.length) {
+      document.getElementById('calls-body').innerHTML = '<tr><td colspan="6" class="empty">No calls found.</td></tr>';
+      return;
+    }
+    document.getElementById('calls-body').innerHTML = filtered.map(call => {
+      const status = getStatus(call);
+      const caller = call.customer?.number || call.customer?.name || 'Unknown';
+      const reason = (call.endedReason || '—').replace(/-/g, ' ');
+      return `<tr onclick="openModal('${call.id}')">
+        <td class="caller">${caller}</td>
+        <td class="time">${fmtDate(call.startedAt || call.createdAt)}</td>
+        <td class="duration">${fmtDuration(call.duration)}</td>
+        <td>${badgeHtml(status)}</td>
+        <td class="cost" style="text-transform:capitalize">${reason}</td>
+        <td class="cost">${call.cost ? '$'+call.cost.toFixed(3) : '—'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function openModal(callId) {
+    const call = allCalls.find(c => c.id === callId);
+    if (!call) return;
+    const caller = call.customer?.number || call.customer?.name || 'Unknown';
+    document.getElementById('modal-title').textContent = `Call from ${caller}`;
+    document.getElementById('modal-meta').textContent =
+      `${fmtDate(call.startedAt || call.createdAt)} · ${fmtDuration(call.duration)} · ${(call.endedReason||'').replace(/-/g,' ')}`;
+
+    const summary = call.summary || call.analysis?.summary;
+    document.getElementById('modal-summary').innerHTML = summary
+      ? summary : '<span class="no-data">No summary available</span>';
+    document.getElementById('summary-section').style.display = summary ? '' : 'none';
+
+    const transcript = call.transcript || (call.messages || []).map(m => `${m.role}: ${m.message}`).join('\n');
+    document.getElementById('modal-transcript').innerHTML = transcript
+      ? transcript : '<span class="no-data">No transcript available</span>';
+
+    document.getElementById('modal-overlay').classList.add('open');
+  }
+
+  function closeModal(e) {
+    if (!e || e.target === document.getElementById('modal-overlay')) {
+      document.getElementById('modal-overlay').classList.remove('open');
+    }
+  }
+
+  // Filter buttons
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      renderTable();
+    });
+  });
+
+  loadCalls();
+  setInterval(loadCalls, 60000); // auto-refresh every 60s
+</script>
+</body>
+</html>
