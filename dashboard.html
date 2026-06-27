@@ -1,198 +1,384 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Spectrum Financial Solutions — Command Center</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; color: #1e293b; min-height: 100vh; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Spectrum Financial — Command Center</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;
+  --surface:#161b22;
+  --card:#1c2333;
+  --border:#30363d;
+  --faint:#21262d;
+  --blue:#58a6ff;
+  --blue-dim:rgba(88,166,255,.12);
+  --green:#3fb950;
+  --green-dim:rgba(63,185,80,.12);
+  --purple:#bc8cff;
+  --purple-dim:rgba(188,140,255,.12);
+  --amber:#e3b341;
+  --amber-dim:rgba(227,179,65,.12);
+  --red:#f85149;
+  --red-dim:rgba(248,81,73,.12);
+  --text:#e6edf3;
+  --muted:#8b949e;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
-    /* ── Header ── */
-    header {
-      background: #1a3c6e;
-      color: #fff;
-      padding: 16px 32px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    }
-    header h1 { font-size: 18px; font-weight: 700; }
-    header p  { font-size: 12px; opacity: 0.7; margin-top: 2px; }
-    #last-updated { font-size: 12px; opacity: 0.65; }
+/* Header */
+header{
+  background:linear-gradient(135deg,#0d1f3c 0%,#0a1628 60%,#0d1117 100%);
+  color:#fff;padding:18px 32px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:50;
+}
+.header-left{display:flex;align-items:center;gap:14px}
+.logo-mark{
+  width:38px;height:38px;
+  background:linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:19px;flex-shrink:0;
+}
+header h1{font-size:16px;font-weight:700;letter-spacing:-.02em}
+header p{font-size:11px;color:var(--muted);margin-top:2px}
+.header-right{display:flex;align-items:center;gap:14px}
+#last-updated{font-size:11px;color:var(--muted)}
+.live-badge{
+  display:flex;align-items:center;gap:5px;
+  background:rgba(63,185,80,.1);
+  border:1px solid rgba(63,185,80,.25);
+  color:#3fb950;font-size:10px;font-weight:800;
+  padding:4px 10px;border-radius:20px;letter-spacing:.08em;
+}
+.live-dot{
+  width:6px;height:6px;background:#3fb950;
+  border-radius:50%;animation:pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
 
-    /* ── Tabs ── */
-    .tabs {
-      display: flex;
-      background: #1a3c6e;
-      padding: 0 32px;
-      border-bottom: none;
-    }
-    .tab-btn {
-      padding: 12px 20px;
-      background: none;
-      border: none;
-      color: rgba(255,255,255,0.6);
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      transition: all .15s;
-    }
-    .tab-btn:hover { color: rgba(255,255,255,0.9); }
-    .tab-btn.active { color: #fff; border-bottom-color: #60a5fa; }
+/* Tabs */
+.tabs{
+  display:flex;background:var(--surface);
+  padding:0 32px;border-bottom:1px solid var(--border);
+  position:sticky;top:77px;z-index:40;
+}
+.tab-btn{
+  padding:13px 18px;background:none;border:none;
+  color:var(--muted);font-size:13px;font-weight:500;
+  cursor:pointer;border-bottom:2px solid transparent;
+  transition:all .2s;display:flex;align-items:center;gap:6px;
+}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue)}
 
-    /* ── Overview stats row ── */
-    .overview-stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      padding: 24px 32px 8px;
-    }
-    .stat-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 18px 22px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    }
-    .stat-card .label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: .06em; }
-    .stat-card .value { font-size: 2rem; font-weight: 700; color: #1a3c6e; margin-top: 4px; }
-    .stat-card .sub   { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:24px 32px 8px}
+.stat-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:20px 22px;
+  position:relative;overflow:hidden;
+  transition:transform .2s,box-shadow .2s;
+}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 10px 40px rgba(0,0,0,.4)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.stat-card.blue::before{background:linear-gradient(90deg,#1d4ed8,#60a5fa)}
+.stat-card.green::before{background:linear-gradient(90deg,#059669,#34d399)}
+.stat-card.purple::before{background:linear-gradient(90deg,#7c3aed,#c084fc)}
+.stat-card.amber::before{background:linear-gradient(90deg,#d97706,#fbbf24)}
+.stat-card.red::before{background:linear-gradient(90deg,#dc2626,#f87171)}
+.stat-icon{
+  width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;margin-bottom:12px;
+}
+.blue .stat-icon{background:var(--blue-dim)}
+.green .stat-icon{background:var(--green-dim)}
+.purple .stat-icon{background:var(--purple-dim)}
+.amber .stat-icon{background:var(--amber-dim)}
+.red .stat-icon{background:var(--red-dim)}
+.stat-card .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;font-weight:700}
+.stat-card .val{font-size:2.6rem;font-weight:800;margin-top:4px;letter-spacing:-.04em;line-height:1}
+.blue .val{color:var(--blue)}
+.green .val{color:var(--green)}
+.purple .val{color:var(--purple)}
+.amber .val{color:var(--amber)}
+.red .val{color:var(--red)}
+.stat-card .sub{font-size:11px;color:var(--muted);margin-top:6px}
+.val-sm{font-size:1.3rem}
 
-    /* ── Section ── */
-    .section { display: none; }
-    .section.active { display: block; }
+/* Section */
+.section{display:none}.section.active{display:block}
 
-    /* ── Toolbar ── */
-    .toolbar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 16px 32px 8px;
-      flex-wrap: wrap;
-    }
-    .filter-btn {
-      padding: 6px 14px;
-      border-radius: 20px;
-      border: 1px solid #e2e8f0;
-      background: #fff;
-      font-size: 12px;
-      cursor: pointer;
-      color: #475569;
-      transition: all .15s;
-    }
-    .filter-btn.active { background: #1a3c6e; color: #fff; border-color: #1a3c6e; }
-    .search-input {
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 7px 12px;
-      font-size: 13px;
-      outline: none;
-      width: 200px;
-      background: #fff;
-    }
-    .search-input:focus { border-color: #1a3c6e; }
-    .ml-auto { margin-left: auto; }
-    .refresh-btn {
-      padding: 7px 14px;
-      background: #1a3c6e;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 12px;
-      cursor: pointer;
-    }
-    .refresh-btn:hover { background: #15315e; }
-    .export-btn {
-      padding: 7px 14px;
-      background: rgba(26,60,110,0.08);
-      color: #1a3c6e;
-      border: 1px solid #1a3c6e;
-      border-radius: 8px;
-      font-size: 12px;
-      cursor: pointer;
-      text-decoration: none;
-    }
+/* Section heading */
+.sec-heading{padding:20px 32px 6px;font-size:14px;font-weight:700;color:var(--text)}
 
-    /* ── Table ── */
-    .table-wrap { padding: 8px 32px 32px; overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); font-size: 13px; }
-    thead { background: #f8fafc; }
-    th { padding: 11px 14px; text-align: left; font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid #e2e8f0; }
-    td { padding: 12px 14px; border-top: 1px solid #f1f5f9; vertical-align: middle; }
-    tr:hover td { background: #f8fafc; }
+/* Toolbar */
+.toolbar{display:flex;align-items:center;gap:8px;padding:14px 32px 8px;flex-wrap:wrap}
+.filter-btn{
+  padding:5px 14px;border-radius:20px;
+  border:1px solid var(--border);background:transparent;
+  font-size:12px;font-weight:500;cursor:pointer;
+  color:var(--muted);transition:all .15s;
+}
+.filter-btn:hover{color:var(--text);border-color:var(--muted)}
+.filter-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.srch{
+  border:1px solid var(--border);border-radius:8px;
+  padding:7px 14px;font-size:13px;outline:none;
+  background:var(--surface);color:var(--text);width:230px;
+  transition:border-color .15s;
+}
+.srch:focus{border-color:var(--blue)}
+.srch::placeholder{color:var(--muted)}
+.ml{margin-left:auto}
+.btn-refresh{
+  padding:7px 16px;background:var(--blue);color:#fff;
+  border:none;border-radius:8px;font-size:12px;font-weight:600;
+  cursor:pointer;transition:opacity .15s;
+}
+.btn-refresh:hover{opacity:.8}
+.btn-export{
+  padding:7px 14px;background:transparent;color:var(--blue);
+  border:1px solid var(--blue);border-radius:8px;
+  font-size:12px;font-weight:600;text-decoration:none;
+  transition:background .15s;
+}
+.btn-export:hover{background:var(--blue-dim)}
 
-    /* ── Badges ── */
-    .badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 600;
-    }
-    /* Chat lead badges */
-    .badge-tax   { background: #dcfce7; color: #166534; }
-    .badge-book  { background: #fef9c3; color: #854d0e; }
-    .badge-cfo   { background: #ede9fe; color: #5b21b6; }
-    .badge-pay   { background: #fee2e2; color: #991b1b; }
-    .badge-other { background: #dbeafe; color: #1d4ed8; }
-    /* Outbound badges */
-    .badge-emailed    { background: #dcfce7; color: #16a34a; }
-    .badge-found      { background: #dbeafe; color: #1d4ed8; }
-    .badge-no_email   { background: #fff7ed; color: #c2410c; }
-    .badge-no_website { background: #f1f5f9; color: #64748b; }
-    .badge-error      { background: #fee2e2; color: #dc2626; }
-    /* Call badges */
-    .badge-answered   { background: #dcfce7; color: #16a34a; }
-    .badge-missed     { background: #fee2e2; color: #dc2626; }
-    .badge-live       { background: #dbeafe; color: #2563eb; }
+/* Table wrapper */
+.tw{padding:8px 32px 40px;overflow-x:auto}
+table{
+  width:100%;border-collapse:collapse;
+  background:var(--card);border-radius:12px;overflow:hidden;
+  border:1px solid var(--border);font-size:13px;
+}
+thead{background:var(--surface)}
+th{
+  padding:11px 16px;text-align:left;
+  font-size:10px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.07em;
+  border-bottom:1px solid var(--border);
+}
+td{padding:13px 16px;border-top:1px solid rgba(48,54,61,.5);vertical-align:middle}
+tr:hover td{background:rgba(88,166,255,.04)}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+.empty{text-align:center;padding:52px;color:var(--muted);line-height:1.7}
+.empty-icon{font-size:32px;display:block;margin-bottom:10px}
 
-    .biz-name    { font-weight: 600; }
-    .biz-sub     { font-size: 11px; color: #94a3b8; margin-top: 2px; }
-    .biz-industry { font-size: 10px; color: #7c3aed; background: #ede9fe; border-radius: 4px; padding: 1px 6px; display: inline-block; margin-top: 3px; }
-    .email-preview { max-width: 320px; font-size: 12px; color: #64748b; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; cursor: pointer; }
-    .email-preview.open { -webkit-line-clamp: unset; display: block; }
+/* Badges */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.b-tax{background:rgba(63,185,80,.15);color:#3fb950}
+.b-book{background:rgba(227,179,65,.15);color:#e3b341}
+.b-cfo{background:rgba(188,140,255,.15);color:#bc8cff}
+.b-pay{background:rgba(248,81,73,.15);color:#f85149}
+.b-other{background:rgba(88,166,255,.15);color:#58a6ff}
+.b-emailed{background:rgba(63,185,80,.15);color:#3fb950}
+.b-found{background:rgba(88,166,255,.15);color:#58a6ff}
+.b-no_email{background:rgba(227,179,65,.15);color:#e3b341}
+.b-no_website{background:rgba(139,148,158,.15);color:#8b949e}
+.b-email_found{background:rgba(88,166,255,.15);color:#58a6ff}
+.b-error{background:rgba(248,81,73,.15);color:#f85149}
+.b-answered{background:rgba(63,185,80,.15);color:#3fb950}
+.b-missed{background:rgba(248,81,73,.15);color:#f85149}
+.b-live{background:rgba(88,166,255,.15);color:#58a6ff;animation:pulse 1.5s infinite}
 
-    .empty { text-align: center; padding: 48px; color: #94a3b8; }
-    a { color: #1a3c6e; text-decoration: none; }
-    a:hover { text-decoration: underline; }
+/* Activity type chips */
+.type-chat{display:inline-flex;align-items:center;gap:4px;background:rgba(88,166,255,.12);color:#58a6ff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.type-email{display:inline-flex;align-items:center;gap:4px;background:rgba(63,185,80,.12);color:#3fb950;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.type-call{display:inline-flex;align-items:center;gap:4px;background:rgba(188,140,255,.12);color:#bc8cff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
 
-    /* ── Call modal ── */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 100; align-items: center; justify-content: center; }
-    .modal-overlay.open { display: flex; }
-    .modal { background: #fff; border-radius: 12px; width: 600px; max-width: 95vw; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
-    .modal-header { padding: 18px 22px 14px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: flex-start; }
-    .modal-header h2 { font-size: 15px; }
-    .modal-meta { font-size: 12px; color: #94a3b8; margin-top: 3px; }
-    .modal-close { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: #94a3b8; }
-    .modal-body { padding: 18px 22px; overflow-y: auto; flex: 1; }
-    .modal-section { margin-bottom: 16px; }
-    .modal-section h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #94a3b8; margin-bottom: 6px; }
-    .modal-text { font-size: 13px; line-height: 1.6; color: #334155; background: #f8fafc; padding: 12px; border-radius: 8px; white-space: pre-wrap; max-height: 260px; overflow-y: auto; }
-    .no-data { color: #94a3b8; font-style: italic; }
-  </style>
+/* Table cell helpers */
+.bn{font-weight:600;color:var(--text)}
+.bs{font-size:11px;color:var(--muted);margin-top:3px}
+.bi{font-size:10px;color:var(--purple);background:var(--purple-dim);border-radius:4px;padding:2px 7px;display:inline-block;margin-top:3px;font-weight:700}
+.ep{max-width:300px;font-size:12px;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;cursor:pointer}
+.ep.open{-webkit-line-clamp:unset;display:block}
+.td-sm{font-size:12px;color:var(--muted)}
+.td-xs{font-size:11px;color:var(--muted)}
+.td-grey{font-size:12px;color:var(--muted)}
+.td-cap{font-size:12px;color:var(--muted);text-transform:capitalize}
+.td-muted{color:var(--muted)}
+.call-row{cursor:pointer}
+
+/* Modal */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.75);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  z-index:100;align-items:center;justify-content:center;
+}
+.modal-overlay.open{display:flex;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;width:620px;max-width:95vw;max-height:82vh;
+  display:flex;flex-direction:column;
+  box-shadow:0 30px 80px rgba(0,0,0,.7);
+  animation:slideUp .25s cubic-bezier(.34,1.4,.64,1);
+}
+@keyframes slideUp{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mh{
+  padding:20px 24px 16px;border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:flex-start;
+}
+.mh h2{font-size:15px;font-weight:700}
+.mm{font-size:12px;color:var(--muted);margin-top:4px}
+.mc{background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--muted);transition:color .15s;line-height:1;padding:0 4px}
+.mc:hover{color:var(--text)}
+.mb{padding:20px 24px;overflow-y:auto;flex:1}
+.ms{margin-bottom:20px}
+.ms h3{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin-bottom:8px}
+.mt{
+  font-size:13px;line-height:1.7;color:var(--text);
+  background:var(--surface);padding:14px 16px;
+  border-radius:10px;border:1px solid var(--border);
+  white-space:pre-wrap;max-height:280px;overflow-y:auto;
+}
+.nd{color:var(--muted);font-style:italic}
+</style>
 </head>
 <body>
 
 <header>
-  <div>
-    <h1>📊 Spectrum Financial Solutions — Command Center</h1>
-    <p>AI Marketing & Sales Agent</p>
+  <div class="header-left">
+    <div class="logo-mark">💼</div>
+    <div>
+      <h1>Spectrum Financial Solutions</h1>
+      <p>AI Marketing &amp; Sales Command Center</p>
+    </div>
   </div>
-  <span id="last-updated">Loading...</span>
+  <div class="header-right">
+    <span id="last-updated">Loading…</span>
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+  </div>
 </header>
 
 <div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('overview', this)">🏠 Overview</button>
-  <button class="tab-btn" onclick="switchTab('chat', this)">💬 Chat Leads</button>
-  <button class="tab-btn" onclick="switchTab('outbound', this)">📤 Outbound</button>
-  <button class="tab-btn" onclick="switchTab('calls', this)">📞 Calls</button>
+  <button class="tab-btn active" onclick="switchTab(this,'overview')">📊 Overview</button>
+  <button class="tab-btn" onclick="switchTab(this,'chat')">💬 Chat Leads</button>
+  <button class="tab-btn" onclick="switchTab(this,'outbound')">📧 Outbound</button>
+  <button class="tab-btn" onclick="switchTab(this,'calls')">📞 Calls</button>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     OVERVIEW TAB
-══════════════════════════════════════════════════════ -->
-<div id="tab-overview" class="section active">
-  <div class="overview-stats">
-    <div class="stat-card
+<!-- OVERVIEW -->
+<div id="s-overview" class="section active">
+  <div class="stats-row">
+    <div class="stat-card blue">
+      <div class="stat-icon">💬</div>
+      <div class="lbl">Chat Leads</div>
+      <div class="val" id="ov-chat">—</div>
+      <div class="sub">From website widget</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-icon">📧</div>
+      <div class="lbl">Outbound Emailed</div>
+      <div class="val" id="ov-emailed">—</div>
+      <div class="sub">Cold emails sent</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-icon">📞</div>
+      <div class="lbl">Calls Received</div>
+      <div class="val" id="ov-calls">—</div>
+      <div class="sub">Via Vapi receptionist</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-icon">⚡</div>
+      <div class="lbl">Total Touches</div>
+      <div class="val" id="ov-total">—</div>
+      <div class="sub">All channels combined</div>
+    </div>
+  </div>
+  <div class="sec-heading">Recent Activity</div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Type</th><th>Name</th><th>Contact</th><th>Detail</th><th>Date</th></tr></thead>
+      <tbody id="ov-tbody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div id="s-chat" class="section">
+  <div class="stats-row">
+    <div class="stat-card blue"><div class="stat-icon">👥</div><div class="lbl">Total</div><div class="val" id="ch-total">—</div></div>
+    <div class="stat-card green"><div class="stat-icon">📅</div><div class="lbl">Today</div><div class="val" id="ch-today">—</div></div>
+    <div class="stat-card purple"><div class="stat-icon">📆</div><div class="lbl">This Week</div><div class="val" id="ch-week">—</div></div>
+    <div class="stat-card amber"><div class="stat-icon">🏆</div><div class="lbl">Top Service</div><div class="val val-sm" id="ch-top">—</div></div>
+  </div>
+  <div class="toolbar">
+    <input class="srch" id="ch-s" type="text" placeholder="Search name, email…" oninput="renderChat()"/>
+    <a class="btn-export ml" href="/leads/export.csv" download>⬇ Export CSV</a>
+    <button class="btn-refresh" onclick="loadChat()">↻ Refresh</button>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Service</th><th>Notes</th><th>Captured</th></tr></thead>
+    <tbody id="ch-tbody"><tr><td colspan="6" class="empty"><span class="empty-icon">💬</span>Loading…</td></tr></tbody>
+  </table></div>
+</div>
+
+<!-- OUTBOUND -->
+<div id="s-outbound" class="section">
+  <div class="stats-row">
+    <div class="stat-card blue"><div class="stat-icon">🔍</div><div class="lbl">Total Found</div><div class="val" id="ob-total">—</div></div>
+    <div class="stat-card green"><div class="stat-icon">✅</div><div class="lbl">Emailed</div><div class="val" id="ob-emailed">—</div></div>
+    <div class="stat-card purple"><div class="stat-icon">📨</div><div class="lbl">Email Found</div><div class="val" id="ob-found">—</div></div>
+    <div class="stat-card amber"><div class="stat-icon">❓</div><div class="lbl">No Email</div><div class="val" id="ob-noemail">—</div></div>
+  </div>
+  <div class="toolbar">
+    <button class="filter-btn active" onclick="obFilter(this,'all')">All</button>
+    <button class="filter-btn" onclick="obFilter(this,'emailed')">✅ Emailed</button>
+    <button class="filter-btn" onclick="obFilter(this,'email_found')">📨 Email Found</button>
+    <button class="filter-btn" onclick="obFilter(this,'found')">🔍 Found</button>
+    <button class="filter-btn" onclick="obFilter(this,'no_email')">❌ No Email</button>
+    <input class="srch ml" id="ob-s" type="text" placeholder="Search business…" oninput="renderOutbound()"/>
+    <button class="btn-refresh" onclick="loadOutbound()">↻ Refresh</button>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Business</th><th>Contact</th><th>Status</th><th>Industry</th><th>Email Preview</th><th>Date</th></tr></thead>
+    <tbody id="ob-tbody"><tr><td colspan="6" class="empty"><span class="empty-icon">📧</span>Loading…</td></tr></tbody>
+  </table></div>
+</div>
+
+<!-- CALLS -->
+<div id="s-calls" class="section">
+  <div class="stats-row">
+    <div class="stat-card blue"><div class="stat-icon">📞</div><div class="lbl">Total Calls</div><div class="val" id="ca-total">—</div></div>
+    <div class="stat-card green"><div class="stat-icon">✅</div><div class="lbl">Answered</div><div class="val" id="ca-answered">—</div></div>
+    <div class="stat-card purple"><div class="stat-icon">⏱</div><div class="lbl">Avg Duration</div><div class="val val-sm" id="ca-duration">—</div></div>
+    <div class="stat-card amber"><div class="stat-icon">💰</div><div class="lbl">Total Cost</div><div class="val val-sm" id="ca-cost">—</div></div>
+  </div>
+  <div class="toolbar">
+    <button class="filter-btn active" onclick="caFilter(this,'all')">All</button>
+    <button class="filter-btn" onclick="caFilter(this,'ended')">✅ Answered</button>
+    <button class="filter-btn" onclick="caFilter(this,'missed')">❌ Missed</button>
+    <button class="btn-refresh ml" onclick="loadCalls()">↻ Refresh</button>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Caller</th><th>Date</th><th>Duration</th><th>Status</th><th>Reason</th><th>Cost</th></tr></thead>
+    <tbody id="ca-tbody"><tr><td colspan="6" class="empty"><span class="empty-icon">📞</span>Loading…</td></tr></tbody>
+  </table></div>
+</div>
+
+<!-- CALL MODAL -->
+<div class="modal-overlay" id="call-modal">
+  <div class="modal">
+    <div class="mh">
+      <div><h2 id="m-title">Call Details</h2><div class="mm" id="m-meta"></div></div>
+      <button class="mc" id="m-close">&times;</button>
+    </div>
+    <div class="mb">
+      <div class="ms" id="m-sum-wrap"><h3>Summary</h3><div class="mt" id="m-summary"></div></div>
+      <div class="ms"><h3>Transcript</h3><div class="mt" id="m-transcript"></div></div>
+    </div>
+  </div>
+</div>
+
+<script src="/dashboard.js"></script>
+</body>
+</html>

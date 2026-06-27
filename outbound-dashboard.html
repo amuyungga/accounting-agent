@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Outbound Leads — Spectrum Financial Solutions</title>
+  <style>
+    :root {
+      --bg: #0f172a; --surface: #1e293b; --surface2: #273448;
+      --border: #334155; --text: #e2e8f0; --muted: #94a3b8;
+      --primary: #3b82f6; --green: #22c55e; --yellow: #eab308;
+      --red: #ef4444; --purple: #a855f7; --orange: #f97316;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+    header {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 16px 28px; display: flex; align-items: center; justify-content: space-between;
+    }
+    header h1 { font-size: 18px; font-weight: 700; }
+    header h1 span { color: var(--primary); }
+    header small { color: var(--muted); font-size: 13px; }
+    .refresh-btn {
+      background: var(--primary); color: #fff; border: none; border-radius: 8px;
+      padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: opacity .2s;
+    }
+    .refresh-btn:hover { opacity: .85; }
+
+    .stats { display: flex; gap: 16px; padding: 20px 28px; flex-wrap: wrap; }
+    .stat {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px 20px; min-width: 140px; flex: 1;
+    }
+    .stat-val { font-size: 28px; font-weight: 800; }
+    .stat-lbl { font-size: 12px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .05em; }
+
+    .filters {
+      padding: 0 28px 16px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    }
+    .filter-btn {
+      background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+      border-radius: 20px; padding: 6px 14px; font-size: 13px; cursor: pointer;
+      transition: all .15s;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--primary); border-color: var(--primary); color: #fff;
+    }
+    #search-input {
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+      border-radius: 8px; padding: 7px 12px; font-size: 13px; width: 220px;
+      outline: none; margin-left: auto;
+    }
+    #search-input::placeholder { color: var(--muted); }
+
+    .table-wrap { padding: 0 28px 40px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th {
+      text-align: left; padding: 10px 14px; color: var(--muted); font-size: 12px;
+      text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border);
+      background: var(--surface); position: sticky; top: 0; z-index: 1;
+    }
+    td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:hover td { background: var(--surface2); }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600;
+    }
+    .badge.emailed    { background: #14532d; color: var(--green); }
+    .badge.found      { background: #1e3a5f; color: var(--primary); }
+    .badge.email_found{ background: #1e3a5f; color: #60a5fa; }
+    .badge.no_email   { background: #292524; color: var(--orange); }
+    .badge.no_website { background: #292524; color: var(--muted); }
+    .badge.error, .badge.send_error { background: #450a0a; color: var(--red); }
+
+    .biz-name { font-weight: 600; color: var(--text); }
+    .biz-address { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .biz-industry {
+      font-size: 11px; color: var(--purple); background: #2e1065;
+      border-radius: 4px; padding: 1px 6px; display: inline-block; margin-top: 4px;
+    }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .email-preview {
+      max-width: 380px; font-size: 12px; color: var(--muted); line-height: 1.5;
+      white-space: pre-wrap; cursor: pointer;
+    }
+    .email-preview.collapsed {
+      overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+
+    .empty { text-align: center; padding: 60px 28px; color: var(--muted); }
+    .empty h2 { font-size: 20px; margin-bottom: 8px; color: var(--text); }
+    .spinner {
+      display: inline-block; width: 20px; height: 20px; border: 3px solid var(--border);
+      border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .ts { font-size: 11px; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Outbound Leads — <span>Spectrum Financial Solutions</span></h1>
+    <small id="last-updated">Loading...</small>
+  </div>
+  <button class="refresh-btn" onclick="loadData()">↺ Refresh</button>
+</header>
+
+<div class="stats" id="stats">
+  <div class="stat"><div class="stat-val" id="s-total">—</div><div class="stat-lbl">Total Found</div></div>
+  <div class="stat"><div class="stat-val" style="color:var(--green)" id="s-emailed">—</div><div class="stat-lbl">Emailed</div></div>
+  <div class="stat"><div class="stat-val" style="color:var(--primary)" id="s-email-found">—</div><div class="stat-lbl">Email Found</div></div>
+  <div class="stat"><div class="stat-val" style="color:var(--orange)" id="s-no-email">—</div><div class="stat-lbl">No Email</div></div>
+</div>
+
+<div class="filters">
+  <button class="filter-btn active" data-status="all" onclick="setFilter('all', this)">All</button>
+  <button class="filter-btn" data-status="emailed" onclick="setFilter('emailed', this)">✅ Emailed</button>
+  <button class="filter-btn" data-status="email_found" onclick="setFilter('email_found', this)">📧 Email Found</button>
+  <button class="filter-btn" data-status="found" onclick="setFilter('found', this)">🔍 Found</button>
+  <button class="filter-btn" data-status="no_email" onclick="setFilter('no_email', this)">⚠️ No Email</button>
+  <button class="filter-btn" data-status="no_website" onclick="setFilter('no_website', this)">🌐 No Website</button>
+  <input id="search-input" type="text" placeholder="Search business name..." oninput="renderTable()" />
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Business</th>
+        <th>Contact</th>
+        <th>Status</th>
+        <th>Source</th>
+        <th>Email Preview</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody id="table-body">
+      <tr><td colspan="6" style="text-align:center;padding:40px"><div class="spinner"></div></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  // ── Config ─────────────────────────────────────────────────────────────
+  // Point this at your Railway server
+  const API_URL = 'https://accounting-agent-production-cf69.up.railway.app/outbound-leads';
+  // OR use local: const API_URL = 'http://localhost:3000/outbound-leads';
+
+  let allLeads = [];
+  let activeFilter = 'all';
+
+  // ── Load data ───────────────────────────────────────────────────────────
+  async function loadData() {
+    try {
+      const res = await fetch(API_URL);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      allLeads = await res.json();
+      allLeads.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+      updateStats();
+      renderTable();
+      document.getElementById('last-updated').textContent =
+        `Last updated: ${new Date().toLocaleTimeString()}  ·  ${allLeads.length} leads`;
+    } catch (err) {
+      document.getElementById('last-updated').textContent = `Error: ${err.message}`;
+      document.getElementById('table-body').innerHTML =
+        `<tr><td colspan="6" class="empty"><h2>Could not load leads</h2><p>${err.message}</p><p style="margin-top:8px;font-size:12px">Make sure the server is running and has the /outbound-leads endpoint.</p></td></tr>`;
+    }
+  }
+
+  // ── Stats ───────────────────────────────────────────────────────────────
+  function updateStats() {
+    document.getElementById('s-total').textContent = allLeads.length;
+    document.getElementById('s-emailed').textContent = allLeads.filter(l => l.status === 'emailed').length;
+    document.getElementById('s-email-found').textContent = allLeads.filter(l => l.status === 'email_found').length;
+    document.getElementById('s-no-email').textContent = allLeads.filter(l => ['no_email','no_website'].includes(l.status)).length;
+  }
+
+  // ── Filter ──────────────────────────────────────────────────────────────
+  function setFilter(status, btn) {
+    activeFilter = status;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderTable();
+  }
+
+  // ── Render table ────────────────────────────────────────────────────────
+  function renderTable() {
+    const query = document.getElementById('search-input').value.toLowerCase();
+    let leads = allLeads;
+
+    if (activeFilter !== 'all') leads = leads.filter(l => l.status === activeFilter);
+    if (query) leads = leads.filter(l =>
+      (l.name || '').toLowerCase().includes(query) ||
+      (l.industry || '').toLowerCase().includes(query) ||
+      (l.email || '').toLowerCase().includes(query)
+    );
+
+    if (!leads.length) {
+      document.getElementById('table-body').innerHTML =
+        `<tr><td colspan="6" class="empty"><h2>No leads match</h2><p>Try a different filter or search term.</p></td></tr>`;
+      return;
+    }
+
+    document.getElementById('table-body').innerHTML = leads.map((l, i) => {
+      const emailPreview = l.emailContent
+        ? l.emailContent.replace(/Subject:[^\n]+\n?/, '').trim().slice(0, 200) + (l.emailContent.length > 200 ? '…' : '')
+        : '—';
+      return `
+        <tr>
+          <td>
+            <div class="biz-name">${esc(l.name || '—')}</div>
+            <div class="biz-address">${esc(l.address || '')}</div>
+            ${l.industry ? `<span class="biz-industry">${esc(l.industry)}</span>` : ''}
+          </td>
+          <td>
+            ${l.email ? `<a href="mailto:${esc(l.email)}">${esc(l.email)}</a>` : '<span style="color:var(--muted)">—</span>'}
+            ${l.phone ? `<div class="ts">${esc(l.phone)}</div>` : ''}
+            ${l.website ? `<div class="ts"><a href="${esc(l.website)}" target="_blank">website ↗</a></div>` : ''}
+          </td>
+          <td><span class="badge ${l.status}">${statusLabel(l.status)}</span></td>
+          <td><span class="ts">${esc(sourceLabel(l.source))}</span></td>
+          <td>
+            <div class="email-preview collapsed" onclick="this.classList.toggle('collapsed')" title="Click to expand">
+              ${esc(emailPreview)}
+            </div>
+          </td>
+          <td class="ts">${l.emailSentAt ? fmtDate(l.emailSentAt) : fmtDate(l.foundAt)}</td>
+        </tr>`;
+    }).join('');
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────────────
+  function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+  }
+  function statusLabel(s) {
+    return { emailed:'✅ Emailed', found:'🔍 Found', email_found:'📧 Email Found',
+             no_email:'⚠️ No Email', no_website:'🌐 No Website',
+             error:'❌ Error', send_error:'❌ Send Error' }[s] || s;
+  }
+  function sourceLabel(s) {
+    return { google_places:'Google Maps', yellow_pages:'Yellow Pages' }[s] || (s || 'Unknown');
+  }
+
+  // Auto-refresh every 60 seconds
+  loadData();
+  setInterval(loadData, 60000);
+</script>
+</body>
+</html>
