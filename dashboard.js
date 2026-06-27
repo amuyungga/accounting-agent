@@ -235,8 +235,8 @@ function updateOverview() {
           '<td>' + e.t + '</td>' +
           '<td><strong>' + E(e.n) + '</strong></td>' +
           '<td class="td-sm">' + E(e.c) + '</td>' +
-          '<td style="font-size:12px;color:#64748
-;text-transform:capitalize">' + E(e.d) + '</td>' +
+          '<td style="
+;">' + E(e.d) + '</td>' +
           '<td class="td-xs">' + D(e.dt) + '</td>' +
           '</tr>';
       }).join('')
