@@ -549,7 +549,7 @@ async function run() {
 }
 
 // ── GitHub sync ────────────────────────────────────────────────────────────
-const GITHUB_TOKEN = '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';
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
 const GITHUB_OWNER = 'amuyungga';
 const GITHUB_REPO  = 'accounting-agent';
 const GITHUB_PATH  = 'outbound-leads.json';
