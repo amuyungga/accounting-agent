@@ -61,6 +61,11 @@ a{color:#1a3c6e;text-decoration:none}a:hover{text-decoration:underline}
 .ms h3{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:6px}
 .mt{font-size:13px;line-height:1.6;color:#334155;background:#f8fafc;padding:12px;border-radius:8px;white-space:pre-wrap;max-height:260px;overflow-y:auto}
 .nd{color:#94a3b8;font-style:italic}
+.td-sm{font-size:12px;color:#64748b}
+.td-xs{font-size:11px;color:#94a3b8}
+.td-grey{font-size:12px;color:#94a3b8}
+.td-cap{font-size:12px;color:#64748b;text-transform:capitalize}
+.td-muted{color:#94a3b8}
 </style>
 </head>
 <body>
@@ -226,8 +231,8 @@ function renderChat() {
       '<td><a href="mailto:' + E(l.email || '') + '">' + E(l.email || '-') + '</a></td>' +
       '<td>' + E(l.phone || '-') + '</td>' +
       '<td><span class="badge ' + bc + '">' + E(l.service || '-') + '</span></td>' +
-      '<td style="color:#64748b;font-size:12px">' + E(l.notes || '-') + '</td>' +
-      '<td style="color:#94a3b8;font-size:11px">' + D(l.capturedAt) + '</td>' +
+      '<td class="td-sm">' + E(l.notes || '-') + '</td>' +
+      '<td class="td-xs">' + D(l.capturedAt) + '</td>' +
       '</tr>';
   }).join('');
 }
@@ -280,7 +285,7 @@ function renderOutbound() {
   }
   document.getElementById('ob-tbody').innerHTML = leads.map(function(l) {
     var prev = (l.emailContent || '').replace(/Subject:[^\n]+\n?/, '').trim().slice(0, 180);
-    var contact = l.email ? '<a href="mailto:' + E(l.email) + '">' + E(l.email) + '</a>' : '<span style="color:#94a3b8">-</span>';
+    var contact = l.email ? '<a href="mailto:' + E(l.email) + '">' + E(l.email) + '</a>' : '<span class="td-muted">-</span>';
     if (l.phone) contact += '<div class="bs">' + E(l.phone) + '</div>';
     if (l.website) contact += '<div class="bs"><a href="' + E(l.website) + '" target="_blank">website</a></div>';
     return '<tr>' +
@@ -289,7 +294,7 @@ function renderOutbound() {
       '<td><span class="badge b-' + (l.status || 'other') + '">' + obLabel(l.status) + '</span></td>' +
       '<td>' + (l.industry ? '<span class="bi">' + E(l.industry) + '</span>' : '-') + '</td>' +
       '<td><div class="ep">' + E(prev || '-') + '</div></td>' +
-      '<td style="font-size:11px;color:#94a3b8">' + D(l.emailSentAt || l.foundAt) + '</td>' +
+      '<td class="td-xs">' + D(l.emailSentAt || l.foundAt) + '</td>' +
       '</tr>';
   }).join('');
   document.querySelectorAll('.ep').forEach(function(el) {
@@ -346,11 +351,11 @@ function renderCalls() {
     var bl = labelMap[st] || st;
     return '<tr class="call-row" data-id="' + c.id + '">' +
       '<td><strong>' + E(caller) + '</strong></td>' +
-      '<td style="font-size:12px;color:#64748b">' + D(c.startedAt || c.createdAt) + '</td>' +
+      '<td class="td-sm">' + D(c.startedAt || c.createdAt) + '</td>' +
       '<td>' + dur(c.duration) + '</td>' +
       '<td><span class="badge ' + bc + '">' + bl + '</span></td>' +
-      '<td style="font-size:12px;text-transform:capitalize;color:#64748b">' + E(reason) + '</td>' +
-      '<td style="font-size:12px;color:#94a3b8">' + (c.cost ? '$' + c.cost.toFixed(3) : '-') + '</td>' +
+      '<td class="td-cap">' + E(reason) + '</td>' +
+      '<td class="td-grey">' + (c.cost ? '$' + c.cost.toFixed(3) : '-') + '</td>' +
       '</tr>';
   }).join('');
   document.querySelectorAll('.call-row').forEach(function(row) {
@@ -397,10 +402,10 @@ function updateOverview() {
         return '<tr>' +
           '<td>' + e.t + '</td>' +
           '<td><strong>' + E(e.n) + '</strong></td>' +
-          '<td style="font-size:12px;color:#64748b">' + E(e.c) + '</td>' +
+          '<td class="td-sm">' + E(e.c) + '</td>' +
           '<td style="font-size:12px;color:#64748
 ;text-transform:capitalize">' + E(e.d) + '</td>' +
-          '<td style="font-size:11px;color:#94a3b8">' + D(e.dt) + '</td>' +
+          '<td class="td-xs">' + D(e.dt) + '</td>' +
           '</tr>';
       }).join('')
     : '<tr><td colspan="5" class="empty">No activity yet.</td></tr>';
