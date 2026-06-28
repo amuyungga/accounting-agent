@@ -262,6 +262,55 @@ a:hover{text-decoration:underline}
   white-space:pre-wrap;max-height:280px;overflow-y:auto;
 }
 .nd{color:var(--muted);font-style:italic}
+
+/* KPI section */
+.kpi-toolbar{display:flex;align-items:center;gap:8px;padding:20px 32px 12px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.kpi-sep{width:1px;height:24px;background:var(--border);margin:0 4px}
+.date-input{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-size:12px;padding:6px 10px;outline:none;
+  transition:border-color .15s;
+}
+.date-input:focus{border-color:var(--blue)}
+.kpi-label{font-size:11px;color:var(--muted);font-weight:600}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;padding:20px 32px 8px}
+.kpi-card{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:18px 20px;text-align:center;position:relative;overflow:hidden;
+}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi-card.blue::before{background:linear-gradient(90deg,#1d4ed8,#60a5fa)}
+.kpi-card.green::before{background:linear-gradient(90deg,#059669,#34d399)}
+.kpi-card.amber::before{background:linear-gradient(90deg,#d97706,#fbbf24)}
+.kpi-card.purple::before{background:linear-gradient(90deg,#7c3aed,#c084fc)}
+.kpi-card.red::before{background:linear-gradient(90deg,#dc2626,#f87171)}
+.kpi-card .kv{font-size:2.2rem;font-weight:800;line-height:1;letter-spacing:-.03em}
+.kpi-card .kl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-top:4px}
+.kpi-card .ks{font-size:11px;color:var(--muted);margin-top:5px}
+.kpi-card.blue .kv{color:var(--blue)}
+.kpi-card.green .kv{color:var(--green)}
+.kpi-card.amber .kv{color:var(--amber)}
+.kpi-card.purple .kv{color:var(--purple)}
+.kpi-card.red .kv{color:var(--red)}
+
+/* KPI sub-tables */
+.kpi-tables{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 32px 40px}
+@media(max-width:900px){.kpi-tables{grid-template-columns:1fr}}
+.kpi-table-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.kpi-table-title{font-size:12px;font-weight:700;color:var(--text);padding:14px 18px 10px;border-bottom:1px solid var(--border)}
+.kpi-table-wrap table{border:none;border-radius:0;background:transparent}
+.kpi-table-wrap th{font-size:9px}
+.kpi-table-wrap td{padding:10px 16px;font-size:12px}
+.rate-bar{display:flex;align-items:center;gap:8px}
+.rate-track{flex:1;height:5px;background:var(--faint);border-radius:3px;overflow:hidden}
+.rate-fill{height:100%;border-radius:3px;transition:width .4s}
+.ab-wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 16px}
+.ab-card{background:var(--faint);border-radius:10px;padding:14px;text-align:center}
+.ab-card .ab-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:8px}
+.ab-stat{margin-top:6px}
+.ab-stat .av{font-size:1.4rem;font-weight:800}
+.ab-stat .al{font-size:10px;color:var(--muted)}
+.winner{box-shadow:0 0 0 2px var(--green)}
 </style>
 </head>
 <body>
@@ -286,6 +335,7 @@ a:hover{text-decoration:underline}
   <button class="tab-btn" onclick="switchTab(this,'outbound')">📧 Outbound</button>
   <button class="tab-btn" onclick="switchTab(this,'calls')">📞 Calls</button>
   <button class="tab-btn" onclick="switchTab(this,'crm')">🏢 CRM</button>
+  <button class="tab-btn" onclick="switchTab(this,'kpi');renderKpi()">📈 KPIs</button>
 </div>
 
 <!-- OVERVIEW -->
@@ -431,6 +481,47 @@ a:hover{text-decoration:underline}
     <thead><tr><th>Name</th><th>Email</th><th>Company</th><th>Phone</th><th>CRM Status</th><th>Stage</th><th>Last Updated</th></tr></thead>
     <tbody id="crm-tbody"><tr><td colspan="7" class="empty"><span class="empty-icon">🏢</span>Loading…</td></tr></tbody>
   </table></div>
+</div>
+
+<!-- KPIs -->
+<div id="s-kpi" class="section">
+  <div class="kpi-toolbar">
+    <span class="kpi-label">Period:</span>
+    <button class="filter-btn" onclick="setKpiPreset('today',this)">Today</button>
+    <button class="filter-btn" onclick="setKpiPreset('7d',this)">Last 7 days</button>
+    <button class="filter-btn active" onclick="setKpiPreset('30d',this)">Last 30 days</button>
+    <button class="filter-btn" onclick="setKpiPreset('month',this)">This Month</button>
+    <button class="filter-btn" onclick="setKpiPreset('all',this)">All Time</button>
+    <div class="kpi-sep"></div>
+    <span class="kpi-label">From</span>
+    <input class="date-input" type="date" id="kpi-from" onchange="renderKpi()"/>
+    <span class="kpi-label">To</span>
+    <input class="date-input" type="date" id="kpi-to" onchange="renderKpi()"/>
+  </div>
+
+  <!-- Funnel KPI cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card blue"><div class="kv" id="kpi-sent">—</div><div class="kl">Emails Sent</div><div class="ks" id="kpi-sent-sub"></div></div>
+    <div class="kpi-card amber"><div class="kv" id="kpi-open">—</div><div class="kl">Open Rate</div><div class="ks" id="kpi-open-sub"></div></div>
+    <div class="kpi-card purple"><div class="kv" id="kpi-click">—</div><div class="kl">Click Rate</div><div class="ks" id="kpi-click-sub"></div></div>
+    <div class="kpi-card green"><div class="kv" id="kpi-reply">—</div><div class="kl">Reply Rate</div><div class="ks" id="kpi-reply-sub"></div></div>
+    <div class="kpi-card blue"><div class="kv" id="kpi-fu1">—</div><div class="kl">1st Follow-ups</div><div class="ks" id="kpi-fu1-sub"></div></div>
+    <div class="kpi-card purple"><div class="kv" id="kpi-fu2">—</div><div class="kl">2nd Follow-ups</div><div class="ks" id="kpi-fu2-sub"></div></div>
+  </div>
+
+  <!-- Source breakdown + A/B side by side -->
+  <div class="kpi-tables">
+    <!-- Source performance -->
+    <div class="kpi-table-wrap">
+      <div class="kpi-table-title">📡 Source Performance</div>
+      <div id="kpi-sources-body"></div>
+    </div>
+    <!-- A/B comparison -->
+    <div class="kpi-table-wrap">
+      <div class="kpi-table-title">🔬 Email Variant A vs B</div>
+      <div class="ab-wrap" id="kpi-ab"></div>
+    </div>
+  </div>
 </div>
 
 <!-- CALL MODAL -->

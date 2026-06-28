@@ -502,6 +502,156 @@ function renderCrmContacts() {
   }).join('');
 }
 
+// ── KPI Section ───────────────────────────────────────────────────────────────
+
+var kpiFrom = null, kpiTo = null;
+
+function setKpiPreset(preset, btn) {
+  document.querySelectorAll('.kpi-toolbar .filter-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  var now = new Date();
+  var from, to = new Date(now);
+  to.setHours(23, 59, 59, 999);
+  if (preset === 'today') {
+    from = new Date(now); from.setHours(0, 0, 0, 0);
+  } else if (preset === '7d') {
+    from = new Date(now); from.setDate(from.getDate() - 6); from.setHours(0, 0, 0, 0);
+  } else if (preset === '30d') {
+    from = new Date(now); from.setDate(from.getDate() - 29); from.setHours(0, 0, 0, 0);
+  } else if (preset === 'month') {
+    from = new Date(now.getFullYear(), now.getMonth(), 1);
+  } else {
+    from = null; to = null;
+  }
+  kpiFrom = from; kpiTo = to;
+  var fmt = function(d) { return d ? d.toISOString().slice(0, 10) : ''; };
+  document.getElementById('kpi-from').value = fmt(from);
+  document.getElementById('kpi-to').value = fmt(to);
+  renderKpi();
+}
+
+function kpiLeads() {
+  // Read custom date inputs if they changed directly
+  var fromInput = document.getElementById('kpi-from').value;
+  var toInput   = document.getElementById('kpi-to').value;
+  if (fromInput) { kpiFrom = new Date(fromInput); kpiFrom.setHours(0, 0, 0, 0); }
+  if (toInput)   { kpiTo   = new Date(toInput);   kpiTo.setHours(23, 59, 59, 999); }
+
+  return outboundLeads.filter(function(l) {
+    if (!l.emailSentAt) return false;
+    var d = new Date(l.emailSentAt);
+    if (kpiFrom && d < kpiFrom) return false;
+    if (kpiTo   && d > kpiTo)   return false;
+    return true;
+  });
+}
+
+function pct(a, b) { return b ? Math.round(a / b * 100) + '%' : '0%'; }
+function pctNum(a, b) { return b ? Math.round(a / b * 100) : 0; }
+
+function renderKpi() {
+  var leads = kpiLeads();
+  var sent    = leads.length;
+  var opened  = leads.filter(function(l) { return l.openCount > 0; }).length;
+  var clicked = leads.filter(function(l) { return l.clicked; }).length;
+  var replied = leads.filter(function(l) { return l.replied; }).length;
+  var fu1     = leads.filter(function(l) { return l.followUpSent; }).length;
+  var fu2     = leads.filter(function(l) { return l.secondFollowUpSent; }).length;
+
+  // KPI cards
+  document.getElementById('kpi-sent').textContent  = sent;
+  document.getElementById('kpi-sent-sub').textContent = sent ? 'in selected period' : 'no emails in range';
+  document.getElementById('kpi-open').textContent   = pct(opened, sent);
+  document.getElementById('kpi-open-sub').textContent  = opened + ' of ' + sent + ' opened';
+  document.getElementById('kpi-click').textContent  = pct(clicked, sent);
+  document.getElementById('kpi-click-sub').textContent = clicked + ' clicked Calendly';
+  document.getElementById('kpi-reply').textContent  = pct(replied, sent);
+  document.getElementById('kpi-reply-sub').textContent = replied + ' replied';
+  document.getElementById('kpi-fu1').textContent    = fu1;
+  document.getElementById('kpi-fu1-sub').textContent   = pct(fu1, sent) + ' of sent';
+  document.getElementById('kpi-fu2').textContent    = fu2;
+  document.getElementById('kpi-fu2-sub').textContent   = pct(fu2, sent) + ' of sent';
+
+  // Source performance
+  var srcNames = { linkedin: 'LinkedIn', indeed: 'Indeed', ziprecruiter: 'ZipRecruiter', glassdoor: 'Glassdoor', monster: 'Monster', craigslist: 'Craigslist', reddit: 'Reddit', acctg_software: 'Acctg Software', new_business: 'New Business', google_places: 'Google Places', intent: 'Intent' };
+  var srcMap = {};
+  leads.forEach(function(l) {
+    var src = l.source || l.intentSource || (l.placeId ? 'google_places' : 'other');
+    if (!srcMap[src]) srcMap[src] = { sent: 0, opened: 0, replied: 0 };
+    srcMap[src].sent++;
+    if (l.openCount > 0) srcMap[src].opened++;
+    if (l.replied)       srcMap[src].replied++;
+  });
+  var srcEl = document.getElementById('kpi-sources-body');
+  var srcKeys = Object.keys(srcMap).sort(function(a, b) { return srcMap[b].sent - srcMap[a].sent; });
+  if (!srcKeys.length) {
+    srcEl.innerHTML = '<div style="padding:20px 18px;font-size:13px;color:var(--muted)">No data for this period.</div>';
+  } else {
+    var maxSent = Math.max.apply(null, srcKeys.map(function(k) { return srcMap[k].sent; }));
+    srcEl.innerHTML = '<table><thead><tr><th>Source</th><th>Sent</th><th>Open%</th><th>Reply%</th></tr></thead><tbody>' +
+      srcKeys.map(function(k) {
+        var s = srcMap[k];
+        var openPct  = pctNum(s.opened, s.sent);
+        var replyPct = pctNum(s.replied, s.sent);
+        var barW = Math.round(s.sent / maxSent * 100);
+        return '<tr>' +
+          '<td><strong>' + (srcNames[k] || k) + '</strong>' +
+          '<div class="rate-bar" style="margin-top:4px"><div class="rate-track"><div class="rate-fill" style="width:' + barW + '%;background:var(--blue)"></div></div></div></td>' +
+          '<td style="font-weight:700;color:var(--blue)">' + s.sent + '</td>' +
+          '<td>' + (s.opened ? '<span style="color:var(--amber);font-weight:700">' + openPct + '%</span>' : '<span style="color:var(--muted)">0%</span>') + '</td>' +
+          '<td>' + (s.replied ? '<span style="color:var(--green);font-weight:700">' + replyPct + '%</span>' : '<span style="color:var(--muted)">0%</span>') + '</td>' +
+          '</tr>';
+      }).join('') + '</tbody></table>';
+  }
+
+  // A/B comparison
+  var varA = leads.filter(function(l) { return l.emailVariant === 'A'; });
+  var varB = leads.filter(function(l) { return l.emailVariant === 'B'; });
+  var abEl = document.getElementById('kpi-ab');
+
+  function abStats(arr) {
+    return {
+      sent:    arr.length,
+      opened:  arr.filter(function(l) { return l.openCount > 0; }).length,
+      clicked: arr.filter(function(l) { return l.clicked; }).length,
+      replied: arr.filter(function(l) { return l.replied; }).length,
+    };
+  }
+  var sA = abStats(varA), sB = abStats(varB);
+  var aReplyPct = pctNum(sA.replied, sA.sent), bReplyPct = pctNum(sB.replied, sB.sent);
+  var aWins = aReplyPct >= bReplyPct;
+
+  function abCard(label, s, wins) {
+    return '<div class="ab-card' + (wins && s.sent > 0 ? ' winner' : '') + '">' +
+      '<div class="ab-label">Variant ' + label + (wins && s.sent > 0 ? ' 🏆' : '') + '</div>' +
+      '<div class="ab-stat"><div class="av" style="color:var(--blue)">' + s.sent + '</div><div class="al">Sent</div></div>' +
+      '<div class="ab-stat"><div class="av" style="color:var(--amber)">' + pct(s.opened, s.sent) + '</div><div class="al">Open Rate</div></div>' +
+      '<div class="ab-stat"><div class="av" style="color:var(--green)">' + pct(s.replied, s.sent) + '</div><div class="al">Reply Rate</div></div>' +
+      '<div class="ab-stat"><div class="av" style="color:var(--purple)">' + pct(s.clicked, s.sent) + '</div><div class="al">Click Rate</div></div>' +
+      '</div>';
+  }
+
+  if (!sA.sent && !sB.sent) {
+    abEl.innerHTML = '<div style="padding:20px;font-size:13px;color:var(--muted);grid-column:span 2">No A/B data for this period.</div>';
+  } else {
+    abEl.innerHTML = abCard('A', sA, aWins) + abCard('B', sB, !aWins);
+  }
+}
+
+// Initialize KPI date range to last 30 days on page load
+(function() {
+  var now = new Date();
+  var from = new Date(now); from.setDate(from.getDate() - 29); from.setHours(0, 0, 0, 0);
+  kpiFrom = from; kpiTo = new Date(now); kpiTo.setHours(23, 59, 59, 999);
+  var fmt = function(d) { return d.toISOString().slice(0, 10); };
+  document.addEventListener('DOMContentLoaded', function() {
+    var fi = document.getElementById('kpi-from');
+    var ti = document.getElementById('kpi-to');
+    if (fi) fi.value = fmt(from);
+    if (ti) ti.value = fmt(kpiTo);
+  });
+})();
+
 function exportObCsv() {
   var cols = ['name', 'email', 'phone', 'website', 'industry', 'city', 'status', 'score', 'source',
               'emailSentAt', 'openCount', 'clicked', 'replied', 'followUpSent', 'secondFollowUpSent'];
