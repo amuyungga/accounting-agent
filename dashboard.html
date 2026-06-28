@@ -271,6 +271,17 @@ a:hover{text-decoration:underline}
 .date-bar .date-input{padding:4px 8px;font-size:11px;width:130px}
 .date-bar .db-sep{width:1px;height:18px;background:var(--border);margin:0 4px;flex-shrink:0}
 .date-bar .db-lbl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.source-select{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-size:12px;font-weight:500;
+  padding:5px 28px 5px 10px;cursor:pointer;outline:none;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238b949e' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;
+  transition:border-color .15s;min-width:160px;
+}
+.source-select:focus{border-color:var(--blue)}
+.source-select option{background:var(--card);color:var(--text)}
 
 /* KPI section */
 .kpi-toolbar{display:flex;align-items:center;gap:8px;padding:20px 32px 12px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
@@ -467,13 +478,14 @@ a:hover{text-decoration:underline}
     <button class="filter-btn" onclick="obFilter(this,'email_found')">📨 Email Found</button>
     <button class="filter-btn" onclick="obFilter(this,'found')">🔍 Found</button>
     <button class="filter-btn" onclick="obFilter(this,'no_email')">❌ No Email</button>
+    <div class="db-sep" style="height:22px;background:var(--border);width:1px;margin:0 4px"></div>
+    <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap">Source:</span>
+    <select id="ob-source-sel" class="source-select" onchange="obSourceFilter(this.value)">
+      <option value="all">All Sources</option>
+    </select>
     <input class="srch ml" id="ob-s" type="text" placeholder="Search business…" oninput="renderOutbound()"/>
     <button class="btn-export" onclick="exportObCsv()">⬇ Export CSV</button>
     <button class="btn-refresh" onclick="loadOutbound()">↻ Refresh</button>
-  </div>
-  <div class="toolbar" style="padding-top:6px;border-top:1px solid var(--border)" id="ob-source-bar">
-    <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap">Source:</span>
-    <button class="filter-btn active" onclick="obSourceFilter(this,'all')">All Sources</button>
   </div>
   <div class="tw"><table>
     <thead><tr><th>Business</th><th>Contact</th><th>Status</th><th>Industry</th><th>Email Preview</th><th>Date</th></tr></thead>

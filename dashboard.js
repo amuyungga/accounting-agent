@@ -196,7 +196,7 @@ function renderObStats() {
   animateCount('ob-found', outboundLeads.filter(function(l) { return l.status === 'email_found'; }).length);
   animateCount('ob-noemail', outboundLeads.filter(function(l) { return l.status === 'no_email' || l.status === 'no_website'; }).length);
 
-  // Source breakdown chips + filter bar
+  // Source breakdown chips + dropdown
   var sourceCounts = {};
   outboundLeads.forEach(function(l) {
     var src = l.source || l.intentSource || (l.placeId ? 'google_places' : null);
@@ -204,29 +204,27 @@ function renderObStats() {
   });
   var srcNames = { linkedin: 'LinkedIn', indeed: 'Indeed', ziprecruiter: 'ZipRecruiter', glassdoor: 'Glassdoor', monster: 'Monster', craigslist: 'Craigslist', reddit: 'Reddit', acctg_software: 'Acctg Software', new_business: 'New Business', google_places: 'Google Places', intent: 'Intent' };
   var srcIcons = { linkedin: '💼', indeed: '🔍', ziprecruiter: '⚡', glassdoor: '🪟', monster: '👾', craigslist: '📋', reddit: '🔴', acctg_software: '📊', new_business: '🏪', google_places: '📍', intent: '🎯' };
+  var sortedSrcs = Object.keys(sourceCounts).sort(function(a, b) { return sourceCounts[b] - sourceCounts[a]; });
 
   // Summary chips
   var srcEl = document.getElementById('ob-sources');
   if (srcEl) {
-    var entries = Object.keys(sourceCounts).sort(function(a, b) { return sourceCounts[b] - sourceCounts[a]; });
-    srcEl.innerHTML = entries.length
-      ? entries.map(function(s) {
+    srcEl.innerHTML = sortedSrcs.length
+      ? sortedSrcs.map(function(s) {
           return '<div class="src-chip">' + (srcIcons[s] || '') + ' ' + (srcNames[s] || s) + '<span>' + sourceCounts[s] + '</span></div>';
         }).join('')
       : '';
   }
 
-  // Source filter bar — rebuild buttons to match actual data
-  var bar = document.getElementById('ob-source-bar');
-  if (bar) {
-    var sortedSrcs = Object.keys(sourceCounts).sort(function(a, b) { return sourceCounts[b] - sourceCounts[a]; });
-    var btns = '<span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap">Source:</span>' +
-      '<button class="filter-btn' + (obCurSource === 'all' ? ' active' : '') + '" onclick="obSourceFilter(this,\'all\')">All Sources</button>' +
+  // Populate source dropdown — preserve current selection
+  var sel = document.getElementById('ob-source-sel');
+  if (sel) {
+    var prev = sel.value || 'all';
+    sel.innerHTML = '<option value="all">All Sources (' + outboundLeads.length + ')</option>' +
       sortedSrcs.map(function(s) {
-        var active = obCurSource === s ? ' active' : '';
-        return '<button class="filter-btn' + active + '" onclick="obSourceFilter(this,\'' + s + '\')">' + (srcIcons[s] || '') + ' ' + (srcNames[s] || s) + ' <span style="font-size:10px;opacity:.7">(' + sourceCounts[s] + ')</span></button>';
+        return '<option value="' + s + '">' + (srcIcons[s] || '') + ' ' + (srcNames[s] || s) + ' (' + sourceCounts[s] + ')</option>';
       }).join('');
-    bar.innerHTML = btns;
+    sel.value = prev; // restore selection
   }
 }
 
@@ -237,10 +235,8 @@ function obFilter(btn, f) {
   renderOutbound();
 }
 
-function obSourceFilter(btn, src) {
+function obSourceFilter(src) {
   obCurSource = src;
-  document.querySelectorAll('#ob-source-bar .filter-btn').forEach(function(b) { b.classList.remove('active'); });
-  btn.classList.add('active');
   renderOutbound();
 }
 
