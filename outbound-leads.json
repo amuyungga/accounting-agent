@@ -1628,5 +1628,35 @@
     "id": "ol_1782607564772_utld",
     "foundAt": "2026-06-28T00:46:04.772Z",
     "updatedAt": "2026-06-28T00:46:04.772Z"
+  },
+  {
+    "source": "google_places",
+    "placeId": "ChIJ08f1IgDNj4ARtegHCSBtKKw",
+    "name": "Eos & Nyx",
+    "address": "201 S Second St #120, San Jose, CA 95113, USA",
+    "city": "San Jose, CA",
+    "phone": "(408) 831-6880",
+    "website": "http://www.eosnyxsj.com/",
+    "industry": "restaurant",
+    "status": "found",
+    "email": null,
+    "id": "ol_1782607878635_7g9i",
+    "foundAt": "2026-06-28T00:51:18.635Z",
+    "updatedAt": "2026-06-28T00:51:18.635Z"
+  },
+  {
+    "source": "google_places",
+    "placeId": "ChIJT3W17RUzjoARfcuftzvTJ3k",
+    "name": "Excellence Property Management",
+    "address": "1174 Lincoln Ave #9, San Jose, CA 95125, USA",
+    "city": "San Jose, CA",
+    "phone": "(408) 454-6620",
+    "website": "https://www.epmmanager.com/",
+    "industry": "property management",
+    "status": "found",
+    "email": null,
+    "id": "ol_1782607894695_axc6",
+    "foundAt": "2026-06-28T00:51:34.695Z",
+    "updatedAt": "2026-06-28T00:51:34.695Z"
   }
 ]
