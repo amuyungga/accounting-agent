@@ -338,6 +338,8 @@ function updateOverview() {
   animateCount('ov-crm', crmContacts.length);
   animateCount('ov-total', chatLeads.length + em + callLogs.length);
 
+  renderOverviewChart();
+
   // Email funnel
   var funnelEl = document.getElementById('ov-funnel');
   if (funnelEl && outboundLeads.length) {
@@ -572,7 +574,7 @@ function renderKpi() {
   document.getElementById('kpi-fu2').textContent    = fu2;
   document.getElementById('kpi-fu2-sub').textContent   = pct(fu2, sent) + ' of sent';
 
-  // Source performance
+  // Source performance chart
   var srcNames = { linkedin: 'LinkedIn', indeed: 'Indeed', ziprecruiter: 'ZipRecruiter', glassdoor: 'Glassdoor', monster: 'Monster', craigslist: 'Craigslist', reddit: 'Reddit', acctg_software: 'Acctg Software', new_business: 'New Business', google_places: 'Google Places', intent: 'Intent' };
   var srcMap = {};
   leads.forEach(function(l) {
@@ -582,60 +584,222 @@ function renderKpi() {
     if (l.openCount > 0) srcMap[src].opened++;
     if (l.replied)       srcMap[src].replied++;
   });
-  var srcEl = document.getElementById('kpi-sources-body');
   var srcKeys = Object.keys(srcMap).sort(function(a, b) { return srcMap[b].sent - srcMap[a].sent; });
-  if (!srcKeys.length) {
-    srcEl.innerHTML = '<div style="padding:20px 18px;font-size:13px;color:var(--muted)">No data for this period.</div>';
-  } else {
-    var maxSent = Math.max.apply(null, srcKeys.map(function(k) { return srcMap[k].sent; }));
-    srcEl.innerHTML = '<table><thead><tr><th>Source</th><th>Sent</th><th>Open%</th><th>Reply%</th></tr></thead><tbody>' +
-      srcKeys.map(function(k) {
-        var s = srcMap[k];
-        var openPct  = pctNum(s.opened, s.sent);
-        var replyPct = pctNum(s.replied, s.sent);
-        var barW = Math.round(s.sent / maxSent * 100);
-        return '<tr>' +
-          '<td><strong>' + (srcNames[k] || k) + '</strong>' +
-          '<div class="rate-bar" style="margin-top:4px"><div class="rate-track"><div class="rate-fill" style="width:' + barW + '%;background:var(--blue)"></div></div></div></td>' +
-          '<td style="font-weight:700;color:var(--blue)">' + s.sent + '</td>' +
-          '<td>' + (s.opened ? '<span style="color:var(--amber);font-weight:700">' + openPct + '%</span>' : '<span style="color:var(--muted)">0%</span>') + '</td>' +
-          '<td>' + (s.replied ? '<span style="color:var(--green);font-weight:700">' + replyPct + '%</span>' : '<span style="color:var(--muted)">0%</span>') + '</td>' +
-          '</tr>';
-      }).join('') + '</tbody></table>';
-  }
 
-  // A/B comparison
-  var varA = leads.filter(function(l) { return l.emailVariant === 'A'; });
-  var varB = leads.filter(function(l) { return l.emailVariant === 'B'; });
-  var abEl = document.getElementById('kpi-ab');
-
+  // A/B stats
   function abStats(arr) {
-    return {
-      sent:    arr.length,
-      opened:  arr.filter(function(l) { return l.openCount > 0; }).length,
-      clicked: arr.filter(function(l) { return l.clicked; }).length,
-      replied: arr.filter(function(l) { return l.replied; }).length,
-    };
+    return { sent: arr.length, opened: arr.filter(function(l) { return l.openCount > 0; }).length, clicked: arr.filter(function(l) { return l.clicked; }).length, replied: arr.filter(function(l) { return l.replied; }).length };
   }
-  var sA = abStats(varA), sB = abStats(varB);
-  var aReplyPct = pctNum(sA.replied, sA.sent), bReplyPct = pctNum(sB.replied, sB.sent);
-  var aWins = aReplyPct >= bReplyPct;
+  var sA = abStats(leads.filter(function(l) { return l.emailVariant === 'A'; }));
+  var sB = abStats(leads.filter(function(l) { return l.emailVariant === 'B'; }));
 
-  function abCard(label, s, wins) {
-    return '<div class="ab-card' + (wins && s.sent > 0 ? ' winner' : '') + '">' +
-      '<div class="ab-label">Variant ' + label + (wins && s.sent > 0 ? ' 🏆' : '') + '</div>' +
-      '<div class="ab-stat"><div class="av" style="color:var(--blue)">' + s.sent + '</div><div class="al">Sent</div></div>' +
-      '<div class="ab-stat"><div class="av" style="color:var(--amber)">' + pct(s.opened, s.sent) + '</div><div class="al">Open Rate</div></div>' +
-      '<div class="ab-stat"><div class="av" style="color:var(--green)">' + pct(s.replied, s.sent) + '</div><div class="al">Reply Rate</div></div>' +
-      '<div class="ab-stat"><div class="av" style="color:var(--purple)">' + pct(s.clicked, s.sent) + '</div><div class="al">Click Rate</div></div>' +
-      '</div>';
+  // Draw charts
+  renderKpiActivityChart(leads);
+  if (srcKeys.length) renderSourceChart(srcKeys, srcMap, srcNames);
+  renderABChart(sA, sB);
+}
+
+// ── Chart.js helpers ──────────────────────────────────────────────────────────
+
+var chartOverview = null, chartKpiActivity = null, chartSources = null, chartAB = null;
+
+function chartDefaults() {
+  if (!window.Chart) return;
+  Chart.defaults.color = '#8b949e';
+  Chart.defaults.borderColor = '#30363d';
+  Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  Chart.defaults.font.size = 11;
+}
+chartDefaults();
+
+function makeGradient(ctx, color, alpha1, alpha2) {
+  var g = ctx.createLinearGradient(0, 0, 0, 220);
+  g.addColorStop(0, color.replace('1)', alpha1 + ')'));
+  g.addColorStop(1, color.replace('1)', alpha2 + ')'));
+  return g;
+}
+
+var TOOLTIP_OPTS = {
+  backgroundColor: '#1c2333',
+  borderColor: '#30363d',
+  borderWidth: 1,
+  padding: 10,
+  titleColor: '#e6edf3',
+  bodyColor: '#8b949e',
+  cornerRadius: 8,
+};
+
+function areaDataset(label, data, hexColor, grad) {
+  return { label: label, data: data, borderColor: hexColor, backgroundColor: grad, fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: hexColor, borderWidth: 2 };
+}
+
+function lineChartOptions() {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top', labels: { boxWidth: 8, padding: 18, usePointStyle: true, pointStyleWidth: 8 } },
+      tooltip: TOOLTIP_OPTS,
+    },
+    scales: {
+      x: { grid: { color: '#21262d' }, ticks: { maxTicksLimit: 10, maxRotation: 0 } },
+      y: { grid: { color: '#21262d' }, beginAtZero: true, ticks: { precision: 0 } }
+    }
+  };
+}
+
+function buildDailyData(leads, days) {
+  var sent = {}, opened = {}, replied = {};
+  days.forEach(function(d) { sent[d] = 0; opened[d] = 0; replied[d] = 0; });
+  leads.forEach(function(l) {
+    var d = (l.emailSentAt || '').slice(0, 10);
+    if (sent[d] !== undefined) {
+      sent[d]++;
+      if (l.openCount > 0) opened[d]++;
+      if (l.replied) replied[d]++;
+    }
+  });
+  return { sent: sent, opened: opened, replied: replied };
+}
+
+function dayLabels(days) {
+  return days.map(function(d) {
+    return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  });
+}
+
+// Overview: 14-day activity area chart
+function renderOverviewChart() {
+  if (!window.Chart) return;
+  var canvas = document.getElementById('ov-chart');
+  if (!canvas) return;
+
+  var days = [];
+  var now = new Date();
+  for (var i = 13; i >= 0; i--) {
+    var d = new Date(now); d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0, 10));
   }
 
-  if (!sA.sent && !sB.sent) {
-    abEl.innerHTML = '<div style="padding:20px;font-size:13px;color:var(--muted);grid-column:span 2">No A/B data for this period.</div>';
-  } else {
-    abEl.innerHTML = abCard('A', sA, aWins) + abCard('B', sB, !aWins);
+  var daily = buildDailyData(outboundLeads, days);
+  var labels = dayLabels(days);
+  var ctx = canvas.getContext('2d');
+
+  if (chartOverview) { chartOverview.destroy(); chartOverview = null; }
+
+  chartOverview = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        areaDataset('Emails Sent', days.map(function(d) { return daily.sent[d]; }),   '#58a6ff', makeGradient(ctx, 'rgba(88,166,255,1)',   0.28, 0.02)),
+        areaDataset('Opened',      days.map(function(d) { return daily.opened[d]; }), '#e3b341', makeGradient(ctx, 'rgba(227,179,65,1)',    0.22, 0.01)),
+        areaDataset('Replied',     days.map(function(d) { return daily.replied[d]; }),'#3fb950', makeGradient(ctx, 'rgba(63,185,80,1)',     0.22, 0.01)),
+      ]
+    },
+    options: lineChartOptions()
+  });
+}
+
+// KPI: activity line chart for selected period
+function renderKpiActivityChart(leads) {
+  if (!window.Chart) return;
+  var canvas = document.getElementById('kpi-activity-chart');
+  if (!canvas) return;
+
+  // Build day range from kpiFrom → kpiTo (cap at 90 days)
+  var from = kpiFrom || new Date(Date.now() - 29 * 86400000);
+  var to   = kpiTo   || new Date();
+  var days = [], cur = new Date(from);
+  while (cur <= to && days.length < 90) {
+    days.push(cur.toISOString().slice(0, 10));
+    cur.setDate(cur.getDate() + 1);
   }
+
+  var daily = buildDailyData(leads, days);
+  var labels = dayLabels(days);
+  var ctx = canvas.getContext('2d');
+
+  if (chartKpiActivity) { chartKpiActivity.destroy(); chartKpiActivity = null; }
+
+  chartKpiActivity = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        areaDataset('Emails Sent', days.map(function(d) { return daily.sent[d]; }),   '#58a6ff', makeGradient(ctx, 'rgba(88,166,255,1)',   0.28, 0.02)),
+        areaDataset('Opened',      days.map(function(d) { return daily.opened[d]; }), '#e3b341', makeGradient(ctx, 'rgba(227,179,65,1)',    0.22, 0.01)),
+        areaDataset('Replied',     days.map(function(d) { return daily.replied[d]; }),'#3fb950', makeGradient(ctx, 'rgba(63,185,80,1)',     0.22, 0.01)),
+      ]
+    },
+    options: lineChartOptions()
+  });
+}
+
+// KPI: source horizontal bar chart
+function renderSourceChart(srcKeys, srcMap, srcNames) {
+  if (!window.Chart) return;
+  var canvas = document.getElementById('kpi-source-chart');
+  if (!canvas) return;
+
+  // Set container height dynamically: ~48px per source, min 200
+  var h = Math.max(200, srcKeys.length * 52);
+  canvas.parentElement.style.minHeight = h + 'px';
+
+  if (chartSources) { chartSources.destroy(); chartSources = null; }
+
+  chartSources = new Chart(canvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: srcKeys.map(function(k) { return srcNames[k] || k; }),
+      datasets: [
+        { label: 'Sent',    data: srcKeys.map(function(k) { return srcMap[k].sent; }),    backgroundColor: 'rgba(88,166,255,0.65)',  borderColor: '#58a6ff', borderWidth: 1, borderRadius: 4 },
+        { label: 'Opened',  data: srcKeys.map(function(k) { return srcMap[k].opened; }),  backgroundColor: 'rgba(227,179,65,0.7)',   borderColor: '#e3b341', borderWidth: 1, borderRadius: 4 },
+        { label: 'Replied', data: srcKeys.map(function(k) { return srcMap[k].replied; }), backgroundColor: 'rgba(63,185,80,0.7)',    borderColor: '#3fb950', borderWidth: 1, borderRadius: 4 },
+      ]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 8, padding: 14, usePointStyle: true, pointStyleWidth: 8 } },
+        tooltip: TOOLTIP_OPTS,
+      },
+      scales: {
+        x: { grid: { color: '#21262d' }, beginAtZero: true, ticks: { precision: 0 } },
+        y: { grid: { color: 'transparent' } }
+      }
+    }
+  });
+}
+
+// KPI: A/B grouped bar chart
+function renderABChart(sA, sB) {
+  if (!window.Chart) return;
+  var canvas = document.getElementById('kpi-ab-chart');
+  if (!canvas) return;
+
+  if (chartAB) { chartAB.destroy(); chartAB = null; }
+
+  chartAB = new Chart(canvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['Sent', 'Opened', 'Clicked', 'Replied'],
+      datasets: [
+        { label: 'Variant A', data: [sA.sent, sA.opened, sA.clicked, sA.replied], backgroundColor: 'rgba(88,166,255,0.7)',  borderColor: '#58a6ff', borderWidth: 1, borderRadius: 5 },
+        { label: 'Variant B', data: [sB.sent, sB.opened, sB.clicked, sB.replied], backgroundColor: 'rgba(188,140,255,0.7)', borderColor: '#bc8cff', borderWidth: 1, borderRadius: 5 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 8, padding: 14, usePointStyle: true, pointStyleWidth: 8 } },
+        tooltip: TOOLTIP_OPTS,
+      },
+      scales: {
+        x: { grid: { color: '#21262d' } },
+        y: { grid: { color: '#21262d' }, beginAtZero: true, ticks: { precision: 0 } }
+      }
+    }
+  });
 }
 
 // Initialize KPI date range to last 30 days on page load

@@ -262,6 +262,8 @@ a:hover{text-decoration:underline}
   white-space:pre-wrap;max-height:280px;overflow-y:auto;
 }
 .nd{color:var(--muted);font-style:italic}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px}
+.chart-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:16px}
 
 /* KPI section */
 .kpi-toolbar{display:flex;align-items:center;gap:8px;padding:20px 32px 12px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
@@ -374,7 +376,14 @@ a:hover{text-decoration:underline}
   </div>
   <!-- Email Funnel -->
   <div class="sec-heading">Email Funnel</div>
-  <div style="padding:0 32px 20px"><div class="funnel-row" id="ov-funnel"></div></div>
+  <div style="padding:0 32px 16px"><div class="funnel-row" id="ov-funnel"></div></div>
+  <!-- 14-Day Activity Chart -->
+  <div style="padding:0 32px 20px">
+    <div class="chart-card">
+      <div class="chart-title">📊 Last 14 Days — Email Activity</div>
+      <div style="position:relative;height:200px"><canvas id="ov-chart"></canvas></div>
+    </div>
+  </div>
   <div class="sec-heading">Recent Activity</div>
   <div class="tw">
     <table>
@@ -509,17 +518,25 @@ a:hover{text-decoration:underline}
     <div class="kpi-card purple"><div class="kv" id="kpi-fu2">—</div><div class="kl">2nd Follow-ups</div><div class="ks" id="kpi-fu2-sub"></div></div>
   </div>
 
+  <!-- Daily activity trend chart -->
+  <div style="padding:4px 32px 16px">
+    <div class="chart-card">
+      <div class="chart-title">📈 Daily Activity — Sent · Opened · Replied</div>
+      <div style="position:relative;height:200px"><canvas id="kpi-activity-chart"></canvas></div>
+    </div>
+  </div>
+
   <!-- Source breakdown + A/B side by side -->
   <div class="kpi-tables">
-    <!-- Source performance -->
+    <!-- Source performance chart -->
     <div class="kpi-table-wrap">
       <div class="kpi-table-title">📡 Source Performance</div>
-      <div id="kpi-sources-body"></div>
+      <div style="padding:16px;position:relative;min-height:260px"><canvas id="kpi-source-chart"></canvas></div>
     </div>
-    <!-- A/B comparison -->
+    <!-- A/B comparison chart -->
     <div class="kpi-table-wrap">
       <div class="kpi-table-title">🔬 Email Variant A vs B</div>
-      <div class="ab-wrap" id="kpi-ab"></div>
+      <div style="padding:16px;position:relative;height:260px"><canvas id="kpi-ab-chart"></canvas></div>
     </div>
   </div>
 </div>
@@ -538,6 +555,7 @@ a:hover{text-decoration:underline}
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="/dashboard.js"></script>
 </body>
 </html>
