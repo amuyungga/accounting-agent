@@ -1019,92 +1019,15 @@ async function run() {
   console.log(`📧 Mailer   : ${RESEND_API_KEY ? 'Resend live ✅' : 'DRY RUN (no RESEND_API_KEY)'}`);
   console.log(`🗺️  Google   : ${GOOGLE_API ? 'Places API ✅' : 'No key — Yellow Pages fallback'}\n`);
 
-  const searches = getNextSearches(DAILY_SEARCH_LIMIT);
-  // Also grab the cities from today's searches for intent targeting
-  const todayCities = [...new Set(searches.map(s => s.city))];
+  // Intent-only mode: skip random industry searches, target only businesses
+  // actively hiring accountants/bookkeepers on job boards
+  const todayCities = ALL_CITIES;
   let totalFound = 0, totalEmailed = 0;
-
-  for (const { city, industry } of searches) {
-    console.log(`\n── ${industry} · ${city} ──`);
-
-    let businesses = [];
-    if (GOOGLE_API) {
-      businesses = await searchGooglePlaces(industry, city);
-      for (const biz of businesses.slice(0, MAX_LEADS_PER_SEARCH)) {
-        if (!biz.website || !biz.phone) {
-          const details = await getPlaceDetails(biz.placeId);
-          biz.website = biz.website || details.website || null;
-          biz.phone   = biz.phone   || details.formatted_phone_number || null;
-        }
-        await sleep(250);
-      }
-    } else {
-      businesses = await searchYellowPages(industry, city);
-    }
-
-    businesses = businesses.slice(0, MAX_LEADS_PER_SEARCH);
-    console.log(`   Found ${businesses.length} businesses`);
-
-    for (const biz of businesses) {
-      if (alreadyProcessed(biz.placeId)) { continue; }
-      totalFound++;
-      saveLead(biz);
-
-      // Find email
-      let email = null;
-      if (biz.website) {
-        email = await findEmailOnWebsite(biz.website);
-      }
-
-      if (!email) {
-        saveLead({ ...biz, status: biz.website ? 'no_email' : 'no_website' });
-        console.log(`   ✗ ${biz.name} — no email`);
-        continue;
-      }
-
-      if (alreadyEmailedAddress(email)) {
-        console.log(`   ✗ ${biz.name} — already emailed this address`);
-        continue;
-      }
-
-      biz.email = email;
-      biz.score = scoreLead(biz);
-      biz.emailVariant = Math.random() < 0.5 ? 'A' : 'B';
-      saveLead({ ...biz, email, status: 'email_found' });
-
-      // Generate email
-      let emailContent;
-      try {
-        emailContent = await generateColdEmail(biz, biz.emailVariant);
-      } catch (err) {
-        saveLead({ ...biz, status: 'error', error: err.message });
-        console.log(`   ✗ ${biz.name} — Claude error: ${err.message}`);
-        continue;
-      }
-
-      // Send
-      try {
-        await sendColdEmail(email, emailContent, biz);
-        const emailedBiz = { ...biz, status: 'emailed', emailSentAt: new Date().toISOString(), emailContent };
-        saveLead(emailedBiz);
-        await syncLeadToHubSpot(emailedBiz);
-        console.log(`   ✅ ${biz.name} → ${email}`);
-        totalEmailed++;
-      } catch (err) {
-        saveLead({ ...biz, status: 'send_error', error: err.message });
-        console.log(`   ✗ ${biz.name} — send error: ${err.message}`);
-      }
-
-      if (RESEND_API_KEY) await sleep(EMAIL_DELAY_MS);
-    }
-
-    await sleep(1000);
-  }
 
   // Send follow-ups to leads from 3-5 days ago
   await runFollowUps();
 
-  // Run intent-based searches for today's cities
+  // Run intent-based searches across all cities
   const { intentFound, intentEmailed } = await runIntentSearches(todayCities);
   totalFound += intentFound;
   totalEmailed += intentEmailed;
