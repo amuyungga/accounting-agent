@@ -445,6 +445,390 @@ async function sendColdEmail(toEmail, emailContent, business) {
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+// ── INTENT-BASED LEAD SEARCH (Craigslist) ─────────────────────────────────
+// Finds businesses actively posting for bookkeepers/accountants — warm leads
+
+const CRAIGSLIST_MAP = {
+  'Fairfield, CA': 'sfbay',    'San Francisco, CA': 'sfbay',
+  'Oakland, CA': 'sfbay',      'San Jose, CA': 'sfbay',
+  'Sacramento, CA': 'sacramento', 'Fresno, CA': 'fresno',
+  'Los Angeles, CA': 'losangeles', 'San Diego, CA': 'sandiego',
+  'Long Beach, CA': 'losangeles', 'Anaheim, CA': 'losangeles',
+  'Riverside, CA': 'inlandempire', 'Bakersfield, CA': 'bakersfield',
+  'Santa Rosa, CA': 'santabarbara', 'Stockton, CA': 'modesto',
+  'Denver, CO': 'denver',      'Boulder, CO': 'boulder',
+  'Miami, FL': 'miami',        'Orlando, FL': 'orlando',
+  'Tampa, FL': 'tampa',        'Jacksonville, FL': 'jacksonville',
+  'Atlanta, GA': 'atlanta',    'Chicago, IL': 'chicago',
+  'Indianapolis, IN': 'indianapolis',
+  'Boston, MA': 'boston',      'Detroit, MI': 'detroit',
+  'Minneapolis, MN': 'minneapolis',
+  'Kansas City, MO': 'kansascity', 'St. Louis, MO': 'stlouis',
+  'Las Vegas, NV': 'lasvegas', 'Albuquerque, NM': 'albuquerque',
+  'New York, NY': 'newyork',   'Charlotte, NC': 'charlotte',
+  'Raleigh, NC': 'raleigh',    'Columbus, OH': 'columbus',
+  'Cleveland, OH': 'cleveland', 'Oklahoma City, OK': 'oklahomacity',
+  'Portland, OR': 'portland',  'Philadelphia, PA': 'philadelphia',
+  'Pittsburgh, PA': 'pittsburgh',
+  'Nashville, TN': 'nashville', 'Memphis, TN': 'memphis',
+  'Houston, TX': 'houston',    'Dallas, TX': 'dallas',
+  'San Antonio, TX': 'sanantonio', 'Austin, TX': 'austin',
+  'Salt Lake City, UT': 'saltlakecity',
+  'Seattle, WA': 'seattle',    'Milwaukee, WI': 'milwaukee',
+};
+
+const INTENT_KEYWORDS = ['bookkeeper', 'accountant', 'bookkeeping', 'accounting help'];
+
+// ── Source: LinkedIn Jobs (public guest API) ───────────────────────────────
+async function searchLinkedInJobs(city) {
+  const results = [];
+  try {
+    const url = `https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=bookkeeper+accountant&location=${encodeURIComponent(city)}&start=0`;
+    const html = await fetchUrl(url);
+    const companyRe = /class="base-search-card__subtitle"[^>]*>[\s\S]*?<a[^>]*>\s*([^<]+)\s*<\/a>/g;
+    const titleRe   = /class="base-search-card__title"[^>]*>\s*([^<]+)\s*</g;
+    const linkRe    = /href="(https:\/\/www\.linkedin\.com\/jobs\/view\/[^"?]+)/g;
+    const companies = [], titles = [], links = [];
+    let m;
+    while ((m = companyRe.exec(html)) !== null) companies.push(m[1].trim());
+    while ((m = titleRe.exec(html))   !== null) titles.push(m[1].trim());
+    while ((m = linkRe.exec(html))    !== null) { if (!links.includes(m[1])) links.push(m[1]); }
+    for (let i = 0; i < Math.min(companies.length, 5); i++) {
+      if (!companies[i]) continue;
+      results.push({
+        title: titles[i] || 'Bookkeeper / Accountant',
+        link: links[i] || url,
+        desc: `${companies[i]} is actively hiring for ${titles[i] || 'an accounting role'} in ${city}.`,
+        city, keyword: 'bookkeeper', companyName: companies[i],
+      });
+    }
+    console.log(`   [LinkedIn] ${city}: ${results.length} listings`);
+  } catch (e) { console.log(`   [LinkedIn] ${e.message}`); }
+  return results;
+}
+
+// ── Source: Indeed Jobs ────────────────────────────────────────────────────
+async function searchIndeedJobs(city) {
+  const results = [];
+  try {
+    const url = `https://www.indeed.com/jobs?q=bookkeeper+accountant&l=${encodeURIComponent(city)}&sort=date&fromage=14`;
+    const html = await fetchUrl(url);
+    const companyRe = /data-company-name="([^"]+)"/g;
+    const titleRe   = /"jobTitle"[^>]*>\s*<span[^>]*>([^<]+)<\/span>/g;
+    const idRe      = /data-jk="([a-f0-9]{16})"/g;
+    const companies = [], titles = [], ids = [];
+    let m;
+    while ((m = companyRe.exec(html)) !== null) companies.push(m[1].trim());
+    while ((m = titleRe.exec(html))   !== null) titles.push(m[1].trim());
+    while ((m = idRe.exec(html))      !== null) { if (!ids.includes(m[1])) ids.push(m[1]); }
+    for (let i = 0; i < Math.min(companies.length, 5); i++) {
+      if (!companies[i]) continue;
+      results.push({
+        title: titles[i] || 'Bookkeeper / Accountant',
+        link: ids[i] ? `https://www.indeed.com/viewjob?jk=${ids[i]}` : url,
+        desc: `${companies[i]} posted a job for ${titles[i] || 'bookkeeper/accountant'} in ${city} on Indeed.`,
+        city, keyword: 'bookkeeper', companyName: companies[i],
+      });
+    }
+    console.log(`   [Indeed] ${city}: ${results.length} listings`);
+  } catch (e) { console.log(`   [Indeed] ${e.message}`); }
+  return results;
+}
+
+// ── Source: ZipRecruiter ───────────────────────────────────────────────────
+async function searchZipRecruiter(city) {
+  const results = [];
+  try {
+    const url = `https://www.ziprecruiter.com/candidate/search?search=bookkeeper+accountant&location=${encodeURIComponent(city)}&days=14`;
+    const html = await fetchUrl(url);
+    const companyRe = /class="[^"]*t_company_name[^"]*"[^>]*>([^<]+)</g;
+    const titleRe   = /class="[^"]*job_title[^"]*"[^>]*>([^<]+)</g;
+    const linkRe    = /href="(https:\/\/www\.ziprecruiter\.com\/c\/[^"]+)"/g;
+    const companies = [], titles = [], links = [];
+    let m;
+    while ((m = companyRe.exec(html)) !== null) companies.push(m[1].trim());
+    while ((m = titleRe.exec(html))   !== null) titles.push(m[1].trim());
+    while ((m = linkRe.exec(html))    !== null) { if (!links.includes(m[1])) links.push(m[1]); }
+    for (let i = 0; i < Math.min(companies.length, 5); i++) {
+      if (!companies[i]) continue;
+      results.push({
+        title: titles[i] || 'Bookkeeper / Accountant',
+        link: links[i] || url,
+        desc: `${companies[i]} is hiring for ${titles[i] || 'an accounting role'} in ${city} via ZipRecruiter.`,
+        city, keyword: 'bookkeeper', companyName: companies[i],
+      });
+    }
+    console.log(`   [ZipRecruiter] ${city}: ${results.length} listings`);
+  } catch (e) { console.log(`   [ZipRecruiter] ${e.message}`); }
+  return results;
+}
+
+// ── Source: Reddit (public JSON API) ──────────────────────────────────────
+async function searchReddit(city) {
+  const results = [];
+  try {
+    const cityName = city.split(',')[0];
+    const q = encodeURIComponent(`(bookkeeper OR accountant OR bookkeeping) "${cityName}"`);
+    const url = `https://www.reddit.com/search.json?q=${q}&sort=new&t=month&limit=15`;
+    const data = JSON.parse(await fetchUrl(url));
+    const posts = data?.data?.children || [];
+    for (const post of posts) {
+      const d = post.data;
+      const text = ((d.title || '') + ' ' + (d.selftext || '')).toLowerCase();
+      // Only take posts where someone is looking to hire / find accounting help
+      if (!/(looking for|need|hiring|want|seeking|recommend|hire|find).{0,40}(bookkeeper|accountant|accounting|bookkeeping)/.test(text)) continue;
+      if (d.selftext && d.selftext.length < 30) continue;
+      results.push({
+        title: d.title,
+        link: `https://www.reddit.com${d.permalink}`,
+        desc: (d.selftext || '').slice(0, 300),
+        city, keyword: 'reddit_intent',
+        companyName: null, // extract from post content
+        redditAuthor: d.author,
+        subreddit: d.subreddit,
+      });
+    }
+    console.log(`   [Reddit] ${city}: ${results.length} relevant posts`);
+  } catch (e) { console.log(`   [Reddit] ${e.message}`); }
+  return results;
+}
+
+// ── Source: Google (new businesses via Places "recently opened") ───────────
+async function searchNewBusinesses(city) {
+  // Uses existing Google Places but filters for recently opened businesses
+  // (few reviews = likely new = needs accounting setup)
+  if (!GOOGLE_API) return [];
+  const results = [];
+  try {
+    const industries = ['restaurant', 'retail store', 'salon', 'law firm', 'medical clinic'];
+    const industry = industries[Math.floor(Math.random() * industries.length)];
+    const places = await searchGooglePlaces(industry, city);
+    for (const p of places) {
+      if ((p.userRatingsTotal || 999) <= 5) { // Very few reviews = newly opened
+        results.push({
+          title: `New ${industry} opened in ${city}`,
+          link: `https://maps.google.com/?place_id=${p.placeId}`,
+          desc: `${p.name} recently opened in ${city} and likely needs accounting setup.`,
+          city, keyword: 'new_business',
+          companyName: p.name,
+          placeData: p,
+        });
+      }
+    }
+    console.log(`   [New Business] ${city}: ${results.length} recently opened`);
+  } catch (e) { console.log(`   [New Business] ${e.message}`); }
+  return results;
+}
+
+// ── Aggregate all intent sources ───────────────────────────────────────────
+async function searchAllIntentSources(city) {
+  const sources = [
+    { name: 'craigslist',    fn: searchCraigslist },
+    { name: 'linkedin',      fn: searchLinkedInJobs },
+    { name: 'indeed',        fn: searchIndeedJobs },
+    { name: 'ziprecruiter',  fn: searchZipRecruiter },
+    { name: 'reddit',        fn: searchReddit },
+    { name: 'new_business',  fn: searchNewBusinesses },
+  ];
+  const all = [];
+  for (const src of sources) {
+    try {
+      const items = await src.fn(city);
+      all.push(...items.map(i => ({ ...i, intentSource: src.name })));
+    } catch (e) {
+      console.log(`   [Intent/${src.name}] Error: ${e.message}`);
+    }
+    await sleep(1000);
+  }
+  return all;
+}
+
+function parseRssItems(xml) {
+  const items = [];
+  const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+  let match;
+  while ((match = itemRegex.exec(xml)) !== null) {
+    const block = match[1];
+    const get = (tag) => {
+      const m = new RegExp(`<${tag}><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}>([^<]*)<\\/${tag}>`).exec(block);
+      return m ? (m[1] || m[2] || '').trim() : '';
+    };
+    const title = get('title');
+    const link  = get('link') || (/<link\s*\/?>(.*?)<\/link>/.exec(block) || [])[1] || '';
+    const desc  = get('description').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 400);
+    if (title && link) items.push({ title, link, desc });
+  }
+  return items;
+}
+
+async function searchCraigslist(city) {
+  const subdomain = CRAIGSLIST_MAP[city];
+  if (!subdomain) return [];
+
+  const results = [];
+  for (const kw of INTENT_KEYWORDS.slice(0, 2)) {
+    const url = `https://${subdomain}.craigslist.org/search/acc?format=rss&query=${encodeURIComponent(kw)}`;
+    try {
+      const xml = await fetchUrl(url);
+      const items = parseRssItems(xml);
+      for (const item of items.slice(0, 4)) results.push({ ...item, city, keyword: kw });
+    } catch (e) {
+      // Craigslist may throttle — skip silently
+    }
+    await sleep(1500);
+  }
+  return results;
+}
+
+function intentAlreadyProcessed(listingUrl) {
+  const leads = loadLeads();
+  return leads.some(l => l.listingUrl === listingUrl);
+}
+
+async function generateIntentEmail(business, listingContext) {
+  const prompt = `Write a brief, warm outreach email from ${OWNER_NAME} at ${FIRM_NAME} to a business that posted a job listing looking for a bookkeeper or accountant.
+
+Business name: ${business.name}
+City: ${business.city}
+Their listing title: "${business.listingTitle}"
+Listing context: "${listingContext.slice(0, 200)}"
+
+Rules:
+- First line must be: Subject: <specific subject line mentioning their search>
+- 3 short paragraphs, conversational tone, NOT salesy
+- Reference that we saw they're actively looking for bookkeeping/accounting help
+- Position ${FIRM_NAME} as a smarter alternative to hiring full-time (outsourced/fractional, saves 40-60% vs employee)
+- Offer a FREE 30-minute consultation and weave in: ${CALENDLY_URL}
+- Sign off: ${OWNER_NAME} | ${FIRM_NAME}
+- Write ONLY the email, no preamble`;
+
+  const payload = JSON.stringify({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 450,
+    messages: [{ role: 'user', content: prompt }],
+  });
+
+  return new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname: 'api.anthropic.com',
+      path: '/v1/messages',
+      method: 'POST',
+      headers: {
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'content-length': Buffer.byteLength(payload),
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          if (json.error) return reject(new Error(json.error.message));
+          resolve(json.content[0].text.trim());
+        } catch (e) { reject(new Error(`Parse error: ${e.message}`)); }
+      });
+    });
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
+  });
+}
+
+async function runIntentSearches(cities) {
+  console.log('\n🎯 Intent Search — businesses actively seeking accounting help');
+  console.log('   Sources: Craigslist · LinkedIn · Indeed · ZipRecruiter · Reddit · New Businesses\n');
+  let intentFound = 0, intentEmailed = 0;
+
+  for (const city of cities.slice(0, 3)) {
+    const listings = await searchAllIntentSources(city);
+    if (!listings.length) continue;
+    console.log(`   [Intent] ${city}: ${listings.length} total signals across all sources`);
+
+    for (const listing of listings.slice(0, 3)) {
+      if (intentAlreadyProcessed(listing.link)) continue;
+
+      // Use company name from source if available (LinkedIn/Indeed/ZipRecruiter provide it directly)
+      // Otherwise extract from listing title (Craigslist)
+      let companyName = listing.companyName || null;
+      if (!companyName) {
+        const nameMatch = listing.title.match(/(?:for|at|@|-)\s+(.{3,40})$/i);
+        companyName = nameMatch
+          ? nameMatch[1].replace(/[^\w\s&'.-]/g, '').trim()
+          : listing.title.replace(/bookkeeper|accountant|needed|wanted|looking|hire|part.?time|full.?time/gi, '').trim().slice(0, 40);
+      }
+
+      const biz = {
+        id: `il_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
+        name: companyName || 'Local Business',
+        city: listing.city,
+        industry: 'intent_lead',
+        source: listing.intentSource || 'intent',
+        listingUrl: listing.link,
+        listingTitle: listing.title,
+        placeId: `cl_${Buffer.from(listing.link).toString('base64').slice(0,16)}`,
+        website: null, phone: null, email: null,
+        status: 'found',
+        foundAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Try to find their website + email via Google Places
+      if (GOOGLE_API && companyName && companyName.length > 3) {
+        try {
+          const places = await searchGooglePlaces(companyName, city);
+          if (places.length > 0) {
+            const details = await getPlaceDetails(places[0].placeId);
+            biz.website = details.website || places[0].website || null;
+            biz.phone   = details.formatted_phone_number || places[0].phone || null;
+          }
+        } catch (_) {}
+      }
+
+      let email = null;
+      if (biz.website) email = await findEmailOnWebsite(biz.website);
+
+      if (!email) {
+        biz.status = biz.website ? 'no_email' : 'no_website';
+        saveLead(biz);
+        console.log(`   ✗ [Intent] ${biz.name} — no email found`);
+        continue;
+      }
+
+      biz.email = email;
+      intentFound++;
+
+      let emailContent;
+      try {
+        emailContent = await generateIntentEmail(biz, listing.desc);
+      } catch (err) {
+        biz.status = 'error'; biz.error = err.message;
+        saveLead(biz);
+        continue;
+      }
+
+      try {
+        await sendColdEmail(email, emailContent, biz);
+        biz.status = 'emailed';
+        biz.emailSentAt = new Date().toISOString();
+        biz.emailContent = emailContent;
+        console.log(`   ✅ [Intent] ${biz.name} → ${email} (actively seeking accounting help)`);
+        intentEmailed++;
+      } catch (err) {
+        biz.status = 'send_error'; biz.error = err.message;
+      }
+
+      saveLead(biz);
+      if (RESEND_API_KEY) await sleep(EMAIL_DELAY_MS);
+    }
+    await sleep(2000);
+  }
+
+  console.log(`   Intent search done — ${intentFound} leads found, ${intentEmailed} emailed\n`);
+  return { intentFound, intentEmailed };
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
 async function run() {
   // Handle --reset flag
@@ -463,6 +847,8 @@ async function run() {
   console.log(`🗺️  Google   : ${GOOGLE_API ? 'Places API ✅' : 'No key — Yellow Pages fallback'}\n`);
 
   const searches = getNextSearches(DAILY_SEARCH_LIMIT);
+  // Also grab the cities from today's searches for intent targeting
+  const todayCities = [...new Set(searches.map(s => s.city))];
   let totalFound = 0, totalEmailed = 0;
 
   for (const { city, industry } of searches) {
@@ -532,6 +918,11 @@ async function run() {
 
     await sleep(1000);
   }
+
+  // Run intent-based searches for today's cities
+  const { intentFound, intentEmailed } = await runIntentSearches(todayCities);
+  totalFound += intentFound;
+  totalEmailed += intentEmailed;
 
   const all = loadLeads();
   const totalEver = all.filter(l => l.status === 'emailed').length;
