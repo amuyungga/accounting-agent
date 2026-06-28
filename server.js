@@ -389,6 +389,33 @@ app.post('/webhook/resend', express.raw({ type: '*/*' }), (req, res) => {
   }
 });
 
+// GET /hubspot-contacts — fetch contacts + deals from HubSpot
+app.get('/hubspot-contacts', async (req, res) => {
+  if (!process.env.HUBSPOT_API_KEY) return res.json({ contacts: [], deals: [] });
+  try {
+    const [contactsRes, dealsRes] = await Promise.all([
+      hubspotRequest('POST', '/crm/v3/objects/contacts/search', {
+        filterGroups: [],
+        properties: ['email','firstname','lastname','company','phone','hs_lead_status','lifecyclestage','createdate','lastmodifieddate'],
+        sorts: [{ propertyName: 'lastmodifieddate', direction: 'DESCENDING' }],
+        limit: 100,
+      }),
+      hubspotRequest('POST', '/crm/v3/objects/deals/search', {
+        filterGroups: [],
+        properties: ['dealname','dealstage','amount','closedate','createdate'],
+        sorts: [{ propertyName: 'createdate', direction: 'DESCENDING' }],
+        limit: 100,
+      }),
+    ]);
+    const contacts = (contactsRes.body.results || []).map(r => ({ id: r.id, ...r.properties }));
+    const deals    = (dealsRes.body.results || []).map(r => ({ id: r.id, ...r.properties }));
+    res.json({ contacts, deals });
+  } catch (e) {
+    console.error('[HubSpot] Fetch error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // GET /leads/export.csv — CSV export
 app.get('/leads/export.csv', (req, res) => {
   const leads = loadLeads();

@@ -1,6 +1,7 @@
 var BASE = window.location.origin;
 var chatLeads = [], outboundLeads = [], callLogs = [];
-var obCurFilter = 'all', caCurFilter = 'all';
+var crmContacts = [], crmDeals = [];
+var obCurFilter = 'all', caCurFilter = 'all', crmCurFilter = 'all';
 
 document.getElementById('call-modal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
@@ -32,7 +33,7 @@ function animateCount(id, target) {
 }
 
 function loadAll() {
-  Promise.all([loadChat(), loadOutbound(), loadCalls()]).then(function() {
+  Promise.all([loadChat(), loadOutbound(), loadCalls(), loadCrm()]).then(function() {
     updateOverview();
     document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
   });
@@ -303,6 +304,116 @@ function dur(s) {
   if (!s) return '—';
   var m = Math.floor(s / 60), sec = Math.floor(s % 60);
   return m > 0 ? m + 'm ' + sec + 's' : sec + 's';
+}
+
+// ── CRM ──────────────────────────────────────────────────────────────────────
+
+function loadCrm() {
+  return fetch(BASE + '/hubspot-contacts').then(function(r) { return r.json(); }).then(function(d) {
+    crmContacts = d.contacts || [];
+    crmDeals = d.deals || [];
+    renderCrmStats();
+    renderCrmPipeline();
+    renderCrmContacts();
+  }).catch(function(e) {
+    document.getElementById('crm-tbody').innerHTML = '<tr><td colspan="7" class="empty"><span class="empty-icon">⚠️</span>Error loading CRM: ' + e.message + '</td></tr>';
+  });
+}
+
+function renderCrmStats() {
+  animateCount('crm-total', crmContacts.length);
+  var opp = crmContacts.filter(function(c) { return c.hs_lead_status === 'CONNECTED'; }).length;
+  var inp = crmContacts.filter(function(c) { return c.hs_lead_status === 'IN_PROGRESS' || c.hs_lead_status === 'OPEN'; }).length;
+  animateCount('crm-opp', opp);
+  animateCount('crm-inprog', inp);
+  animateCount('crm-deals', crmDeals.length);
+}
+
+function renderCrmPipeline() {
+  var stages = {};
+  crmDeals.forEach(function(d) {
+    var s = d.dealstage || 'Unknown';
+    stages[s] = (stages[s] || 0) + 1;
+  });
+  var stageColors = {
+    appointmentscheduled: '#3b82f6',
+    qualifiedtobuy: '#8b5cf6',
+    presentationscheduled: '#f59e0b',
+    decisionmakerboughtin: '#10b981',
+    contractsent: '#06b6d4',
+    closedwon: '#16a34a',
+    closedlost: '#ef4444'
+  };
+  var stageLabels = {
+    appointmentscheduled: 'Appointment Scheduled',
+    qualifiedtobuy: 'Qualified to Buy',
+    presentationscheduled: 'Presentation Scheduled',
+    decisionmakerboughtin: 'Decision Maker Bought In',
+    contractsent: 'Contract Sent',
+    closedwon: 'Closed Won',
+    closedlost: 'Closed Lost',
+    prospect: 'Prospect',
+    opportunity: 'Opportunity'
+  };
+  var el = document.getElementById('crm-pipeline');
+  if (!Object.keys(stages).length) {
+    el.innerHTML = '<div style="color:#94a3b8;font-size:14px;padding:20px">No deals in pipeline yet.</div>';
+    return;
+  }
+  el.innerHTML = Object.keys(stages).map(function(s) {
+    var color = stageColors[s] || '#64748b';
+    var label = stageLabels[s] || s;
+    return '<div style="background:' + color + '1a;border:1.5px solid ' + color + '33;border-radius:10px;padding:14px 18px;min-width:130px;text-align:center">' +
+      '<div style="font-size:22px;font-weight:800;color:' + color + '">' + stages[s] + '</div>' +
+      '<div style="font-size:11px;color:#64748b;margin-top:4px;white-space:nowrap">' + E(label) + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function crmFilter(btn, f) {
+  crmCurFilter = f;
+  document.querySelectorAll('#s-crm .filter-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderCrmContacts();
+}
+
+function renderCrmContacts() {
+  var q = (document.getElementById('crm-s').value || '').toLowerCase();
+  var contacts = crmContacts;
+  if (crmCurFilter !== 'all') contacts = contacts.filter(function(c) { return c.hs_lead_status === crmCurFilter; });
+  if (q) contacts = contacts.filter(function(c) {
+    return (c.firstname + ' ' + c.lastname).toLowerCase().indexOf(q) >= 0 ||
+           (c.email || '').toLowerCase().indexOf(q) >= 0 ||
+           (c.company || '').toLowerCase().indexOf(q) >= 0;
+  });
+  if (!contacts.length) {
+    document.getElementById('crm-tbody').innerHTML = '<tr><td colspan="7" class="empty"><span class="empty-icon">🏢</span>No contacts found. HubSpot contacts will sync here as leads are emailed.</td></tr>';
+    return;
+  }
+  // Build a map of deals by contact email for quick lookup
+  var dealMap = {};
+  crmDeals.forEach(function(d) {
+    if (d._contactEmail) dealMap[d._contactEmail] = d;
+  });
+  document.getElementById('crm-tbody').innerHTML = contacts.map(function(c) {
+    var name = [c.firstname, c.lastname].filter(Boolean).join(' ') || '-';
+    var status = c.hs_lead_status || 'NEW';
+    var statusColors = { CONNECTED: '#16a34a', IN_PROGRESS: '#d97706', OPEN: '#3b82f6', NEW: '#64748b', UNQUALIFIED: '#ef4444' };
+    var statusBg = statusColors[status] || '#64748b';
+    var deal = dealMap[c.email] || null;
+    var stageLabels = { appointmentscheduled: 'Appt. Scheduled', qualifiedtobuy: 'Qualified', presentationscheduled: 'Presentation', decisionmakerboughtin: 'Decision Maker', contractsent: 'Contract Sent', closedwon: '✅ Won', closedlost: '❌ Lost', prospect: 'Prospect', opportunity: 'Opportunity' };
+    var stageCell = deal ? (stageLabels[deal.dealstage] || deal.dealstage || '-') : '-';
+    var lastMod = c.lastmodifieddate || c.hs_lastmodifieddate || null;
+    return '<tr>' +
+      '<td><strong>' + E(name) + '</strong></td>' +
+      '<td>' + (c.email ? '<a href="mailto:' + E(c.email) + '">' + E(c.email) + '</a>' : '-') + '</td>' +
+      '<td>' + E(c.company || '-') + '</td>' +
+      '<td>' + E(c.phone || '-') + '</td>' +
+      '<td><span style="font-size:11px;font-weight:700;color:' + statusBg + ';background:' + statusBg + '1a;padding:2px 8px;border-radius:10px">' + E(status) + '</span></td>' +
+      '<td>' + E(stageCell) + '</td>' +
+      '<td class="td-xs">' + D(lastMod) + '</td>' +
+      '</tr>';
+  }).join('');
 }
 
 loadAll();

@@ -264,6 +264,7 @@ a:hover{text-decoration:underline}
   <button class="tab-btn" onclick="switchTab(this,'chat')">💬 Chat Leads</button>
   <button class="tab-btn" onclick="switchTab(this,'outbound')">📧 Outbound</button>
   <button class="tab-btn" onclick="switchTab(this,'calls')">📞 Calls</button>
+  <button class="tab-btn" onclick="switchTab(this,'crm')">🏢 CRM</button>
 </div>
 
 <!-- OVERVIEW -->
@@ -362,6 +363,35 @@ a:hover{text-decoration:underline}
   <div class="tw"><table>
     <thead><tr><th>Caller</th><th>Date</th><th>Duration</th><th>Status</th><th>Reason</th><th>Cost</th></tr></thead>
     <tbody id="ca-tbody"><tr><td colspan="6" class="empty"><span class="empty-icon">📞</span>Loading…</td></tr></tbody>
+  </table></div>
+</div>
+
+<!-- CRM -->
+<div id="s-crm" class="section">
+  <div class="stats-row">
+    <div class="stat-card blue"><div class="stat-icon">👥</div><div class="lbl">Total Contacts</div><div class="val" id="crm-total">—</div><div class="sub">In HubSpot</div></div>
+    <div class="stat-card green"><div class="stat-icon">🤝</div><div class="lbl">Opportunities</div><div class="val" id="crm-opp">—</div><div class="sub">Replied / Connected</div></div>
+    <div class="stat-card amber"><div class="stat-icon">🔥</div><div class="lbl">In Progress</div><div class="val" id="crm-inprog">—</div><div class="sub">Opened / Clicked</div></div>
+    <div class="stat-card purple"><div class="stat-icon">💼</div><div class="lbl">Open Deals</div><div class="val" id="crm-deals">—</div><div class="sub">In pipeline</div></div>
+  </div>
+
+  <!-- Pipeline stages -->
+  <div class="sec-heading">Deal Pipeline</div>
+  <div style="padding:0 32px 20px;display:flex;gap:12px;overflow-x:auto" id="crm-pipeline"></div>
+
+  <!-- Contacts table -->
+  <div class="toolbar">
+    <input class="srch" id="crm-s" type="text" placeholder="Search contacts…" oninput="renderCrmContacts()"/>
+    <button class="filter-btn active" onclick="crmFilter(this,'all')">All</button>
+    <button class="filter-btn" onclick="crmFilter(this,'CONNECTED')">🤝 Connected</button>
+    <button class="filter-btn" onclick="crmFilter(this,'IN_PROGRESS')">🔥 In Progress</button>
+    <button class="filter-btn" onclick="crmFilter(this,'OPEN')">👁 Opened</button>
+    <button class="filter-btn" onclick="crmFilter(this,'NEW')">🆕 New</button>
+    <button class="btn-refresh ml" onclick="loadCrm()">↻ Refresh</button>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Name</th><th>Email</th><th>Company</th><th>Phone</th><th>CRM Status</th><th>Stage</th><th>Last Updated</th></tr></thead>
+    <tbody id="crm-tbody"><tr><td colspan="7" class="empty"><span class="empty-icon">🏢</span>Loading…</td></tr></tbody>
   </table></div>
 </div>
 
