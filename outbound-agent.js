@@ -478,14 +478,65 @@ Rules:
   });
 }
 
+async function generateSecondFollowUp(lead) {
+  const prompt = `Write a very short 2nd follow-up email from ${OWNER_NAME}, CPA at ${FIRM_NAME} to a business that hasn't responded to two previous outreach emails about outsourced accounting.
+
+Business: ${lead.name || 'the business'}
+City: ${lead.city || ''}
+
+Angle: Keep it extremely brief — 2-3 sentences max. Be genuine, not pushy. Acknowledge they're likely busy. Leave the door open without pressure. End with a soft offer for the free call: ${CALENDLY_URL}
+
+Rules:
+- First line: Subject: <short subject, different from previous emails>
+- 2-3 sentences only
+- Warm, human tone — not a sales pitch
+- Do NOT include a sign-off or signature`;
+
+  const payload = JSON.stringify({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 200,
+    messages: [{ role: 'user', content: prompt }],
+  });
+
+  return new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname: 'api.anthropic.com',
+      path: '/v1/messages',
+      method: 'POST',
+      headers: {
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'content-length': Buffer.byteLength(payload),
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          if (json.error) return reject(new Error(json.error.message));
+          resolve(json.content[0].text.trim());
+        } catch (e) { reject(new Error(`Parse error: ${e.message}`)); }
+      });
+    });
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
+  });
+}
+
 async function runFollowUps() {
-  console.log('\n📬 Follow-up check — looking for 3-5 day old unanswered emails...');
+  console.log('\n📬 Follow-up check — looking for unanswered emails...');
   const leads = loadLeads();
   const now = Date.now();
-  const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
-  const FIVE_DAYS  = 5 * 24 * 60 * 60 * 1000;
+  const THREE_DAYS  = 3  * 24 * 60 * 60 * 1000;
+  const FIVE_DAYS   = 5  * 24 * 60 * 60 * 1000;
+  const SEVEN_DAYS  = 7  * 24 * 60 * 60 * 1000;
+  const TEN_DAYS    = 10 * 24 * 60 * 60 * 1000;
 
-  const toFollowUp = leads.filter(l => {
+  // 1st follow-up: 3-5 days after initial email, no follow-up sent yet
+  const first = leads.filter(l => {
     if (l.status !== 'emailed') return false;
     if (l.followUpSent || l.replied) return false;
     if (!l.emailSentAt || !l.email) return false;
@@ -493,27 +544,45 @@ async function runFollowUps() {
     return age >= THREE_DAYS && age <= FIVE_DAYS;
   });
 
-  console.log(`   ${toFollowUp.length} leads ready for follow-up`);
+  // 2nd follow-up: 7-10 days after initial email, 1st follow-up sent but no reply
+  const second = leads.filter(l => {
+    if (l.replied || l.secondFollowUpSent) return false;
+    if (!l.followUpSent || !l.followUpSentAt || !l.email) return false;
+    const age = now - new Date(l.emailSentAt).getTime();
+    return age >= SEVEN_DAYS && age <= TEN_DAYS;
+  });
+
+  console.log(`   ${first.length} leads ready for 1st follow-up`);
+  console.log(`   ${second.length} leads ready for 2nd follow-up`);
   let sent = 0;
 
-  for (const lead of toFollowUp) {
+  for (const lead of first) {
     try {
       const content = await generateFollowUpEmail(lead);
-      await sendColdEmail(lead.email, content, { ...lead, emailVariant: 'followup' });
-      saveLead({
-        ...lead,
-        followUpSent: true,
-        followUpSentAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-      console.log(`   ✅ Follow-up → ${lead.name || lead.industry} (${lead.email})`);
+      await sendColdEmail(lead.email, content, { ...lead, emailVariant: 'followup1' });
+      saveLead({ ...lead, status: 'follow_up_sent', followUpSent: true, followUpSentAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+      console.log(`   ✅ 1st follow-up → ${lead.name || lead.email}`);
       sent++;
       if (RESEND_API_KEY) await sleep(EMAIL_DELAY_MS);
     } catch (e) {
-      console.log(`   ✗ Follow-up failed for ${lead.email}: ${e.message}`);
+      console.log(`   ✗ 1st follow-up failed for ${lead.email}: ${e.message}`);
     }
   }
-  console.log(`   Follow-ups sent: ${sent}\n`);
+
+  for (const lead of second) {
+    try {
+      const content = await generateSecondFollowUp(lead);
+      await sendColdEmail(lead.email, content, { ...lead, emailVariant: 'followup2' });
+      saveLead({ ...lead, secondFollowUpSent: true, secondFollowUpSentAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+      console.log(`   ✅ 2nd follow-up → ${lead.name || lead.email}`);
+      sent++;
+      if (RESEND_API_KEY) await sleep(EMAIL_DELAY_MS);
+    } catch (e) {
+      console.log(`   ✗ 2nd follow-up failed for ${lead.email}: ${e.message}`);
+    }
+  }
+
+  console.log(`   Total follow-ups sent: ${sent}\n`);
   return sent;
 }
 
@@ -768,15 +837,121 @@ async function searchNewBusinesses(city) {
   return results;
 }
 
+// ── Source: Glassdoor ──────────────────────────────────────────────────────
+async function searchGlassdoor(city) {
+  const results = [];
+  try {
+    const citySlug = city.split(',')[0].toLowerCase().replace(/\s+/g, '-');
+    const keywords = ['bookkeeper', 'accountant', 'accounting+clerk'];
+    for (const kw of keywords.slice(0, 2)) {
+      const url = `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${encodeURIComponent(kw)}&locT=C&locId=0&typedLocation=${encodeURIComponent(city)}&fromAge=14`;
+      try {
+        const html = await fetchUrl(url);
+        // Parse job card titles from Glassdoor HTML
+        const titleRe = /<a[^>]+class="[^"]*jobLink[^"]*"[^>]*>([^<]+)<\/a>/gi;
+        let m;
+        let count = 0;
+        while ((m = titleRe.exec(html)) !== null && count < 3) {
+          const title = m[1].trim();
+          if (!title || title.length < 4) continue;
+          results.push({
+            title: `${title} — Glassdoor job posting in ${city}`,
+            link: url,
+            desc: `Company on Glassdoor is hiring a ${title} in ${city}.`,
+            city, keyword: kw,
+          });
+          count++;
+        }
+      } catch (_) {}
+      await sleep(2000);
+    }
+    console.log(`   [Glassdoor] ${city}: ${results.length} listings`);
+  } catch (e) { console.log(`   [Glassdoor] ${e.message}`); }
+  return results;
+}
+
+// ── Source: Monster ────────────────────────────────────────────────────────
+async function searchMonster(city) {
+  const results = [];
+  try {
+    const citySlug = city.split(',')[0].toLowerCase().replace(/\s+/g, '-');
+    const stateSlug = (city.split(',')[1] || '').trim().toLowerCase();
+    const keywords = ['bookkeeper', 'accountant'];
+    for (const kw of keywords) {
+      const url = `https://www.monster.com/jobs/search?q=${encodeURIComponent(kw)}&where=${encodeURIComponent(city)}&recency=14`;
+      try {
+        const html = await fetchUrl(url);
+        // Monster job titles are in <h2 class="title"> or similar
+        const titleRe = /class="[^"]*title[^"]*"[^>]*>\s*<[^>]+>\s*([A-Za-z][^<]{5,60})<\//gi;
+        let m;
+        let count = 0;
+        while ((m = titleRe.exec(html)) !== null && count < 3) {
+          const title = m[1].trim();
+          if (!title || /class|script|style/i.test(title)) continue;
+          results.push({
+            title: `${title} — Monster job posting in ${city}`,
+            link: url,
+            desc: `Company on Monster.com is hiring a ${title} in ${city}.`,
+            city, keyword: kw,
+          });
+          count++;
+        }
+      } catch (_) {}
+      await sleep(2000);
+    }
+    console.log(`   [Monster] ${city}: ${results.length} listings`);
+  } catch (e) { console.log(`   [Monster] ${e.message}`); }
+  return results;
+}
+
+// ── Source: Accounting Software Buyers (Reddit/LinkedIn) ──────────────────
+async function searchAccountingSoftwareBuyers(city) {
+  const results = [];
+  try {
+    const cityName = city.split(',')[0];
+    // Reddit: small businesses asking about QuickBooks / Xero → likely need help
+    const queries = [
+      `(QuickBooks OR Xero OR "accounting software") "${cityName}" (confused OR help OR mess OR behind OR overwhelmed)`,
+      `(bookkeeping OR "catch up" OR "clean up books") "${cityName}"`,
+    ];
+    for (const q of queries) {
+      const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(q)}&sort=new&t=month&limit=10`;
+      try {
+        const data = JSON.parse(await fetchUrl(url));
+        const posts = data?.data?.children || [];
+        for (const post of posts.slice(0, 3)) {
+          const d = post.data;
+          const text = ((d.title || '') + ' ' + (d.selftext || '')).toLowerCase();
+          // Skip if it's someone offering services (we want buyers/seekers)
+          if (/i offer|we offer|dm me|hire me|for hire/.test(text)) continue;
+          results.push({
+            title: d.title,
+            link: `https://www.reddit.com${d.permalink}`,
+            desc: (d.selftext || '').slice(0, 300),
+            city, keyword: 'accounting_software_buyer',
+            redditAuthor: d.author,
+          });
+        }
+      } catch (_) {}
+      await sleep(1500);
+    }
+    console.log(`   [Acctg Software] ${city}: ${results.length} signals`);
+  } catch (e) { console.log(`   [Acctg Software] ${e.message}`); }
+  return results;
+}
+
 // ── Aggregate all intent sources ───────────────────────────────────────────
 async function searchAllIntentSources(city) {
   const sources = [
-    { name: 'craigslist',    fn: searchCraigslist },
-    { name: 'linkedin',      fn: searchLinkedInJobs },
-    { name: 'indeed',        fn: searchIndeedJobs },
-    { name: 'ziprecruiter',  fn: searchZipRecruiter },
-    { name: 'reddit',        fn: searchReddit },
-    { name: 'new_business',  fn: searchNewBusinesses },
+    { name: 'craigslist',         fn: searchCraigslist },
+    { name: 'linkedin',           fn: searchLinkedInJobs },
+    { name: 'indeed',             fn: searchIndeedJobs },
+    { name: 'ziprecruiter',       fn: searchZipRecruiter },
+    { name: 'glassdoor',          fn: searchGlassdoor },
+    { name: 'monster',            fn: searchMonster },
+    { name: 'reddit',             fn: searchReddit },
+    { name: 'acctg_software',     fn: searchAccountingSoftwareBuyers },
+    { name: 'new_business',       fn: searchNewBusinesses },
   ];
   const all = [];
   for (const src of sources) {
@@ -834,34 +1009,43 @@ function intentAlreadyProcessed(listingUrl) {
 }
 
 async function generateIntentEmail(business, listingContext, variant = 'A') {
-  const promptA = `Write a brief, warm outreach email from ${OWNER_NAME} at ${FIRM_NAME} to a business that posted a job listing looking for a bookkeeper or accountant.
+  // Extract a clean role title from the listing (e.g. "Senior Bookkeeper" from a long title)
+  const roleTitle = (business.listingTitle || '')
+    .replace(/\s*[-–|].*$/, '')       // strip everything after a dash or pipe
+    .replace(/\s*\(.*?\)/g, '')        // strip parenthetical notes
+    .trim()
+    .slice(0, 60) || 'bookkeeper/accountant';
+
+  const promptA = `Write a brief, warm outreach email from ${OWNER_NAME} at ${FIRM_NAME} to a business that posted a job listing for a "${roleTitle}".
 
 Business name: ${business.name}
 City: ${business.city}
-Their listing title: "${business.listingTitle}"
+Role they're hiring for: "${roleTitle}"
 Listing context: "${listingContext.slice(0, 200)}"
 
 Rules:
-- First line must be: Subject: <specific subject line mentioning their search>
+- First line must be: Subject: <subject referencing their specific "${roleTitle}" search>
 - 3 short paragraphs, conversational tone, NOT salesy
-- Reference that we saw they're actively looking for bookkeeping/accounting help
-- Position ${FIRM_NAME} as a smarter alternative to hiring full-time (outsourced/fractional, saves 40-60% vs employee)
-- Offer a FREE 30-minute consultation and weave in: ${CALENDLY_URL}
+- Mention their search for a "${roleTitle}" to show this is personal, not a mass email
+- Position ${FIRM_NAME} as a smarter alternative to hiring full-time (outsourced/fractional accounting)
+- Offer a FREE 30-minute consultation: ${CALENDLY_URL}
+- Do NOT mention salary ranges or compensation figures
 - Do NOT include a sign-off or signature — it will be added automatically
 - Write ONLY the email body, no preamble, no sign-off`;
 
-  const promptB = `Write a short, punchy outreach email from ${OWNER_NAME} at ${FIRM_NAME} to a business hiring for a bookkeeper or accountant.
+  const promptB = `Write a short, punchy outreach email from ${OWNER_NAME} at ${FIRM_NAME} to a business posting a "${roleTitle}" job.
 
 Business name: ${business.name}
 City: ${business.city}
-Their listing: "${business.listingTitle}"
+Role they're posting for: "${roleTitle}"
 
-Angle: Cut straight to the point — hiring a full-time bookkeeper costs $45,000–$65,000/year in salary alone. We do the same work for a fraction of that.
+Angle: We saw their listing — position ${FIRM_NAME} as the smarter, faster alternative to the full hiring cycle (posting, interviewing, onboarding takes months).
 
 Rules:
-- First line: Subject: <bold subject line — name the cost comparison or savings>
-- 2 paragraphs only — lead with the cost insight, end with a soft ask
+- First line: Subject: <bold subject line referencing the "${roleTitle}" role they're hiring for>
+- 2 paragraphs only — lead with empathy for the hiring burden, end with a soft ask
 - Offer FREE 30-minute call: ${CALENDLY_URL}
+- Do NOT mention salary ranges or compensation figures
 - Do NOT include a sign-off or signature — it will be added automatically
 - Write ONLY the email body`;
 
@@ -903,7 +1087,7 @@ Rules:
 
 async function runIntentSearches(cities) {
   console.log('\n🎯 Intent Search — businesses actively seeking accounting help');
-  console.log('   Sources: Craigslist · LinkedIn · Indeed · ZipRecruiter · Reddit · New Businesses\n');
+  console.log('   Sources: Craigslist · LinkedIn · Indeed · ZipRecruiter · Glassdoor · Monster · Reddit · Acctg Software Buyers · New Businesses\n');
   let intentFound = 0, intentEmailed = 0;
 
   for (const city of cities) {
