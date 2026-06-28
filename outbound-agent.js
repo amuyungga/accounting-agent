@@ -406,7 +406,8 @@ async function sendColdEmail(toEmail, emailContent, business) {
   // Professional signature
   const sigText = `\n\n--\nAsante Muyungga\nFounder and CEO | Spectrum Financial Solutions\nasante@spectrumfinancialsolution.com\nspectrumfinancialsolution.com\nSchedule a free 30-min call: ${CALENDLY_URL}`;
   const sigHtml = `<br><br><hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0">
-<table style="font-family:Arial,sans-serif;font-size:13px;color:#475569">
+<table style="font-family:Arial,sans-serif;font-size:13px;color:#475569;border-collapse:collapse">
+  <tr><td style="padding-bottom:10px"><a href="https://spectrumfinancialsolution.com"><img src="https://spectrumfinancialsolution.com/airo-assets/images/logo/horizontal" alt="Spectrum Financial Solutions" style="height:40px;width:auto;display:block" /></a></td></tr>
   <tr><td><strong style="font-size:14px;color:#1e293b">Asante Muyungga</strong></td></tr>
   <tr><td style="color:#64748b">Founder and CEO | Spectrum Financial Solutions</td></tr>
   <tr><td style="padding-top:4px"><a href="mailto:asante@spectrumfinancialsolution.com" style="color:#3b82f6;text-decoration:none">asante@spectrumfinancialsolution.com</a></td></tr>
