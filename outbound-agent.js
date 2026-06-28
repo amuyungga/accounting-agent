@@ -530,11 +530,11 @@ async function sendColdEmail(toEmail, emailContent, business) {
   const rawBody = lines.filter(l => !/^subject:/i.test(l)).join('\n').trim().replace(/\*\*/g, '');
 
   // Professional signature
-  const sigText = `\n\n--\nAsante Muyungga\nFounder and CEO | Spectrum Financial Solutions\nasante@spectrumfinancialsolution.com\nspectrumfinancialsolution.com\nSchedule a free 30-min call: ${CALENDLY_URL}`;
+  const sigText = `\n\n--\nAsante Muyungga, CPA\nFounder and CEO | Spectrum Financial Solutions\nasante@spectrumfinancialsolution.com\nspectrumfinancialsolution.com\nSchedule a free 30-min call: ${CALENDLY_URL}`;
   const sigHtml = `<br><br><hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0">
 <table style="font-family:Arial,sans-serif;font-size:13px;color:#475569;border-collapse:collapse">
   <tr><td style="padding-bottom:10px"><a href="https://spectrumfinancialsolution.com"><img src="https://spectrumfinancialsolution.com/airo-assets/images/logo/horizontal" alt="Spectrum Financial Solutions" style="height:40px;width:auto;display:block" /></a></td></tr>
-  <tr><td><strong style="font-size:14px;color:#1e293b">Asante Muyungga</strong></td></tr>
+  <tr><td><strong style="font-size:14px;color:#1e293b">Asante Muyungga, CPA</strong></td></tr>
   <tr><td style="color:#64748b">Founder and CEO | Spectrum Financial Solutions</td></tr>
   <tr><td style="padding-top:4px"><a href="mailto:asante@spectrumfinancialsolution.com" style="color:#3b82f6;text-decoration:none">asante@spectrumfinancialsolution.com</a></td></tr>
   <tr><td><a href="https://spectrumfinancialsolution.com" style="color:#3b82f6;text-decoration:none">spectrumfinancialsolution.com</a></td></tr>
@@ -1036,7 +1036,6 @@ async function run() {
   const totalEver = all.filter(l => l.status === 'emailed').length;
   console.log('\n╔══════════════════════════════════════════════════════╗');
   console.log(`║  Today's run complete                                ║`);
-  console.log(`║  Searches run today   : ${String(searches.length).padEnd(28)}║`);
   console.log(`║  New leads found      : ${String(totalFound).padEnd(28)}║`);
   console.log(`║  Emails sent today    : ${String(totalEmailed).padEnd(28)}║`);
   console.log(`║  Total leads in DB    : ${String(all.length).padEnd(28)}║`);
