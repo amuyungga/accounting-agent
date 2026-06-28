@@ -270,6 +270,7 @@ function updateOverview() {
   animateCount('ov-chat', chatLeads.length);
   animateCount('ov-emailed', em);
   animateCount('ov-calls', callLogs.length);
+  animateCount('ov-crm', crmContacts.length);
   animateCount('ov-total', chatLeads.length + em + callLogs.length);
   var ev = [].concat(
     chatLeads.map(function(l) { return { t: 'Chat', n: l.name || 'Unknown', c: l.email || '', d: l.service || '-', dt: l.capturedAt }; }),
