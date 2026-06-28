@@ -351,9 +351,9 @@ Rules:
 - Mention their industry (${business.industry}) and a relevant financial pain point (e.g., tax deadlines, payroll complexity, cash flow, bookkeeping overhead)
 - Offer a FREE 30-minute consultation
 - Weave in this booking link naturally: ${CALENDLY_URL}
-- Sign off: ${OWNER_NAME} | ${FIRM_NAME}
+- Do NOT include a sign-off or signature — it will be added automatically
 - Do NOT start with "I hope this email finds you well" or similar filler
-- Write ONLY the email. No preamble.`;
+- Write ONLY the email body. No preamble, no sign-off.`;
 
   const payload = JSON.stringify({
     model: 'claude-haiku-4-5-20251001',
@@ -404,11 +404,11 @@ async function sendColdEmail(toEmail, emailContent, business) {
   const rawBody = lines.filter(l => !/^subject:/i.test(l)).join('\n').trim().replace(/\*\*/g, '');
 
   // Professional signature
-  const sigText = `\n\n--\nAsante Muyungga\nFounder & CPA | Spectrum Financial Solutions\nasante@spectrumfinancialsolution.com\nspectrumfinancialsolution.com\nSchedule a free 30-min call: ${CALENDLY_URL}`;
+  const sigText = `\n\n--\nAsante Muyungga\nFounder and CEO | Spectrum Financial Solutions\nasante@spectrumfinancialsolution.com\nspectrumfinancialsolution.com\nSchedule a free 30-min call: ${CALENDLY_URL}`;
   const sigHtml = `<br><br><hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0">
 <table style="font-family:Arial,sans-serif;font-size:13px;color:#475569">
   <tr><td><strong style="font-size:14px;color:#1e293b">Asante Muyungga</strong></td></tr>
-  <tr><td style="color:#64748b">Founder & CPA | Spectrum Financial Solutions</td></tr>
+  <tr><td style="color:#64748b">Founder and CEO | Spectrum Financial Solutions</td></tr>
   <tr><td style="padding-top:4px"><a href="mailto:asante@spectrumfinancialsolution.com" style="color:#3b82f6;text-decoration:none">asante@spectrumfinancialsolution.com</a></td></tr>
   <tr><td><a href="https://spectrumfinancialsolution.com" style="color:#3b82f6;text-decoration:none">spectrumfinancialsolution.com</a></td></tr>
   <tr><td style="padding-top:6px"><a href="${CALENDLY_URL}" style="background:#3b82f6;color:#fff;padding:6px 14px;border-radius:4px;text-decoration:none;font-size:12px">📅 Schedule a Free Consultation</a></td></tr>
@@ -715,8 +715,8 @@ Rules:
 - Reference that we saw they're actively looking for bookkeeping/accounting help
 - Position ${FIRM_NAME} as a smarter alternative to hiring full-time (outsourced/fractional, saves 40-60% vs employee)
 - Offer a FREE 30-minute consultation and weave in: ${CALENDLY_URL}
-- Sign off: ${OWNER_NAME} | ${FIRM_NAME}
-- Write ONLY the email, no preamble`;
+- Do NOT include a sign-off or signature — it will be added automatically
+- Write ONLY the email body, no preamble, no sign-off`;
 
   const payload = JSON.stringify({
     model: 'claude-haiku-4-5-20251001',
