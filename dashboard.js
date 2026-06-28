@@ -3,6 +3,63 @@ var chatLeads = [], outboundLeads = [], callLogs = [];
 var crmContacts = [], crmDeals = [];
 var obCurFilter = 'all', caCurFilter = 'all', crmCurFilter = 'all';
 
+// ── Tab date filters ──────────────────────────────────────────────────────────
+var tabDates = { ch: {from:null,to:null}, ob: {from:null,to:null}, ca: {from:null,to:null}, crm: {from:null,to:null} };
+var tabSections = { ch: 's-chat', ob: 's-outbound', ca: 's-calls', crm: 's-crm' };
+
+function setTabDate(tab, preset, btn) {
+  var bar = btn.closest('.date-bar');
+  bar.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  var now = new Date(), from = null, to = null;
+  if (preset === 'today') {
+    from = new Date(now); from.setHours(0,0,0,0);
+    to   = new Date(now); to.setHours(23,59,59,999);
+  } else if (preset === '7d') {
+    from = new Date(now); from.setDate(from.getDate()-6); from.setHours(0,0,0,0);
+    to   = new Date(now); to.setHours(23,59,59,999);
+  } else if (preset === '30d') {
+    from = new Date(now); from.setDate(from.getDate()-29); from.setHours(0,0,0,0);
+    to   = new Date(now); to.setHours(23,59,59,999);
+  } else if (preset === 'month') {
+    from = new Date(now.getFullYear(), now.getMonth(), 1);
+    to   = new Date(now); to.setHours(23,59,59,999);
+  }
+  tabDates[tab] = { from:from, to:to };
+  var fmt = function(d) { return d ? d.toISOString().slice(0,10) : ''; };
+  var fi = document.getElementById(tab+'-from-date'), ti = document.getElementById(tab+'-to-date');
+  if (fi) fi.value = fmt(from);
+  if (ti) ti.value = fmt(to);
+  tabRender(tab);
+}
+
+function applyTabDate(tab) {
+  var fi = document.getElementById(tab+'-from-date'), ti = document.getElementById(tab+'-to-date');
+  var from = null, to = null;
+  if (fi && fi.value) { from = new Date(fi.value); from.setHours(0,0,0,0); }
+  if (ti && ti.value) { to   = new Date(ti.value); to.setHours(23,59,59,999); }
+  tabDates[tab] = { from:from, to:to };
+  var bar = document.querySelector('#'+tabSections[tab]+' .date-bar');
+  if (bar) bar.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+  tabRender(tab);
+}
+
+function tabRender(tab) {
+  if (tab === 'ch')  renderChat();
+  else if (tab === 'ob')  renderOutbound();
+  else if (tab === 'ca')  renderCalls();
+  else if (tab === 'crm') renderCrmContacts();
+}
+
+function inDateRange(dateStr, from, to) {
+  if (!from && !to) return true;
+  if (!dateStr) return false;
+  var d = new Date(dateStr);
+  if (from && d < from) return false;
+  if (to   && d > to)   return false;
+  return true;
+}
+
 document.getElementById('call-modal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
@@ -62,7 +119,8 @@ function renderChatStats() {
 
 function renderChat() {
   var q = (document.getElementById('ch-s').value || '').toLowerCase();
-  var leads = chatLeads.slice().reverse();
+  var d = tabDates['ch'];
+  var leads = chatLeads.slice().reverse().filter(function(l) { return inDateRange(l.capturedAt, d.from, d.to); });
   if (q) leads = leads.filter(function(l) {
     return (l.name || '').toLowerCase().indexOf(q) >= 0 ||
            (l.email || '').toLowerCase().indexOf(q) >= 0 ||
@@ -165,7 +223,8 @@ function obFilter(btn, f) {
 
 function renderOutbound() {
   var q = (document.getElementById('ob-s').value || '').toLowerCase();
-  var leads = outboundLeads;
+  var d = tabDates['ob'];
+  var leads = outboundLeads.filter(function(l) { return inDateRange(l.emailSentAt || l.foundAt || l.updatedAt, d.from, d.to); });
   if (obCurFilter !== 'all') leads = leads.filter(function(l) { return l.status === obCurFilter; });
   if (q) leads = leads.filter(function(l) {
     return (l.name || '').toLowerCase().indexOf(q) >= 0 ||
@@ -276,7 +335,8 @@ function caFilter(btn, f) {
 }
 
 function renderCalls() {
-  var logs = callLogs;
+  var d = tabDates['ca'];
+  var logs = callLogs.filter(function(c) { return inDateRange(c.startedAt || c.createdAt, d.from, d.to); });
   if (caCurFilter !== 'all') logs = logs.filter(function(c) { return caStatus(c) === caCurFilter; });
   if (!logs.length) {
     document.getElementById('ca-tbody').innerHTML = '<tr><td colspan="6" class="empty"><span class="empty-icon">📞</span>No calls yet. Calls from your Vapi receptionist will appear here.</td></tr>';
@@ -467,7 +527,8 @@ function crmFilter(btn, f) {
 
 function renderCrmContacts() {
   var q = (document.getElementById('crm-s').value || '').toLowerCase();
-  var contacts = crmContacts;
+  var d = tabDates['crm'];
+  var contacts = crmContacts.filter(function(c) { return inDateRange(c.lastmodifieddate || c.createdate, d.from, d.to); });
   if (crmCurFilter !== 'all') contacts = contacts.filter(function(c) { return c.hs_lead_status === crmCurFilter; });
   if (q) contacts = contacts.filter(function(c) {
     return (c.firstname + ' ' + c.lastname).toLowerCase().indexOf(q) >= 0 ||

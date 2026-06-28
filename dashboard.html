@@ -265,6 +265,13 @@ a:hover{text-decoration:underline}
 .chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px}
 .chart-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:16px}
 
+/* Date filter bar */
+.date-bar{display:flex;align-items:center;gap:6px;padding:10px 32px 2px;flex-wrap:wrap;border-bottom:1px solid var(--border);background:var(--surface)}
+.date-bar .filter-btn{padding:3px 10px;font-size:11px}
+.date-bar .date-input{padding:4px 8px;font-size:11px;width:130px}
+.date-bar .db-sep{width:1px;height:18px;background:var(--border);margin:0 4px;flex-shrink:0}
+.date-bar .db-lbl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+
 /* KPI section */
 .kpi-toolbar{display:flex;align-items:center;gap:8px;padding:20px 32px 12px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
 .kpi-sep{width:1px;height:24px;background:var(--border);margin:0 4px}
@@ -401,6 +408,19 @@ a:hover{text-decoration:underline}
     <div class="stat-card purple"><div class="stat-icon">📆</div><div class="lbl">This Week</div><div class="val" id="ch-week">—</div></div>
     <div class="stat-card amber"><div class="stat-icon">🏆</div><div class="lbl">Top Service</div><div class="val val-sm" id="ch-top">—</div></div>
   </div>
+  <div class="date-bar">
+    <span class="db-lbl">Period:</span>
+    <button class="filter-btn active" onclick="setTabDate('ch','all',this)">All Time</button>
+    <button class="filter-btn" onclick="setTabDate('ch','today',this)">Today</button>
+    <button class="filter-btn" onclick="setTabDate('ch','7d',this)">Last 7 days</button>
+    <button class="filter-btn" onclick="setTabDate('ch','30d',this)">Last 30 days</button>
+    <button class="filter-btn" onclick="setTabDate('ch','month',this)">This Month</button>
+    <div class="db-sep"></div>
+    <span class="db-lbl">From</span>
+    <input class="date-input" type="date" id="ch-from-date" onchange="applyTabDate('ch')"/>
+    <span class="db-lbl">To</span>
+    <input class="date-input" type="date" id="ch-to-date" onchange="applyTabDate('ch')"/>
+  </div>
   <div class="toolbar">
     <input class="srch" id="ch-s" type="text" placeholder="Search name, email…" oninput="renderChat()"/>
     <a class="btn-export ml" href="/leads/export.csv" download>⬇ Export CSV</a>
@@ -419,6 +439,19 @@ a:hover{text-decoration:underline}
     <div class="stat-card green"><div class="stat-icon">✅</div><div class="lbl">Emailed</div><div class="val" id="ob-emailed">—</div></div>
     <div class="stat-card purple"><div class="stat-icon">📨</div><div class="lbl">Email Found</div><div class="val" id="ob-found">—</div></div>
     <div class="stat-card amber"><div class="stat-icon">❓</div><div class="lbl">No Email</div><div class="val" id="ob-noemail">—</div></div>
+  </div>
+  <div class="date-bar">
+    <span class="db-lbl">Period:</span>
+    <button class="filter-btn active" onclick="setTabDate('ob','all',this)">All Time</button>
+    <button class="filter-btn" onclick="setTabDate('ob','today',this)">Today</button>
+    <button class="filter-btn" onclick="setTabDate('ob','7d',this)">Last 7 days</button>
+    <button class="filter-btn" onclick="setTabDate('ob','30d',this)">Last 30 days</button>
+    <button class="filter-btn" onclick="setTabDate('ob','month',this)">This Month</button>
+    <div class="db-sep"></div>
+    <span class="db-lbl">From</span>
+    <input class="date-input" type="date" id="ob-from-date" onchange="applyTabDate('ob')"/>
+    <span class="db-lbl">To</span>
+    <input class="date-input" type="date" id="ob-to-date" onchange="applyTabDate('ob')"/>
   </div>
   <!-- Source breakdown chips -->
   <div id="ob-sources" style="padding:4px 32px 12px;display:flex;gap:8px;flex-wrap:wrap"></div>
@@ -451,6 +484,19 @@ a:hover{text-decoration:underline}
     <div class="stat-card purple"><div class="stat-icon">⏱</div><div class="lbl">Avg Duration</div><div class="val val-sm" id="ca-duration">—</div></div>
     <div class="stat-card amber"><div class="stat-icon">💰</div><div class="lbl">Total Cost</div><div class="val val-sm" id="ca-cost">—</div></div>
   </div>
+  <div class="date-bar">
+    <span class="db-lbl">Period:</span>
+    <button class="filter-btn active" onclick="setTabDate('ca','all',this)">All Time</button>
+    <button class="filter-btn" onclick="setTabDate('ca','today',this)">Today</button>
+    <button class="filter-btn" onclick="setTabDate('ca','7d',this)">Last 7 days</button>
+    <button class="filter-btn" onclick="setTabDate('ca','30d',this)">Last 30 days</button>
+    <button class="filter-btn" onclick="setTabDate('ca','month',this)">This Month</button>
+    <div class="db-sep"></div>
+    <span class="db-lbl">From</span>
+    <input class="date-input" type="date" id="ca-from-date" onchange="applyTabDate('ca')"/>
+    <span class="db-lbl">To</span>
+    <input class="date-input" type="date" id="ca-to-date" onchange="applyTabDate('ca')"/>
+  </div>
   <div class="toolbar">
     <button class="filter-btn active" onclick="caFilter(this,'all')">All</button>
     <button class="filter-btn" onclick="caFilter(this,'ended')">✅ Answered</button>
@@ -477,6 +523,19 @@ a:hover{text-decoration:underline}
   <div style="padding:0 32px 20px;display:flex;gap:12px;overflow-x:auto" id="crm-pipeline"></div>
 
   <!-- Contacts table -->
+  <div class="date-bar">
+    <span class="db-lbl">Period:</span>
+    <button class="filter-btn active" onclick="setTabDate('crm','all',this)">All Time</button>
+    <button class="filter-btn" onclick="setTabDate('crm','today',this)">Today</button>
+    <button class="filter-btn" onclick="setTabDate('crm','7d',this)">Last 7 days</button>
+    <button class="filter-btn" onclick="setTabDate('crm','30d',this)">Last 30 days</button>
+    <button class="filter-btn" onclick="setTabDate('crm','month',this)">This Month</button>
+    <div class="db-sep"></div>
+    <span class="db-lbl">From</span>
+    <input class="date-input" type="date" id="crm-from-date" onchange="applyTabDate('crm')"/>
+    <span class="db-lbl">To</span>
+    <input class="date-input" type="date" id="crm-to-date" onchange="applyTabDate('crm')"/>
+  </div>
   <div class="toolbar">
     <input class="srch" id="crm-s" type="text" placeholder="Search contacts…" oninput="renderCrmContacts()"/>
     <button class="filter-btn active" onclick="crmFilter(this,'all')">All</button>
