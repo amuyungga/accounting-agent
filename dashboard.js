@@ -98,10 +98,36 @@ function loadOutbound() {
   return fetch(BASE + '/outbound-leads').then(function(r) { return r.json(); }).then(function(d) {
     outboundLeads = d;
     outboundLeads.sort(function(a, b) { return new Date(b.updatedAt) - new Date(a.updatedAt); });
-    renderObStats(); renderOutbound();
+    renderObStats(); renderHotLeads(); renderOutbound();
   }).catch(function(e) {
     document.getElementById('ob-tbody').innerHTML = '<tr><td colspan="6" class="empty"><span class="empty-icon">⚠️</span>Error: ' + e.message + '</td></tr>';
   });
+}
+
+function renderHotLeads() {
+  var hot = outboundLeads.filter(function(l) { return l.replied || l.clicked || (l.openCount && l.openCount >= 2); });
+  var wrap = document.getElementById('ob-hot-wrap');
+  var el = document.getElementById('ob-hot');
+  if (!wrap || !el) return;
+  if (!hot.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  el.innerHTML = hot.map(function(l) {
+    var signals = [];
+    if (l.replied)   signals.push('<span class="hc-sig" style="background:rgba(63,185,80,.15);color:#3fb950">💬 Replied</span>');
+    if (l.clicked)   signals.push('<span class="hc-sig" style="background:rgba(248,81,73,.15);color:#f85149">🔥 Clicked Calendly</span>');
+    if (l.openCount) signals.push('<span class="hc-sig" style="background:rgba(227,179,65,.15);color:#e3b341">👁 Opened ' + l.openCount + 'x</span>');
+    if (l.secondFollowUpSent) signals.push('<span class="hc-sig" style="background:rgba(88,166,255,.12);color:#58a6ff">📬 2nd Follow-up</span>');
+    else if (l.followUpSent)  signals.push('<span class="hc-sig" style="background:rgba(88,166,255,.12);color:#58a6ff">📬 Followed Up</span>');
+    var replyBtn = !l.replied && l.id
+      ? '<button onclick="markReplied(\'' + l.id + '\',this)" style="margin-top:8px;font-size:11px;padding:3px 10px;border:1px solid #3fb950;color:#3fb950;border-radius:6px;background:transparent;cursor:pointer">Mark Replied</button>'
+      : '';
+    return '<div class="hot-card">' +
+      '<div class="hc-name">' + E(l.name || '-') + '</div>' +
+      '<div class="hc-email">' + (l.email ? '<a href="mailto:' + E(l.email) + '">' + E(l.email) + '</a>' : '-') + '</div>' +
+      '<div class="hc-signals">' + signals.join('') + '</div>' +
+      replyBtn +
+      '</div>';
+  }).join('');
 }
 
 function renderObStats() {
@@ -109,6 +135,23 @@ function renderObStats() {
   animateCount('ob-emailed', outboundLeads.filter(function(l) { return l.status === 'emailed'; }).length);
   animateCount('ob-found', outboundLeads.filter(function(l) { return l.status === 'email_found'; }).length);
   animateCount('ob-noemail', outboundLeads.filter(function(l) { return l.status === 'no_email' || l.status === 'no_website'; }).length);
+
+  // Source breakdown chips
+  var sourceCounts = {};
+  outboundLeads.forEach(function(l) {
+    var src = l.source || l.intentSource || (l.placeId ? 'google_places' : null);
+    if (src) sourceCounts[src] = (sourceCounts[src] || 0) + 1;
+  });
+  var srcEl = document.getElementById('ob-sources');
+  if (srcEl) {
+    var srcNames = { linkedin: 'LinkedIn', indeed: 'Indeed', ziprecruiter: 'ZipRecruiter', glassdoor: 'Glassdoor', monster: 'Monster', craigslist: 'Craigslist', reddit: 'Reddit', acctg_software: 'Acctg Software', new_business: 'New Business', google_places: 'Google Places', intent: 'Intent' };
+    var entries = Object.keys(sourceCounts).sort(function(a, b) { return sourceCounts[b] - sourceCounts[a]; });
+    srcEl.innerHTML = entries.length
+      ? entries.map(function(s) {
+          return '<div class="src-chip">' + (srcNames[s] || s) + '<span>' + sourceCounts[s] + '</span></div>';
+        }).join('')
+      : '';
+  }
 }
 
 function obFilter(btn, f) {
@@ -266,12 +309,35 @@ function openModal(id) {
 }
 
 function updateOverview() {
-  var em = outboundLeads.filter(function(l) { return l.status === 'emailed'; }).length;
+  var em      = outboundLeads.filter(function(l) { return l.status === 'emailed' || l.status === 'follow_up_sent'; }).length;
+  var opened  = outboundLeads.filter(function(l) { return l.openCount > 0; }).length;
+  var clicked = outboundLeads.filter(function(l) { return l.clicked; }).length;
+  var replied = outboundLeads.filter(function(l) { return l.replied; }).length;
   animateCount('ov-chat', chatLeads.length);
   animateCount('ov-emailed', em);
   animateCount('ov-calls', callLogs.length);
   animateCount('ov-crm', crmContacts.length);
   animateCount('ov-total', chatLeads.length + em + callLogs.length);
+
+  // Email funnel
+  var funnelEl = document.getElementById('ov-funnel');
+  if (funnelEl && outboundLeads.length) {
+    var pct = function(a, b) { return b ? Math.round(a / b * 100) + '%' : '—'; };
+    var steps = [
+      { lbl: 'Found',   val: outboundLeads.length, color: '#58a6ff', pct: null },
+      { lbl: 'Emailed', val: em,      color: '#3fb950', pct: pct(em, outboundLeads.length) },
+      { lbl: 'Opened',  val: opened,  color: '#e3b341', pct: pct(opened, em) },
+      { lbl: 'Clicked', val: clicked, color: '#bc8cff', pct: pct(clicked, em) },
+      { lbl: 'Replied', val: replied, color: '#f85149', pct: pct(replied, em) },
+    ];
+    funnelEl.innerHTML = steps.map(function(s) {
+      return '<div class="funnel-step">' +
+        '<div class="fs-val" style="color:' + s.color + '">' + s.val + '</div>' +
+        '<div class="fs-lbl">' + s.lbl + '</div>' +
+        (s.pct ? '<div class="fs-pct" style="color:' + s.color + '">' + s.pct + '</div>' : '') +
+        '</div>';
+    }).join('');
+  }
   var ev = [].concat(
     chatLeads.map(function(l) { return { t: 'Chat', n: l.name || 'Unknown', c: l.email || '', d: l.service || '-', dt: l.capturedAt }; }),
     outboundLeads.filter(function(l) { return l.status === 'emailed'; }).map(function(l) { return { t: 'Email', n: l.name || 'Unknown', c: l.email || '', d: l.industry || '-', dt: l.emailSentAt || l.foundAt }; }),
@@ -415,6 +481,26 @@ function renderCrmContacts() {
       '<td class="td-xs">' + D(lastMod) + '</td>' +
       '</tr>';
   }).join('');
+}
+
+function exportObCsv() {
+  var cols = ['name', 'email', 'phone', 'website', 'industry', 'city', 'status', 'score', 'source',
+              'emailSentAt', 'openCount', 'clicked', 'replied', 'followUpSent', 'secondFollowUpSent'];
+  var header = cols.join(',');
+  var rows = outboundLeads.map(function(l) {
+    return cols.map(function(c) {
+      var v = l[c] == null ? '' : String(l[c]);
+      return v.indexOf(',') >= 0 || v.indexOf('"') >= 0 || v.indexOf('\n') >= 0
+        ? '"' + v.replace(/"/g, '""') + '"' : v;
+    }).join(',');
+  });
+  var csv = [header].concat(rows).join('\n');
+  var blob = new Blob([csv], { type: 'text/csv' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'outbound-leads-' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 loadAll();

@@ -192,6 +192,27 @@ a:hover{text-decoration:underline}
 .type-email{display:inline-flex;align-items:center;gap:4px;background:rgba(63,185,80,.12);color:#3fb950;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
 .type-call{display:inline-flex;align-items:center;gap:4px;background:rgba(188,140,255,.12);color:#bc8cff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
 
+/* Funnel */
+.funnel-row{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.funnel-step{flex:1;min-width:100px;padding:18px 16px;position:relative;text-align:center}
+.funnel-step+.funnel-step::before{content:'›';position:absolute;left:-2px;top:50%;transform:translateY(-50%);color:var(--border);font-size:20px;font-weight:300}
+.funnel-step .fs-val{font-size:1.8rem;font-weight:800;line-height:1}
+.funnel-step .fs-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-top:4px}
+.funnel-step .fs-pct{font-size:11px;margin-top:5px;font-weight:600;opacity:.75}
+
+/* Hot leads panel */
+.hot-panel{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.hot-card{background:var(--card);border:1px solid rgba(248,81,73,.3);border-radius:12px;padding:14px 16px;position:relative}
+.hot-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#f85149,#bc8cff);border-radius:12px 12px 0 0}
+.hc-name{font-weight:700;font-size:13px}
+.hc-email{font-size:11px;color:var(--muted);margin-top:2px}
+.hc-signals{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.hc-sig{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px}
+
+/* Source chips */
+.src-chip{font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;background:var(--faint);border:1px solid var(--border);color:var(--muted);white-space:nowrap}
+.src-chip span{color:var(--blue);margin-left:4px}
+
 /* Table cell helpers */
 .bn{font-weight:600;color:var(--text)}
 .bs{font-size:11px;color:var(--muted);margin-top:3px}
@@ -301,6 +322,9 @@ a:hover{text-decoration:underline}
       <div class="sub">All channels combined</div>
     </div>
   </div>
+  <!-- Email Funnel -->
+  <div class="sec-heading">Email Funnel</div>
+  <div style="padding:0 32px 20px"><div class="funnel-row" id="ov-funnel"></div></div>
   <div class="sec-heading">Recent Activity</div>
   <div class="tw">
     <table>
@@ -337,6 +361,13 @@ a:hover{text-decoration:underline}
     <div class="stat-card purple"><div class="stat-icon">📨</div><div class="lbl">Email Found</div><div class="val" id="ob-found">—</div></div>
     <div class="stat-card amber"><div class="stat-icon">❓</div><div class="lbl">No Email</div><div class="val" id="ob-noemail">—</div></div>
   </div>
+  <!-- Source breakdown chips -->
+  <div id="ob-sources" style="padding:4px 32px 12px;display:flex;gap:8px;flex-wrap:wrap"></div>
+  <!-- Hot leads panel -->
+  <div id="ob-hot-wrap" style="display:none;padding:0 32px 16px">
+    <div class="sec-heading" style="padding:4px 0 10px">🔥 Hot Leads — Need Attention</div>
+    <div class="hot-panel" id="ob-hot"></div>
+  </div>
   <div class="toolbar">
     <button class="filter-btn active" onclick="obFilter(this,'all')">All</button>
     <button class="filter-btn" onclick="obFilter(this,'emailed')">✅ Emailed</button>
@@ -344,6 +375,7 @@ a:hover{text-decoration:underline}
     <button class="filter-btn" onclick="obFilter(this,'found')">🔍 Found</button>
     <button class="filter-btn" onclick="obFilter(this,'no_email')">❌ No Email</button>
     <input class="srch ml" id="ob-s" type="text" placeholder="Search business…" oninput="renderOutbound()"/>
+    <button class="btn-export" onclick="exportObCsv()">⬇ Export CSV</button>
     <button class="btn-refresh" onclick="loadOutbound()">↻ Refresh</button>
   </div>
   <div class="tw"><table>
