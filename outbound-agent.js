@@ -940,6 +940,77 @@ async function searchAccountingSoftwareBuyers(city) {
   return results;
 }
 
+// ── Source: Bark.com ───────────────────────────────────────────────────────
+async function searchBark(city) {
+  const results = [];
+  try {
+    const cityName = city.split(',')[0].trim();
+    const stateAbr = (city.split(',')[1] || '').trim();
+    // Bark.com service request pages for accounting/bookkeeping
+    const services = ['bookkeeper', 'accountant', 'bookkeeping'];
+    for (const svc of services.slice(0, 2)) {
+      const url = `https://www.bark.com/en/us/${svc}/${cityName.toLowerCase().replace(/\s+/g, '-')}/`;
+      try {
+        const html = await fetchUrl(url);
+        // Bark lists recent client requests with snippets like "Looking for a bookkeeper in Sacramento"
+        const reqRe = /<[^>]+class="[^"]*request[^"]*"[^>]*>([\s\S]*?)<\/[^>]+>/gi;
+        const titleRe = /<h\d[^>]*>([^<]{10,120})<\/h\d>/gi;
+        let m, count = 0;
+        while ((m = titleRe.exec(html)) !== null && count < 4) {
+          const title = m[1].replace(/&amp;/g,'&').replace(/&#\d+;/g,'').trim();
+          if (!title || /nav|menu|footer|cookie|sign/i.test(title)) continue;
+          results.push({
+            title: `${title} — Bark.com request in ${city}`,
+            link: url,
+            desc: `A business in ${cityName} posted a service request for ${svc} help on Bark.com.`,
+            city, keyword: svc,
+          });
+          count++;
+        }
+      } catch (_) {}
+      await sleep(2000);
+    }
+    console.log(`   [Bark.com] ${city}: ${results.length} service requests`);
+  } catch (e) { console.log(`   [Bark.com] ${e.message}`); }
+  return results;
+}
+
+// ── Source: Fiverr Buyer Requests ──────────────────────────────────────────
+async function searchFiverr(city) {
+  // Fiverr buyer requests are behind login, so we search their community
+  // and public brief posts for businesses seeking accounting help
+  const results = [];
+  try {
+    const cityName = city.split(',')[0].trim();
+    // Search Fiverr's public brief/request pages for accounting needs
+    const keywords = ['bookkeeper', 'accountant', 'bookkeeping services'];
+    for (const kw of keywords.slice(0, 2)) {
+      const url = `https://www.fiverr.com/search/gigs?query=${encodeURIComponent(kw + ' ' + cityName)}&source=top-bar&acmpl=1`;
+      try {
+        const html = await fetchUrl(url);
+        // Fiverr shows gig titles — businesses that HIRED from here likely need ongoing help
+        // Look for buyer brief mentions or local service requests
+        const titleRe = /aria-label="([^"]{15,100})"/gi;
+        let m, count = 0;
+        while ((m = titleRe.exec(html)) !== null && count < 3) {
+          const title = m[1].trim();
+          if (!/(bookkeep|account|quickbooks|xero|tax|payroll)/i.test(title)) continue;
+          results.push({
+            title: `${title} — Fiverr buyer request`,
+            link: `https://www.fiverr.com/search/gigs?query=${encodeURIComponent(kw)}`,
+            desc: `Business on Fiverr seeking ${kw} help — likely needs a professional ongoing solution.`,
+            city, keyword: kw,
+          });
+          count++;
+        }
+      } catch (_) {}
+      await sleep(2000);
+    }
+    console.log(`   [Fiverr] ${city}: ${results.length} buyer signals`);
+  } catch (e) { console.log(`   [Fiverr] ${e.message}`); }
+  return results;
+}
+
 // ── Aggregate all intent sources ───────────────────────────────────────────
 async function searchAllIntentSources(city) {
   const sources = [
@@ -949,6 +1020,8 @@ async function searchAllIntentSources(city) {
     { name: 'ziprecruiter',       fn: searchZipRecruiter },
     { name: 'glassdoor',          fn: searchGlassdoor },
     { name: 'monster',            fn: searchMonster },
+    { name: 'bark',               fn: searchBark },
+    { name: 'fiverr',             fn: searchFiverr },
     { name: 'reddit',             fn: searchReddit },
     { name: 'acctg_software',     fn: searchAccountingSoftwareBuyers },
     { name: 'new_business',       fn: searchNewBusinesses },
@@ -1087,7 +1160,7 @@ Rules:
 
 async function runIntentSearches(cities) {
   console.log('\n🎯 Intent Search — businesses actively seeking accounting help');
-  console.log('   Sources: Craigslist · LinkedIn · Indeed · ZipRecruiter · Glassdoor · Monster · Reddit · Acctg Software Buyers · New Businesses\n');
+  console.log('   Sources: Craigslist · LinkedIn · Indeed · ZipRecruiter · Glassdoor · Monster · Bark · Fiverr · Reddit · Acctg Software Buyers · New Businesses\n');
   let intentFound = 0, intentEmailed = 0;
 
   for (const city of cities) {
