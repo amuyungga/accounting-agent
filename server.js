@@ -54,6 +54,75 @@ async function sendLeadNotification(lead) {
   }
 }
 
+// ── HubSpot helper ─────────────────────────────────────────────────────────
+const https = require('https');
+
+function hubspotRequest(method, hsPath, body) {
+  return new Promise((resolve, reject) => {
+    const payload = body ? JSON.stringify(body) : null;
+    const req = https.request({
+      hostname: 'api.hubapi.com',
+      path: hsPath,
+      method,
+      headers: {
+        'Authorization': `Bearer ${process.env.HUBSPOT_API_KEY}`,
+        'Content-Type': 'application/json',
+        ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}),
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try { resolve({ status: res.statusCode, body: JSON.parse(data) }); }
+        catch { resolve({ status: res.statusCode, body: data }); }
+      });
+    });
+    req.on('error', reject);
+    if (payload) req.write(payload);
+    req.end();
+  });
+}
+
+async function syncChatLeadToHubSpot(lead) {
+  if (!process.env.HUBSPOT_API_KEY) return;
+  try {
+    const nameParts = (lead.name || '').split(' ');
+    const props = {
+      email:          lead.email,
+      firstname:      nameParts[0] || '',
+      lastname:       nameParts.slice(1).join(' ') || '',
+      phone:          lead.phone || '',
+      hs_lead_status: 'NEW',
+      lifecyclestage: 'lead',
+    };
+    const search = await hubspotRequest('POST', '/crm/v3/objects/contacts/search', {
+      filterGroups: [{ filters: [{ propertyName: 'email', operator: 'EQ', value: lead.email }] }],
+    });
+    if (search.body.total > 0) {
+      await hubspotRequest('PATCH', `/crm/v3/objects/contacts/${search.body.results[0].id}`, { properties: props });
+    } else {
+      await hubspotRequest('POST', '/crm/v3/objects/contacts', { properties: props });
+    }
+    console.log(`[HubSpot] Chat lead synced: ${lead.name} <${lead.email}>`);
+  } catch (e) {
+    console.error('[HubSpot] Chat sync error:', e.message);
+  }
+}
+
+async function updateHubSpotContact(email, props) {
+  if (!process.env.HUBSPOT_API_KEY || !email) return;
+  try {
+    const search = await hubspotRequest('POST', '/crm/v3/objects/contacts/search', {
+      filterGroups: [{ filters: [{ propertyName: 'email', operator: 'EQ', value: email }] }],
+    });
+    if (search.body.total > 0) {
+      await hubspotRequest('PATCH', `/crm/v3/objects/contacts/${search.body.results[0].id}`, { properties: props });
+    }
+  } catch (e) {
+    console.error('[HubSpot] Update error:', e.message);
+  }
+}
+
 // ── Anthropic client ───────────────────────────────────────────────────────
 const anthropic = new Anthropic({ apiKey: API_KEY });
 
@@ -216,6 +285,7 @@ app.post('/chat', async (req, res) => {
       session.lead = { ...session.lead, ...leadData };
       const saved = saveLead(session.lead);
       sendLeadNotification(saved);
+      syncChatLeadToHubSpot(saved);
     }
 
     res.json({ reply, quickReplies, calendlyUrl });
@@ -278,6 +348,7 @@ app.patch('/outbound-leads/:id/reply', (req, res) => {
     if (idx < 0) return res.status(404).json({ error: 'Lead not found' });
     leads[idx] = { ...leads[idx], replied: true, repliedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
     fs.writeFileSync(file, JSON.stringify(leads, null, 2));
+    if (leads[idx].email) updateHubSpotContact(leads[idx].email, { hs_lead_status: 'CONNECTED', lifecyclestage: 'opportunity' });
     console.log(`[Reply] Marked ${leads[idx].name || leads[idx].email} as replied`);
     res.json(leads[idx]);
   } catch (e) {
@@ -304,9 +375,11 @@ app.post('/webhook/resend', express.raw({ type: '*/*' }), (req, res) => {
     if (type === 'email.opened') {
       leads[idx].openedAt   = leads[idx].openedAt || new Date().toISOString();
       leads[idx].openCount  = (leads[idx].openCount || 0) + 1;
+      if (leads[idx].email) updateHubSpotContact(leads[idx].email, { hs_lead_status: 'OPEN' });
     } else if (type === 'email.clicked') {
       leads[idx].clickedAt  = leads[idx].clickedAt || new Date().toISOString();
       leads[idx].clicked    = true;
+      if (leads[idx].email) updateHubSpotContact(leads[idx].email, { hs_lead_status: 'IN_PROGRESS' });
     }
     leads[idx].updatedAt = new Date().toISOString();
     fs.writeFileSync(file, JSON.stringify(leads, null, 2));

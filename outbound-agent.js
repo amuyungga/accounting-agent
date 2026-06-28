@@ -985,6 +985,7 @@ async function runIntentSearches(cities) {
         biz.status = 'emailed';
         biz.emailSentAt = new Date().toISOString();
         biz.emailContent = emailContent;
+        await syncLeadToHubSpot(biz);
         console.log(`   ✅ [Intent] ${biz.name} → ${email} (actively seeking accounting help)`);
         intentEmailed++;
       } catch (err) {
@@ -1084,7 +1085,9 @@ async function run() {
       // Send
       try {
         await sendColdEmail(email, emailContent, biz);
-        saveLead({ ...biz, status: 'emailed', emailSentAt: new Date().toISOString(), emailContent });
+        const emailedBiz = { ...biz, status: 'emailed', emailSentAt: new Date().toISOString(), emailContent };
+        saveLead(emailedBiz);
+        await syncLeadToHubSpot(emailedBiz);
         console.log(`   ✅ ${biz.name} → ${email}`);
         totalEmailed++;
       } catch (err) {
@@ -1119,6 +1122,91 @@ async function run() {
 
   // Sync leads to GitHub so Railway always has current data after deploy
   await pushLeadsToGitHub(all);
+}
+
+// ── HubSpot CRM sync ───────────────────────────────────────────────────────
+const HUBSPOT_API_KEY = process.env.HUBSPOT_API_KEY || '';
+
+function hubspotRequest(method, path, body) {
+  return new Promise((resolve, reject) => {
+    const payload = body ? JSON.stringify(body) : null;
+    const req = https.request({
+      hostname: 'api.hubapi.com',
+      path,
+      method,
+      headers: {
+        'Authorization': `Bearer ${HUBSPOT_API_KEY}`,
+        'Content-Type': 'application/json',
+        ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}),
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try { resolve({ status: res.statusCode, body: JSON.parse(data) }); }
+        catch { resolve({ status: res.statusCode, body: data }); }
+      });
+    });
+    req.on('error', reject);
+    if (payload) req.write(payload);
+    req.end();
+  });
+}
+
+async function syncLeadToHubSpot(lead) {
+  if (!HUBSPOT_API_KEY) return;
+  try {
+    const nameParts = (lead.name || '').split(' ');
+    const props = {
+      email:      lead.email,
+      firstname:  nameParts[0] || lead.name || '',
+      lastname:   nameParts.slice(1).join(' ') || '',
+      phone:      lead.phone || '',
+      website:    lead.website || '',
+      city:       lead.city || '',
+      company:    lead.name || '',
+      hs_lead_status: lead.status === 'emailed' ? 'IN_PROGRESS' : 'NEW',
+      lifecyclestage: 'lead',
+    };
+
+    // Search for existing contact by email
+    const search = await hubspotRequest('POST', '/crm/v3/objects/contacts/search', {
+      filterGroups: [{ filters: [{ propertyName: 'email', operator: 'EQ', value: lead.email }] }],
+      properties: ['email', 'hs_object_id'],
+    });
+
+    let contactId;
+    if (search.body.total > 0) {
+      contactId = search.body.results[0].id;
+      await hubspotRequest('PATCH', `/crm/v3/objects/contacts/${contactId}`, { properties: props });
+    } else {
+      const created = await hubspotRequest('POST', '/crm/v3/objects/contacts', { properties: props });
+      contactId = created.body.id;
+    }
+
+    // Create a deal if this lead was emailed
+    if (lead.status === 'emailed' && contactId) {
+      const dealSearch = await hubspotRequest('POST', '/crm/v3/objects/deals/search', {
+        filterGroups: [{ filters: [{ propertyName: 'dealname', operator: 'EQ', value: `${lead.name || lead.email} — Outbound` }] }],
+      });
+      if (dealSearch.body.total === 0) {
+        const deal = await hubspotRequest('POST', '/crm/v3/objects/deals', {
+          properties: {
+            dealname:   `${lead.name || lead.email} — Outbound`,
+            pipeline:   'default',
+            dealstage:  'appointmentscheduled',
+            closedate:  new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          },
+        });
+        if (deal.body.id) {
+          await hubspotRequest('PUT', `/crm/v4/objects/deals/${deal.body.id}/associations/contacts/${contactId}/deal_to_contact`, null);
+        }
+      }
+    }
+    console.log(`   [HubSpot] Synced ${lead.name || lead.email} (contact ${contactId})`);
+  } catch (e) {
+    console.log(`   [HubSpot] Sync error: ${e.message}`);
+  }
 }
 
 // ── GitHub sync ────────────────────────────────────────────────────────────
