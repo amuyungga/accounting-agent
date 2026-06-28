@@ -135,10 +135,32 @@ function renderOutbound() {
     var contact = l.email ? '<a href="mailto:' + E(l.email) + '">' + E(l.email) + '</a>' : '<span class="td-muted">-</span>';
     if (l.phone) contact += '<div class="bs">' + E(l.phone) + '</div>';
     if (l.website) contact += '<div class="bs"><a href="' + E(l.website) + '" target="_blank">website ↗</a></div>';
-    return '<tr>' +
-      '<td><div class="bn">' + E(l.name || '-') + '</div><div class="bs">' + E(l.address || '') + '</div></td>' +
+
+    // Score badge
+    var score = l.score || 0;
+    var scoreColor = score >= 70 ? '#16a34a' : score >= 40 ? '#d97706' : '#64748b';
+    var scoreBadge = l.score != null ? '<span style="font-size:11px;font-weight:700;color:' + scoreColor + ';background:' + scoreColor + '1a;padding:2px 6px;border-radius:10px;margin-left:4px">' + score + '</span>' : '';
+
+    // Hot signals
+    var signals = '';
+    if (l.replied)    signals += '<span title="Replied" style="font-size:13px">💬</span> ';
+    if (l.clicked)    signals += '<span title="Clicked Calendly" style="font-size:13px">🔥</span> ';
+    if (l.openCount)  signals += '<span title="Opened ' + l.openCount + 'x" style="font-size:13px">👁 ' + l.openCount + '</span> ';
+    if (l.followUpSent && !l.replied) signals += '<span title="Follow-up sent" style="font-size:13px">📬</span> ';
+    if (l.emailVariant) signals += '<span style="font-size:10px;color:#94a3b8">v' + l.emailVariant + '</span> ';
+
+    // Row highlight for hot leads
+    var rowStyle = l.clicked ? 'background:rgba(239,68,68,0.06)' : l.openCount ? 'background:rgba(245,158,11,0.05)' : '';
+
+    // Reply button
+    var replyBtn = (l.status === 'emailed' || l.status === 'follow_up_sent') && !l.replied && l.id
+      ? '<button onclick="markReplied(\'' + l.id + '\',this)" style="font-size:11px;padding:2px 7px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;cursor:pointer;margin-top:4px">Mark Replied</button>'
+      : (l.replied ? '<span style="font-size:11px;color:#16a34a">✓ Replied</span>' : '');
+
+    return '<tr style="' + rowStyle + '">' +
+      '<td><div class="bn">' + E(l.name || '-') + scoreBadge + '</div><div class="bs">' + E(l.address || '') + '</div></td>' +
       '<td>' + contact + '</td>' +
-      '<td><span class="badge b-' + (l.status || 'other') + '">' + obLabel(l.status) + '</span></td>' +
+      '<td><span class="badge b-' + (l.status || 'other') + '">' + obLabel(l.status) + '</span><div style="margin-top:4px">' + signals + '</div>' + replyBtn + '</td>' +
       '<td>' + (l.industry ? '<span class="bi">' + E(l.industry) + '</span>' : '-') + '</td>' +
       '<td><div class="ep">' + E(prev || '-') + '</div></td>' +
       '<td class="td-xs">' + D(l.emailSentAt || l.foundAt) + '</td>' +
@@ -149,8 +171,17 @@ function renderOutbound() {
   });
 }
 
+function markReplied(id, btn) {
+  btn.disabled = true;
+  btn.textContent = '...';
+  fetch(BASE + '/outbound-leads/' + id + '/reply', { method: 'PATCH' })
+    .then(function(r) { return r.json(); })
+    .then(function() { loadOutbound(); })
+    .catch(function() { btn.disabled = false; btn.textContent = 'Mark Replied'; });
+}
+
 function obLabel(s) {
-  var map = { emailed: 'Emailed', found: 'Found', email_found: 'Email Found', no_email: 'No Email', no_website: 'No Website', error: 'Error' };
+  var map = { emailed: 'Emailed', found: 'Found', email_found: 'Email Found', no_email: 'No Email', no_website: 'No Website', follow_up_sent: 'Follow-up Sent', error: 'Error' };
   return map[s] || (s || '-');
 }
 

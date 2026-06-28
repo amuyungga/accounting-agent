@@ -38,7 +38,7 @@ const PROGRESS_FILE = path.join(__dirname, 'outbound-progress.json');
 const GOOGLE_API   = process.env.GOOGLE_PLACES_API_KEY || null;
 
 // ── Daily search limit ──────────────────────────────────────────────────────
-const DAILY_SEARCH_LIMIT = 10;   // city+industry combinations per run
+const DAILY_SEARCH_LIMIT = 15;   // city+industry combinations per run
 const MAX_LEADS_PER_SEARCH = 5;  // businesses per search query
 const EMAIL_DELAY_MS = 12000;    // 12s between emails
 
@@ -184,6 +184,31 @@ function alreadyProcessed(placeId) {
   const leads = loadLeads();
   const lead = leads.find(l => l.placeId === placeId);
   return lead && lead.status !== 'found';
+}
+
+function alreadyEmailedAddress(email) {
+  if (!email) return false;
+  const leads = loadLeads();
+  return leads.some(l =>
+    l.email && l.email.toLowerCase() === email.toLowerCase() &&
+    ['emailed', 'follow_up_sent'].includes(l.status)
+  );
+}
+
+// ── Lead scoring (0–100) ───────────────────────────────────────────────────
+function scoreLead(lead) {
+  let score = 0;
+  if (lead.industry === 'intent_lead') score += 40;
+  if (lead.intentSource === 'linkedin')     score += 15;
+  if (lead.intentSource === 'indeed')       score += 15;
+  if (lead.intentSource === 'new_business') score += 20;
+  if (lead.intentSource === 'craigslist')   score += 10;
+  if (lead.intentSource === 'ziprecruiter') score += 10;
+  if (lead.intentSource === 'reddit')       score += 8;
+  if (lead.email)   score += 15;
+  if (lead.phone)   score += 5;
+  if (lead.website) score += 5;
+  return Math.min(score, 100);
 }
 
 // ── HTTP fetch ─────────────────────────────────────────────────────────────
@@ -342,8 +367,8 @@ async function searchYellowPages(industry, city) {
 }
 
 // ── Claude cold email ──────────────────────────────────────────────────────
-async function generateColdEmail(business) {
-  const prompt = `Write a brief, warm cold outreach email from ${OWNER_NAME} at ${FIRM_NAME} (a CPA & financial advisory firm) to the owner/manager of "${business.name}" — a ${business.industry} in ${business.city || business.address}.
+async function generateColdEmail(business, variant = 'A') {
+  const promptA = `Write a brief, warm cold outreach email from ${OWNER_NAME} at ${FIRM_NAME} (a CPA & financial advisory firm) to the owner/manager of "${business.name}" — a ${business.industry} in ${business.city || business.address}.
 
 Rules:
 - First line must be: Subject: <compelling, specific subject line>
@@ -354,6 +379,19 @@ Rules:
 - Do NOT include a sign-off or signature — it will be added automatically
 - Do NOT start with "I hope this email finds you well" or similar filler
 - Write ONLY the email body. No preamble, no sign-off.`;
+
+  const promptB = `Write a short, direct cold outreach email from ${OWNER_NAME} at ${FIRM_NAME} to "${business.name}" — a ${business.industry} in ${business.city || business.address}.
+
+Angle: Lead with one specific, surprising insight about what businesses in their industry typically overpay or miss on taxes and bookkeeping.
+
+Rules:
+- First line: Subject: <curiosity-driven subject line — ask a question or name a dollar amount>
+- 2 punchy paragraphs only — open with the insight, close with a soft ask
+- Offer a FREE 30-minute consultation: ${CALENDLY_URL}
+- Do NOT include a sign-off or signature — it will be added automatically
+- Write ONLY the email body. No filler openers.`;
+
+  const prompt = variant === 'B' ? promptB : promptA;
 
   const payload = JSON.stringify({
     model: 'claude-haiku-4-5-20251001',
@@ -389,6 +427,94 @@ Rules:
     req.write(payload);
     req.end();
   });
+}
+
+// ── Follow-up email ────────────────────────────────────────────────────────
+async function generateFollowUpEmail(lead) {
+  const daysAgo = Math.floor((Date.now() - new Date(lead.emailSentAt).getTime()) / 86400000);
+  const prompt = `Write a very brief follow-up email from ${OWNER_NAME} at ${FIRM_NAME} to "${lead.name || (lead.industry + ' business')}" in ${lead.city}.
+
+Context: We sent them a cold email ${daysAgo} days ago offering a free financial consultation and haven't heard back.
+
+Rules:
+- First line: Subject: Re: <short callback to original subject>
+- 2 short paragraphs max — acknowledge they're busy, briefly restate the value of a free 30-min call
+- Soft close: just ask if they're still open to a quick chat, link: ${CALENDLY_URL}
+- Keep total email under 80 words
+- Do NOT include a sign-off or signature — it will be added automatically
+- Write ONLY the email body, no preamble`;
+
+  const payload = JSON.stringify({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 300,
+    messages: [{ role: 'user', content: prompt }],
+  });
+
+  return new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname: 'api.anthropic.com',
+      path: '/v1/messages',
+      method: 'POST',
+      headers: {
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'content-length': Buffer.byteLength(payload),
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          if (json.error) return reject(new Error(json.error.message));
+          resolve(json.content[0].text.trim());
+        } catch (e) { reject(new Error(`Parse error: ${e.message}`)); }
+      });
+    });
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
+  });
+}
+
+async function runFollowUps() {
+  console.log('\n📬 Follow-up check — looking for 3-5 day old unanswered emails...');
+  const leads = loadLeads();
+  const now = Date.now();
+  const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
+  const FIVE_DAYS  = 5 * 24 * 60 * 60 * 1000;
+
+  const toFollowUp = leads.filter(l => {
+    if (l.status !== 'emailed') return false;
+    if (l.followUpSent || l.replied) return false;
+    if (!l.emailSentAt || !l.email) return false;
+    const age = now - new Date(l.emailSentAt).getTime();
+    return age >= THREE_DAYS && age <= FIVE_DAYS;
+  });
+
+  console.log(`   ${toFollowUp.length} leads ready for follow-up`);
+  let sent = 0;
+
+  for (const lead of toFollowUp) {
+    try {
+      const content = await generateFollowUpEmail(lead);
+      await sendColdEmail(lead.email, content, { ...lead, emailVariant: 'followup' });
+      saveLead({
+        ...lead,
+        followUpSent: true,
+        followUpSentAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      console.log(`   ✅ Follow-up → ${lead.name || lead.industry} (${lead.email})`);
+      sent++;
+      if (RESEND_API_KEY) await sleep(EMAIL_DELAY_MS);
+    } catch (e) {
+      console.log(`   ✗ Follow-up failed for ${lead.email}: ${e.message}`);
+    }
+  }
+  console.log(`   Follow-ups sent: ${sent}\n`);
+  return sent;
 }
 
 // ── Send email ─────────────────────────────────────────────────────────────
@@ -433,6 +559,11 @@ async function sendColdEmail(toEmail, emailContent, business) {
       subject,
       text: body,
       html,
+      tags: [
+        { name: 'lead_id',  value: (business.id || 'unknown').slice(0, 50) },
+        { name: 'variant',  value: business.emailVariant || 'A' },
+        { name: 'type',     value: 'cold_outreach' },
+      ],
     });
     const req = https.request({
       hostname: 'api.resend.com',
@@ -702,8 +833,8 @@ function intentAlreadyProcessed(listingUrl) {
   return leads.some(l => l.listingUrl === listingUrl);
 }
 
-async function generateIntentEmail(business, listingContext) {
-  const prompt = `Write a brief, warm outreach email from ${OWNER_NAME} at ${FIRM_NAME} to a business that posted a job listing looking for a bookkeeper or accountant.
+async function generateIntentEmail(business, listingContext, variant = 'A') {
+  const promptA = `Write a brief, warm outreach email from ${OWNER_NAME} at ${FIRM_NAME} to a business that posted a job listing looking for a bookkeeper or accountant.
 
 Business name: ${business.name}
 City: ${business.city}
@@ -718,6 +849,23 @@ Rules:
 - Offer a FREE 30-minute consultation and weave in: ${CALENDLY_URL}
 - Do NOT include a sign-off or signature — it will be added automatically
 - Write ONLY the email body, no preamble, no sign-off`;
+
+  const promptB = `Write a short, punchy outreach email from ${OWNER_NAME} at ${FIRM_NAME} to a business hiring for a bookkeeper or accountant.
+
+Business name: ${business.name}
+City: ${business.city}
+Their listing: "${business.listingTitle}"
+
+Angle: Cut straight to the point — hiring a full-time bookkeeper costs $45,000–$65,000/year in salary alone. We do the same work for a fraction of that.
+
+Rules:
+- First line: Subject: <bold subject line — name the cost comparison or savings>
+- 2 paragraphs only — lead with the cost insight, end with a soft ask
+- Offer FREE 30-minute call: ${CALENDLY_URL}
+- Do NOT include a sign-off or signature — it will be added automatically
+- Write ONLY the email body`;
+
+  const prompt = variant === 'B' ? promptB : promptA;
 
   const payload = JSON.stringify({
     model: 'claude-haiku-4-5-20251001',
@@ -758,12 +906,12 @@ async function runIntentSearches(cities) {
   console.log('   Sources: Craigslist · LinkedIn · Indeed · ZipRecruiter · Reddit · New Businesses\n');
   let intentFound = 0, intentEmailed = 0;
 
-  for (const city of cities.slice(0, 3)) {
+  for (const city of cities) {
     const listings = await searchAllIntentSources(city);
     if (!listings.length) continue;
     console.log(`   [Intent] ${city}: ${listings.length} total signals across all sources`);
 
-    for (const listing of listings.slice(0, 3)) {
+    for (const listing of listings.slice(0, 5)) {
       if (intentAlreadyProcessed(listing.link)) continue;
 
       // Use company name from source if available (LinkedIn/Indeed/ZipRecruiter provide it directly)
@@ -813,12 +961,19 @@ async function runIntentSearches(cities) {
         continue;
       }
 
+      if (alreadyEmailedAddress(email)) {
+        console.log(`   ✗ [Intent] ${biz.name} — already emailed this address`);
+        continue;
+      }
+
       biz.email = email;
+      biz.score = scoreLead(biz);
+      biz.emailVariant = Math.random() < 0.5 ? 'A' : 'B';
       intentFound++;
 
       let emailContent;
       try {
-        emailContent = await generateIntentEmail(biz, listing.desc);
+        emailContent = await generateIntentEmail(biz, listing.desc, biz.emailVariant);
       } catch (err) {
         biz.status = 'error'; biz.error = err.message;
         saveLead(biz);
@@ -906,13 +1061,20 @@ async function run() {
         continue;
       }
 
+      if (alreadyEmailedAddress(email)) {
+        console.log(`   ✗ ${biz.name} — already emailed this address`);
+        continue;
+      }
+
       biz.email = email;
+      biz.score = scoreLead(biz);
+      biz.emailVariant = Math.random() < 0.5 ? 'A' : 'B';
       saveLead({ ...biz, email, status: 'email_found' });
 
       // Generate email
       let emailContent;
       try {
-        emailContent = await generateColdEmail(biz);
+        emailContent = await generateColdEmail(biz, biz.emailVariant);
       } catch (err) {
         saveLead({ ...biz, status: 'error', error: err.message });
         console.log(`   ✗ ${biz.name} — Claude error: ${err.message}`);
@@ -935,6 +1097,9 @@ async function run() {
 
     await sleep(1000);
   }
+
+  // Send follow-ups to leads from 3-5 days ago
+  await runFollowUps();
 
   // Run intent-based searches for today's cities
   const { intentFound, intentEmailed } = await runIntentSearches(todayCities);

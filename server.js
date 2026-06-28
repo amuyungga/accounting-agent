@@ -268,6 +268,54 @@ app.get('/calls', async (req, res) => {
   }
 });
 
+// PATCH /outbound-leads/:id/reply — mark a lead as replied
+app.patch('/outbound-leads/:id/reply', (req, res) => {
+  const file = path.join(__dirname, 'outbound-leads.json');
+  if (!fs.existsSync(file)) return res.status(404).json({ error: 'No leads file' });
+  try {
+    const leads = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const idx = leads.findIndex(l => l.id === req.params.id);
+    if (idx < 0) return res.status(404).json({ error: 'Lead not found' });
+    leads[idx] = { ...leads[idx], replied: true, repliedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    fs.writeFileSync(file, JSON.stringify(leads, null, 2));
+    console.log(`[Reply] Marked ${leads[idx].name || leads[idx].email} as replied`);
+    res.json(leads[idx]);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /webhook/resend — email open/click tracking from Resend
+app.post('/webhook/resend', express.raw({ type: '*/*' }), (req, res) => {
+  res.json({ ok: true }); // always ACK immediately
+  try {
+    const event = JSON.parse(req.body.toString());
+    const type   = event.type || '';
+    const tags   = event.data?.tags || [];
+    const leadId = tags.find(t => t.name === 'lead_id')?.value;
+    if (!leadId) return;
+
+    const file = path.join(__dirname, 'outbound-leads.json');
+    if (!fs.existsSync(file)) return;
+    const leads = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const idx = leads.findIndex(l => l.id === leadId);
+    if (idx < 0) return;
+
+    if (type === 'email.opened') {
+      leads[idx].openedAt   = leads[idx].openedAt || new Date().toISOString();
+      leads[idx].openCount  = (leads[idx].openCount || 0) + 1;
+    } else if (type === 'email.clicked') {
+      leads[idx].clickedAt  = leads[idx].clickedAt || new Date().toISOString();
+      leads[idx].clicked    = true;
+    }
+    leads[idx].updatedAt = new Date().toISOString();
+    fs.writeFileSync(file, JSON.stringify(leads, null, 2));
+    console.log(`[Webhook] ${type} — lead ${leadId} (opens: ${leads[idx].openCount || 0})`);
+  } catch (e) {
+    console.error('[Webhook] Error:', e.message);
+  }
+});
+
 // GET /leads/export.csv — CSV export
 app.get('/leads/export.csv', (req, res) => {
   const leads = loadLeads();
