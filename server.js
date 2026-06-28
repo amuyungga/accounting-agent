@@ -356,6 +356,24 @@ app.patch('/outbound-leads/:id/reply', (req, res) => {
   }
 });
 
+// PATCH /outbound-leads/:id/unreply — undo a replied marking
+app.patch('/outbound-leads/:id/unreply', (req, res) => {
+  const file = path.join(__dirname, 'outbound-leads.json');
+  if (!fs.existsSync(file)) return res.status(404).json({ error: 'No leads file' });
+  try {
+    const leads = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const idx = leads.findIndex(l => l.id === req.params.id);
+    if (idx < 0) return res.status(404).json({ error: 'Lead not found' });
+    leads[idx] = { ...leads[idx], replied: false, repliedAt: null, updatedAt: new Date().toISOString() };
+    fs.writeFileSync(file, JSON.stringify(leads, null, 2));
+    if (leads[idx].email) updateHubSpotContact(leads[idx].email, { hs_lead_status: 'IN_PROGRESS', lifecyclestage: 'lead' });
+    console.log(`[Reply] Undid replied for ${leads[idx].name || leads[idx].email}`);
+    res.json(leads[idx]);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // POST /webhook/resend — email open/click tracking from Resend
 app.post('/webhook/resend', express.raw({ type: '*/*' }), (req, res) => {
   res.json({ ok: true }); // always ACK immediately

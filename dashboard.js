@@ -118,8 +118,10 @@ function renderHotLeads() {
     if (l.openCount) signals.push('<span class="hc-sig" style="background:rgba(227,179,65,.15);color:#e3b341">👁 Opened ' + l.openCount + 'x</span>');
     if (l.secondFollowUpSent) signals.push('<span class="hc-sig" style="background:rgba(88,166,255,.12);color:#58a6ff">📬 2nd Follow-up</span>');
     else if (l.followUpSent)  signals.push('<span class="hc-sig" style="background:rgba(88,166,255,.12);color:#58a6ff">📬 Followed Up</span>');
-    var replyBtn = !l.replied && l.id
-      ? '<button onclick="markReplied(\'' + l.id + '\',this)" style="margin-top:8px;font-size:11px;padding:3px 10px;border:1px solid #3fb950;color:#3fb950;border-radius:6px;background:transparent;cursor:pointer">Mark Replied</button>'
+    var replyBtn = l.id
+      ? (!l.replied
+          ? '<button onclick="markReplied(\'' + l.id + '\',this)" style="margin-top:8px;font-size:11px;padding:3px 10px;border:1px solid #3fb950;color:#3fb950;border-radius:6px;background:transparent;cursor:pointer">Mark Replied</button>'
+          : '<span style="font-size:11px;color:#16a34a;margin-top:8px;display:inline-block">✓ Replied</span> <button onclick="undoReplied(\'' + l.id + '\',this)" style="font-size:10px;padding:1px 6px;border:1px solid #94a3b8;border-radius:4px;background:transparent;color:#94a3b8;cursor:pointer">Undo</button>')
       : '';
     return '<div class="hot-card">' +
       '<div class="hc-name">' + E(l.name || '-') + '</div>' +
@@ -220,8 +222,25 @@ function markReplied(id, btn) {
   btn.textContent = '...';
   fetch(BASE + '/outbound-leads/' + id + '/reply', { method: 'PATCH' })
     .then(function(r) { return r.json(); })
-    .then(function() { loadOutbound(); })
+    .then(function() {
+      // Replace button with "✓ Replied" + Undo link — no full reload needed
+      var cell = btn.parentNode;
+      cell.innerHTML = (cell.innerHTML || '').replace(/<button[^>]*Mark Replied[^<]*<\/button>/, '');
+      var wrap = document.createElement('span');
+      wrap.innerHTML = '<span style="font-size:11px;color:#16a34a">✓ Replied</span> ' +
+        '<button onclick="undoReplied(\'' + id + '\',this)" style="font-size:10px;padding:1px 6px;border:1px solid #94a3b8;border-radius:4px;background:transparent;color:#94a3b8;cursor:pointer;margin-left:4px">Undo</button>';
+      cell.appendChild(wrap);
+    })
     .catch(function() { btn.disabled = false; btn.textContent = 'Mark Replied'; });
+}
+
+function undoReplied(id, btn) {
+  btn.disabled = true;
+  btn.textContent = '...';
+  fetch(BASE + '/outbound-leads/' + id + '/unreply', { method: 'PATCH' })
+    .then(function(r) { return r.json(); })
+    .then(function() { loadOutbound(); })
+    .catch(function() { btn.disabled = false; btn.textContent = 'Undo'; });
 }
 
 function obLabel(s) {
