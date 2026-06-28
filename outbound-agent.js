@@ -395,11 +395,27 @@ Rules:
 async function sendColdEmail(toEmail, emailContent, business) {
   const lines = emailContent.split('\n');
   const subjectLine = lines.find(l => /^subject:/i.test(l));
-  const subject = subjectLine
+  // Strip markdown bold (**) from subject
+  const subject = (subjectLine
     ? subjectLine.replace(/^subject:\s*/i, '').trim()
-    : `A quick note for ${business.name}`;
-  const body = lines.filter(l => !/^subject:/i.test(l)).join('\n').trim();
-  const html = `<div style="font-family:sans-serif;font-size:15px;line-height:1.7;color:#1e293b;max-width:600px;margin:0 auto">${body.replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>')}</div>`;
+    : `A quick note for ${business.name}`).replace(/\*\*/g, '');
+
+  // Strip markdown bold from body
+  const rawBody = lines.filter(l => !/^subject:/i.test(l)).join('\n').trim().replace(/\*\*/g, '');
+
+  // Professional signature
+  const sigText = `\n\n--\nAsante Muyungga\nFounder & CPA | Spectrum Financial Solutions\nasante@spectrumfinancialsolution.com\nspectrumfinancialsolution.com\nSchedule a free 30-min call: ${CALENDLY_URL}`;
+  const sigHtml = `<br><br><hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0">
+<table style="font-family:Arial,sans-serif;font-size:13px;color:#475569">
+  <tr><td><strong style="font-size:14px;color:#1e293b">Asante Muyungga</strong></td></tr>
+  <tr><td style="color:#64748b">Founder & CPA | Spectrum Financial Solutions</td></tr>
+  <tr><td style="padding-top:4px"><a href="mailto:asante@spectrumfinancialsolution.com" style="color:#3b82f6;text-decoration:none">asante@spectrumfinancialsolution.com</a></td></tr>
+  <tr><td><a href="https://spectrumfinancialsolution.com" style="color:#3b82f6;text-decoration:none">spectrumfinancialsolution.com</a></td></tr>
+  <tr><td style="padding-top:6px"><a href="${CALENDLY_URL}" style="background:#3b82f6;color:#fff;padding:6px 14px;border-radius:4px;text-decoration:none;font-size:12px">📅 Schedule a Free Consultation</a></td></tr>
+</table>`;
+
+  const body = rawBody + sigText;
+  const html = `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#1e293b;max-width:600px;margin:0 auto"><p>${rawBody.replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>')}</p>${sigHtml}</div>`;
 
   if (!RESEND_API_KEY) {
     console.log(`   [DRY RUN] Would send to ${toEmail} — Subject: ${subject}`);
