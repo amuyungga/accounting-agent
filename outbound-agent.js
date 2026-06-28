@@ -1158,14 +1158,13 @@ async function syncLeadToHubSpot(lead) {
   try {
     const nameParts = (lead.name || '').split(' ');
     const props = {
-      email:      lead.email,
-      firstname:  nameParts[0] || lead.name || '',
-      lastname:   nameParts.slice(1).join(' ') || '',
-      phone:      lead.phone || '',
-      website:    lead.website || '',
-      city:       lead.city || '',
-      company:    lead.name || '',
-      hs_lead_status: lead.status === 'emailed' ? 'IN_PROGRESS' : 'NEW',
+      email:          lead.email,
+      firstname:      nameParts[0] || lead.name || '',
+      lastname:       nameParts.slice(1).join(' ') || '',
+      phone:          lead.phone || '',
+      website:        lead.website || '',
+      company:        lead.name || '',
+      hs_lead_status: 'IN_PROGRESS',
       lifecyclestage: 'lead',
     };
 
@@ -1179,31 +1178,46 @@ async function syncLeadToHubSpot(lead) {
     if (search.body.total > 0) {
       contactId = search.body.results[0].id;
       await hubspotRequest('PATCH', `/crm/v3/objects/contacts/${contactId}`, { properties: props });
+      console.log(`   [HubSpot] Updated contact ${contactId} for ${lead.name || lead.email}`);
     } else {
       const created = await hubspotRequest('POST', '/crm/v3/objects/contacts', { properties: props });
-      contactId = created.body.id;
+      if (created.body.id) {
+        contactId = created.body.id;
+        console.log(`   [HubSpot] Created contact ${contactId} for ${lead.name || lead.email}`);
+      } else {
+        console.log(`   [HubSpot] Contact creation failed (status ${created.status}): ${JSON.stringify(created.body)}`);
+        return;
+      }
     }
 
     // Create a deal if this lead was emailed
     if (lead.status === 'emailed' && contactId) {
+      const dealName = `${lead.name || lead.email} — Outbound`;
       const dealSearch = await hubspotRequest('POST', '/crm/v3/objects/deals/search', {
-        filterGroups: [{ filters: [{ propertyName: 'dealname', operator: 'EQ', value: `${lead.name || lead.email} — Outbound` }] }],
+        filterGroups: [{ filters: [{ propertyName: 'dealname', operator: 'EQ', value: dealName }] }],
       });
       if (dealSearch.body.total === 0) {
         const deal = await hubspotRequest('POST', '/crm/v3/objects/deals', {
           properties: {
-            dealname:   `${lead.name || lead.email} — Outbound`,
-            pipeline:   'default',
-            dealstage:  'appointmentscheduled',
-            closedate:  new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            dealname:  dealName,
+            pipeline:  'default',
+            dealstage: 'appointmentscheduled',
+            closedate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           },
         });
         if (deal.body.id) {
-          await hubspotRequest('PUT', `/crm/v4/objects/deals/${deal.body.id}/associations/contacts/${contactId}/deal_to_contact`, null);
+          // Associate deal to contact using v4 associations API
+          await hubspotRequest('PUT',
+            `/crm/v4/objects/deals/${deal.body.id}/associations/contacts/${contactId}/3`,
+            null
+          );
+          console.log(`   [HubSpot] Deal created and linked to contact`);
+        } else {
+          console.log(`   [HubSpot] Deal creation failed: ${JSON.stringify(deal.body)}`);
         }
       }
     }
-    console.log(`   [HubSpot] Synced ${lead.name || lead.email} (contact ${contactId})`);
+    console.log(`   [HubSpot] Sync complete for ${lead.name || lead.email}`);
   } catch (e) {
     console.log(`   [HubSpot] Sync error: ${e.message}`);
   }
