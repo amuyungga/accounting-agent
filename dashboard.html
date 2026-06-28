@@ -461,6 +461,7 @@ a:hover{text-decoration:underline}
     <div class="hot-panel" id="ob-hot"></div>
   </div>
   <div class="toolbar">
+    <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap">Status:</span>
     <button class="filter-btn active" onclick="obFilter(this,'all')">All</button>
     <button class="filter-btn" onclick="obFilter(this,'emailed')">✅ Emailed</button>
     <button class="filter-btn" onclick="obFilter(this,'email_found')">📨 Email Found</button>
@@ -469,6 +470,10 @@ a:hover{text-decoration:underline}
     <input class="srch ml" id="ob-s" type="text" placeholder="Search business…" oninput="renderOutbound()"/>
     <button class="btn-export" onclick="exportObCsv()">⬇ Export CSV</button>
     <button class="btn-refresh" onclick="loadOutbound()">↻ Refresh</button>
+  </div>
+  <div class="toolbar" style="padding-top:6px;border-top:1px solid var(--border)" id="ob-source-bar">
+    <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap">Source:</span>
+    <button class="filter-btn active" onclick="obSourceFilter(this,'all')">All Sources</button>
   </div>
   <div class="tw"><table>
     <thead><tr><th>Business</th><th>Contact</th><th>Status</th><th>Industry</th><th>Email Preview</th><th>Date</th></tr></thead>

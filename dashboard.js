@@ -1,7 +1,7 @@
 var BASE = window.location.origin;
 var chatLeads = [], outboundLeads = [], callLogs = [];
 var crmContacts = [], crmDeals = [];
-var obCurFilter = 'all', caCurFilter = 'all', crmCurFilter = 'all';
+var obCurFilter = 'all', obCurSource = 'all', caCurFilter = 'all', crmCurFilter = 'all';
 
 // ── Tab date filters ──────────────────────────────────────────────────────────
 var tabDates = { ch: {from:null,to:null}, ob: {from:null,to:null}, ca: {from:null,to:null}, crm: {from:null,to:null} };
@@ -196,27 +196,50 @@ function renderObStats() {
   animateCount('ob-found', outboundLeads.filter(function(l) { return l.status === 'email_found'; }).length);
   animateCount('ob-noemail', outboundLeads.filter(function(l) { return l.status === 'no_email' || l.status === 'no_website'; }).length);
 
-  // Source breakdown chips
+  // Source breakdown chips + filter bar
   var sourceCounts = {};
   outboundLeads.forEach(function(l) {
     var src = l.source || l.intentSource || (l.placeId ? 'google_places' : null);
     if (src) sourceCounts[src] = (sourceCounts[src] || 0) + 1;
   });
+  var srcNames = { linkedin: 'LinkedIn', indeed: 'Indeed', ziprecruiter: 'ZipRecruiter', glassdoor: 'Glassdoor', monster: 'Monster', craigslist: 'Craigslist', reddit: 'Reddit', acctg_software: 'Acctg Software', new_business: 'New Business', google_places: 'Google Places', intent: 'Intent' };
+  var srcIcons = { linkedin: '💼', indeed: '🔍', ziprecruiter: '⚡', glassdoor: '🪟', monster: '👾', craigslist: '📋', reddit: '🔴', acctg_software: '📊', new_business: '🏪', google_places: '📍', intent: '🎯' };
+
+  // Summary chips
   var srcEl = document.getElementById('ob-sources');
   if (srcEl) {
-    var srcNames = { linkedin: 'LinkedIn', indeed: 'Indeed', ziprecruiter: 'ZipRecruiter', glassdoor: 'Glassdoor', monster: 'Monster', craigslist: 'Craigslist', reddit: 'Reddit', acctg_software: 'Acctg Software', new_business: 'New Business', google_places: 'Google Places', intent: 'Intent' };
     var entries = Object.keys(sourceCounts).sort(function(a, b) { return sourceCounts[b] - sourceCounts[a]; });
     srcEl.innerHTML = entries.length
       ? entries.map(function(s) {
-          return '<div class="src-chip">' + (srcNames[s] || s) + '<span>' + sourceCounts[s] + '</span></div>';
+          return '<div class="src-chip">' + (srcIcons[s] || '') + ' ' + (srcNames[s] || s) + '<span>' + sourceCounts[s] + '</span></div>';
         }).join('')
       : '';
+  }
+
+  // Source filter bar — rebuild buttons to match actual data
+  var bar = document.getElementById('ob-source-bar');
+  if (bar) {
+    var sortedSrcs = Object.keys(sourceCounts).sort(function(a, b) { return sourceCounts[b] - sourceCounts[a]; });
+    var btns = '<span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap">Source:</span>' +
+      '<button class="filter-btn' + (obCurSource === 'all' ? ' active' : '') + '" onclick="obSourceFilter(this,\'all\')">All Sources</button>' +
+      sortedSrcs.map(function(s) {
+        var active = obCurSource === s ? ' active' : '';
+        return '<button class="filter-btn' + active + '" onclick="obSourceFilter(this,\'' + s + '\')">' + (srcIcons[s] || '') + ' ' + (srcNames[s] || s) + ' <span style="font-size:10px;opacity:.7">(' + sourceCounts[s] + ')</span></button>';
+      }).join('');
+    bar.innerHTML = btns;
   }
 }
 
 function obFilter(btn, f) {
   obCurFilter = f;
-  document.querySelectorAll('#s-outbound .filter-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('#s-outbound .toolbar:first-of-type .filter-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderOutbound();
+}
+
+function obSourceFilter(btn, src) {
+  obCurSource = src;
+  document.querySelectorAll('#ob-source-bar .filter-btn').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
   renderOutbound();
 }
@@ -226,6 +249,7 @@ function renderOutbound() {
   var d = tabDates['ob'];
   var leads = outboundLeads.filter(function(l) { return inDateRange(l.emailSentAt || l.foundAt || l.updatedAt, d.from, d.to); });
   if (obCurFilter !== 'all') leads = leads.filter(function(l) { return l.status === obCurFilter; });
+  if (obCurSource !== 'all') leads = leads.filter(function(l) { var s = l.source || l.intentSource || (l.placeId ? 'google_places' : null); return s === obCurSource; });
   if (q) leads = leads.filter(function(l) {
     return (l.name || '').toLowerCase().indexOf(q) >= 0 ||
            (l.email || '').toLowerCase().indexOf(q) >= 0 ||
