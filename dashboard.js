@@ -206,16 +206,6 @@ function renderObStats() {
   var srcIcons = { linkedin: '💼', indeed: '🔍', ziprecruiter: '⚡', glassdoor: '🪟', monster: '👾', craigslist: '📋', reddit: '🔴', acctg_software: '📊', new_business: '🏪', google_places: '📍', intent: '🎯' };
   var sortedSrcs = Object.keys(sourceCounts).sort(function(a, b) { return sourceCounts[b] - sourceCounts[a]; });
 
-  // Summary chips
-  var srcEl = document.getElementById('ob-sources');
-  if (srcEl) {
-    srcEl.innerHTML = sortedSrcs.length
-      ? sortedSrcs.map(function(s) {
-          return '<div class="src-chip">' + (srcIcons[s] || '') + ' ' + (srcNames[s] || s) + '<span>' + sourceCounts[s] + '</span></div>';
-        }).join('')
-      : '';
-  }
-
   // Populate source dropdown — preserve current selection
   var sel = document.getElementById('ob-source-sel');
   if (sel) {
