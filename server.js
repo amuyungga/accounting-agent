@@ -391,7 +391,7 @@ app.post('/webhook/resend', express.raw({ type: '*/*' }), (req, res) => {
 
 // GET /hubspot-contacts — fetch contacts + deals from HubSpot
 app.get('/hubspot-contacts', async (req, res) => {
-  if (!process.env.HUBSPOT_API_KEY) return res.json({ contacts: [], deals: [] });
+  if (!process.env.HUBSPOT_API_KEY) return res.json({ contacts: [], deals: [], _debug: 'no_api_key' });
   try {
     const [contactsRes, dealsRes] = await Promise.all([
       hubspotRequest('POST', '/crm/v3/objects/contacts/search', {
@@ -407,9 +407,11 @@ app.get('/hubspot-contacts', async (req, res) => {
         limit: 100,
       }),
     ]);
+    console.log('[HubSpot] contacts status:', contactsRes.status, 'total:', contactsRes.body.total);
+    console.log('[HubSpot] deals status:', dealsRes.status, 'total:', dealsRes.body.total);
     const contacts = (contactsRes.body.results || []).map(r => ({ id: r.id, ...r.properties }));
     const deals    = (dealsRes.body.results || []).map(r => ({ id: r.id, ...r.properties }));
-    res.json({ contacts, deals });
+    res.json({ contacts, deals, _debug: { contactsStatus: contactsRes.status, dealsStatus: dealsRes.status, contactsTotal: contactsRes.body.total, dealsTotal: dealsRes.body.total } });
   } catch (e) {
     console.error('[HubSpot] Fetch error:', e.message);
     res.status(500).json({ error: e.message });
