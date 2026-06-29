@@ -309,6 +309,32 @@ app.get('/outbound-leads', (req, res) => {
   catch { res.json([]); }
 });
 
+// POST /outbound-leads/sync — receive leads from local agent run and merge into server store
+app.post('/outbound-leads/sync', (req, res) => {
+  const syncKey = process.env.SYNC_SECRET || 'spectrum-sync';
+  if (req.headers['x-sync-key'] !== syncKey) return res.status(401).json({ error: 'Unauthorized' });
+  const incoming = Array.isArray(req.body) ? req.body : [];
+  if (!incoming.length) return res.json({ merged: 0, total: 0 });
+  const file = path.join(__dirname, 'outbound-leads.json');
+  let leads = [];
+  if (fs.existsSync(file)) { try { leads = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {} }
+  let merged = 0;
+  for (const lead of incoming) {
+    const key = lead.email || lead.id || lead.placeId;
+    const idx = key ? leads.findIndex(l => (l.email && l.email === lead.email) || (l.id && l.id === lead.id) || (l.placeId && l.placeId === lead.placeId)) : -1;
+    if (idx >= 0) {
+      // Preserve reply/open tracking already on server; merge in new fields from agent
+      leads[idx] = { ...lead, ...leads[idx], updatedAt: new Date().toISOString() };
+    } else {
+      leads.push(lead);
+      merged++;
+    }
+  }
+  fs.writeFileSync(file, JSON.stringify(leads, null, 2));
+  console.log(`[Sync] Merged ${merged} new leads, total ${leads.length}`);
+  res.json({ merged, total: leads.length });
+});
+
 // GET /calls — proxy Vapi call logs
 app.get('/calls', async (req, res) => {
   const vapiKey = process.env.VAPI_API_KEY;

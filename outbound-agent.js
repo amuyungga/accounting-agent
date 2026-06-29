@@ -1299,8 +1299,11 @@ async function run() {
   console.log(`║  Total emailed ever   : ${String(totalEver).padEnd(28)}║`);
   console.log('╚══════════════════════════════════════════════════════╝\n');
 
-  // Sync leads to GitHub so Railway always has current data after deploy
+  // Sync leads to GitHub (persistence across Railway deploys)
   await pushLeadsToGitHub(all);
+
+  // Push directly to live Railway server so dashboard updates immediately
+  await syncLeadsToRailway(all);
 }
 
 // ── HubSpot CRM sync ───────────────────────────────────────────────────────
@@ -1467,6 +1470,43 @@ async function pushLeadsToGitHub(leads) {
     });
     getReq.on('error', e => { console.log('[GitHub] Error:', e.message); resolve(); });
     getReq.end();
+  });
+}
+
+// ── Railway live sync ──────────────────────────────────────────────────────
+const RAILWAY_URL  = 'https://accounting-agent-production-cf69.up.railway.app';
+const SYNC_SECRET  = process.env.SYNC_SECRET || 'spectrum-sync';
+
+async function syncLeadsToRailway(leads) {
+  console.log('[Railway] Syncing leads to live dashboard...');
+  const body = JSON.stringify(leads);
+  return new Promise((resolve) => {
+    const url = new URL(RAILWAY_URL + '/outbound-leads/sync');
+    const req = https.request({
+      hostname: url.hostname,
+      path: url.pathname,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body),
+        'x-sync-key': SYNC_SECRET,
+      }
+    }, (res) => {
+      let d = '';
+      res.on('data', c => d += c);
+      res.on('end', () => {
+        try {
+          const result = JSON.parse(d);
+          console.log(`[Railway] Sync complete — ${result.merged} new leads added, ${result.total} total on dashboard`);
+        } catch {
+          console.log(`[Railway] Sync response: HTTP ${res.statusCode}`);
+        }
+        resolve();
+      });
+    });
+    req.on('error', e => { console.log('[Railway] Sync error:', e.message); resolve(); });
+    req.write(body);
+    req.end();
   });
 }
 
