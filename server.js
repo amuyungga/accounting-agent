@@ -246,7 +246,7 @@ function parseAssistantMessage(raw) {
 // ── Express app ────────────────────────────────────────────────────────────
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static(__dirname));  // serves dashboard.html
 
 // POST /chat — main chat endpoint
@@ -455,29 +455,4 @@ app.get('/hubspot-contacts', async (req, res) => {
     console.log('[HubSpot] deals status:', dealsRes.status, 'total:', dealsRes.body.total);
     const contacts = (contactsRes.body.results || []).map(r => ({ id: r.id, ...r.properties }));
     const deals    = (dealsRes.body.results || []).map(r => ({ id: r.id, ...r.properties }));
-    res.json({ contacts, deals, _debug: { contactsStatus: contactsRes.status, dealsStatus: dealsRes.status, contactsTotal: contactsRes.body.total, dealsTotal: dealsRes.body.total } });
-  } catch (e) {
-    console.error('[HubSpot] Fetch error:', e.message);
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// GET /leads/export.csv — CSV export
-app.get('/leads/export.csv', (req, res) => {
-  const leads = loadLeads();
-  const headers = ['id','name','email','phone','service','notes','capturedAt','updatedAt'];
-  const rows = leads.map(l => headers.map(h => JSON.stringify(l[h] ?? '')).join(','));
-  const csv = [headers.join(','), ...rows].join('\n');
-  res.setHeader('Content-Type', 'text/csv');
-  res.setHeader('Content-Disposition', 'attachment; filename="leads.csv"');
-  res.send(csv);
-});
-
-// ── Start ───────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`\n✅ Accounting Firm AI Agent running on http://localhost:${PORT}`);
-  console.log(`   Chat endpoint : POST http://localhost:${PORT}/chat`);
-  console.log(`   Leads JSON    : GET  http://localhost:${PORT}/leads`);
-  console.log(`   Leads CSV     : GET  http://localhost:${PORT}/leads/export.csv`);
-  console.log(`   Dashboard     : GET  http://localhost:${PORT}/dashboard.html\n`);
-});
+    res.json({ contacts, deals, _debug: { contactsStatus: contactsRes.status, dealsStatus: dealsRes.status, contactsT
