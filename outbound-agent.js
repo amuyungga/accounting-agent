@@ -1029,10 +1029,14 @@ async function searchAllIntentSources(city) {
   const all = [];
   for (const src of sources) {
     try {
-      const items = await src.fn(city);
+      // Hard 20-second wall-clock timeout per source so one hanging site can't block the rest
+      const items = await Promise.race([
+        src.fn(city),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Source timeout')), 20000)),
+      ]);
       all.push(...items.map(i => ({ ...i, intentSource: src.name })));
     } catch (e) {
-      console.log(`   [Intent/${src.name}] Error: ${e.message}`);
+      console.log(`   [Intent/${src.name}] Skipped: ${e.message}`);
     }
     await sleep(1000);
   }
