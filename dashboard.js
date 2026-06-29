@@ -73,6 +73,12 @@ function switchTab(btn, name) {
   btn.classList.add('active');
 }
 
+function goToTab(name) {
+  var btn = document.querySelector('.tab-btn[onclick*="\'' + name + '\'"]');
+  if (btn) switchTab(btn, name);
+  if (name === 'kpi') renderKpi();
+}
+
 function animateCount(id, target) {
   var el = document.getElementById(id);
   if (!el) return;

@@ -83,6 +83,8 @@ header p{font-size:11px;color:var(--muted);margin-top:2px}
   position:relative;overflow:hidden;
   transition:transform .2s,box-shadow .2s;
 }
+.stat-card[onclick]:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.stat-card[onclick]:hover .sub::after{content:' →';opacity:.7}
 .stat-card:hover{transform:translateY(-2px);box-shadow:0 10px 40px rgba(0,0,0,.4)}
 .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
 .stat-card.blue::before{background:linear-gradient(90deg,#1d4ed8,#60a5fa)}
@@ -361,31 +363,31 @@ a:hover{text-decoration:underline}
 <!-- OVERVIEW -->
 <div id="s-overview" class="section active">
   <div class="stats-row">
-    <div class="stat-card blue">
+    <div class="stat-card blue" onclick="goToTab('chat')" style="cursor:pointer">
       <div class="stat-icon">💬</div>
       <div class="lbl">Chat Leads</div>
       <div class="val" id="ov-chat">—</div>
       <div class="sub">From website widget</div>
     </div>
-    <div class="stat-card green">
+    <div class="stat-card green" onclick="goToTab('outbound')" style="cursor:pointer">
       <div class="stat-icon">📧</div>
       <div class="lbl">Outbound Emailed</div>
       <div class="val" id="ov-emailed">—</div>
       <div class="sub">Cold emails sent</div>
     </div>
-    <div class="stat-card purple">
+    <div class="stat-card purple" onclick="goToTab('calls')" style="cursor:pointer">
       <div class="stat-icon">📞</div>
       <div class="lbl">Calls Received</div>
       <div class="val" id="ov-calls">—</div>
       <div class="sub">Via Vapi receptionist</div>
     </div>
-    <div class="stat-card amber">
+    <div class="stat-card amber" onclick="goToTab('crm')" style="cursor:pointer">
       <div class="stat-icon">🏢</div>
       <div class="lbl">CRM Contacts</div>
       <div class="val" id="ov-crm">—</div>
       <div class="sub">In HubSpot</div>
     </div>
-    <div class="stat-card purple">
+    <div class="stat-card purple" onclick="goToTab('kpi')" style="cursor:pointer">
       <div class="stat-icon">⚡</div>
       <div class="lbl">Total Touches</div>
       <div class="val" id="ov-total">—</div>
