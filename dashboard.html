@@ -227,6 +227,19 @@ a:hover{text-decoration:underline}
 .td-cap{font-size:12px;color:var(--muted);text-transform:capitalize}
 .td-muted{color:var(--muted)}
 .call-row{cursor:pointer}
+.clickable-row{cursor:pointer;transition:background .15s}
+.clickable-row:hover{background:rgba(88,166,255,.07) !important}
+
+/* Detail drawer */
+.dt-section{margin-bottom:20px}
+.dt-section h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px}
+.dt-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px}
+.dt-field{display:flex;flex-direction:column;gap:3px}
+.dt-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.dt-value{font-size:13px;color:var(--text);word-break:break-word}
+.dt-email-box{background:var(--faint);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:12px;line-height:1.65;white-space:pre-wrap;max-height:300px;overflow-y:auto;color:var(--text)}
+.dt-signals{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.dt-sig{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
 
 /* Modal */
 .modal-overlay{
@@ -614,6 +627,17 @@ a:hover{text-decoration:underline}
       <div class="kpi-table-title">🔬 Email Variant A vs B</div>
       <div style="padding:16px;position:relative;height:260px"><canvas id="kpi-ab-chart"></canvas></div>
     </div>
+  </div>
+</div>
+
+<!-- DETAIL DRAWER -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal" style="width:680px">
+    <div class="mh">
+      <div><h2 id="dt-title">Details</h2><div class="mm" id="dt-meta"></div></div>
+      <button class="mc" onclick="document.getElementById('detail-modal').classList.remove('open')">&times;</button>
+    </div>
+    <div class="mb" id="dt-body"></div>
   </div>
 </div>
 

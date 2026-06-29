@@ -66,6 +66,104 @@ document.getElementById('call-modal').addEventListener('click', function(e) {
 document.getElementById('m-close').addEventListener('click', closeModal);
 function closeModal() { document.getElementById('call-modal').classList.remove('open'); }
 
+document.getElementById('detail-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+
+function openDetailModal(title, meta, bodyHtml) {
+  document.getElementById('dt-title').textContent = title;
+  document.getElementById('dt-meta').textContent = meta || '';
+  document.getElementById('dt-body').innerHTML = bodyHtml;
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+function openChatDetail(idx) {
+  var l = chatLeads[idx];
+  if (!l) return;
+  var body =
+    '<div class="dt-section"><h3>Contact Info</h3><div class="dt-grid">' +
+      dtField('Name',    l.name    || '-') +
+      dtField('Email',   l.email   ? '<a href="mailto:' + E(l.email) + '">' + E(l.email) + '</a>' : '-', true) +
+      dtField('Phone',   l.phone   || '-') +
+      dtField('Service', l.service || '-') +
+      dtField('Captured', D(l.capturedAt)) +
+    '</div></div>' +
+    (l.notes ? '<div class="dt-section"><h3>Notes / Conversation</h3><div class="dt-email-box">' + E(l.notes) + '</div></div>' : '');
+  openDetailModal('💬 ' + (l.name || 'Chat Lead'), D(l.capturedAt), body);
+}
+
+function openOutboundDetail(idx) {
+  var l = outboundLeads[idx];
+  if (!l) return;
+  var signals = [];
+  if (l.replied)            signals.push('<span class="dt-sig" style="background:rgba(63,185,80,.15);color:#3fb950">💬 Replied</span>');
+  if (l.clicked)            signals.push('<span class="dt-sig" style="background:rgba(248,81,73,.15);color:#f85149">🔥 Clicked Calendly</span>');
+  if (l.openCount)          signals.push('<span class="dt-sig" style="background:rgba(227,179,65,.15);color:#e3b341">👁 Opened ' + l.openCount + 'x</span>');
+  if (l.secondFollowUpSent) signals.push('<span class="dt-sig" style="background:rgba(88,166,255,.15);color:#58a6ff">📬 2nd Follow-up Sent</span>');
+  else if (l.followUpSent)  signals.push('<span class="dt-sig" style="background:rgba(88,166,255,.15);color:#58a6ff">📬 Follow-up Sent</span>');
+  if (l.emailVariant)       signals.push('<span class="dt-sig" style="background:rgba(188,140,255,.15);color:#bc8cff">Variant ' + l.emailVariant + '</span>');
+
+  var srcNames = { linkedin:'LinkedIn', indeed:'Indeed', ziprecruiter:'ZipRecruiter', glassdoor:'Glassdoor', monster:'Monster', craigslist:'Craigslist', bark:'Bark.com', fiverr:'Fiverr', reddit:'Reddit', acctg_software:'Acctg Software', new_business:'New Business', google_places:'Google Places', intent:'Intent' };
+  var src = l.source || l.intentSource || (l.placeId ? 'google_places' : '-');
+
+  var body =
+    '<div class="dt-section"><h3>Lead Info</h3><div class="dt-grid">' +
+      dtField('Name',      l.name     || '-') +
+      dtField('Email',     l.email    ? '<a href="mailto:' + E(l.email) + '">' + E(l.email) + '</a>' : '-', true) +
+      dtField('Phone',     l.phone    || '-') +
+      dtField('Website',   l.website  ? '<a href="' + E(l.website) + '" target="_blank">' + E(l.website) + ' ↗</a>' : '-', true) +
+      dtField('Industry',  l.industry || '-') +
+      dtField('Address',   l.address  || '-') +
+      dtField('Source',    srcNames[src] || src) +
+      dtField('Score',     l.score != null ? l.score + '/100' : '-') +
+      dtField('Status',    obLabel(l.status)) +
+      dtField('Sent',      D(l.emailSentAt || l.foundAt)) +
+    '</div></div>' +
+    (signals.length ? '<div class="dt-section"><h3>Engagement Signals</h3><div class="dt-signals">' + signals.join('') + '</div></div>' : '') +
+    (l.emailContent ? '<div class="dt-section"><h3>Email Sent</h3><div class="dt-email-box">' + E(l.emailContent) + '</div></div>' : '') +
+    (l.followUpContent ? '<div class="dt-section"><h3>Follow-up Email</h3><div class="dt-email-box">' + E(l.followUpContent) + '</div></div>' : '') +
+    (l.secondFollowUpContent ? '<div class="dt-section"><h3>2nd Follow-up Email</h3><div class="dt-email-box">' + E(l.secondFollowUpContent) + '</div></div>' : '');
+  openDetailModal('📧 ' + (l.name || 'Outbound Lead'), (srcNames[src] || src) + ' · ' + obLabel(l.status), body);
+}
+
+function openCrmDetail(idx) {
+  var c = crmContacts[idx];
+  if (!c) return;
+  var name = [c.firstname, c.lastname].filter(Boolean).join(' ') || '-';
+  var statusColors = { CONNECTED:'#16a34a', IN_PROGRESS:'#d97706', OPEN:'#3b82f6', NEW:'#64748b', UNQUALIFIED:'#ef4444' };
+  var sc = statusColors[c.hs_lead_status] || '#64748b';
+  var statusBadge = '<span style="font-size:11px;font-weight:700;color:' + sc + ';background:' + sc + '1a;padding:2px 8px;border-radius:10px">' + E(c.hs_lead_status || 'NEW') + '</span>';
+  var dealMap = {};
+  crmDeals.forEach(function(d) { if (d._contactEmail) dealMap[d._contactEmail] = d; });
+  var deal = dealMap[c.email] || null;
+  var stageLabels = { appointmentscheduled:'Appt. Scheduled', qualifiedtobuy:'Qualified', presentationscheduled:'Presentation', decisionmakerboughtin:'Decision Maker', contractsent:'Contract Sent', closedwon:'✅ Won', closedlost:'❌ Lost', prospect:'Prospect', opportunity:'Opportunity' };
+
+  var body =
+    '<div class="dt-section"><h3>Contact Info</h3><div class="dt-grid">' +
+      dtField('Name',    name) +
+      dtField('Email',   c.email   ? '<a href="mailto:' + E(c.email) + '">' + E(c.email) + '</a>' : '-', true) +
+      dtField('Phone',   c.phone   || '-') +
+      dtField('Company', c.company || '-') +
+      dtField('Status',  statusBadge, true) +
+      dtField('Last Modified', D(c.lastmodifieddate || c.hs_lastmodifieddate)) +
+    '</div></div>' +
+    (deal ? '<div class="dt-section"><h3>Deal</h3><div class="dt-grid">' +
+      dtField('Deal Name',  deal.dealname  || '-') +
+      dtField('Stage',      stageLabels[deal.dealstage] || deal.dealstage || '-') +
+      dtField('Amount',     deal.amount    ? '$' + Number(deal.amount).toLocaleString() : '-') +
+      dtField('Close Date', D(deal.closedate)) +
+    '</div></div>' : '') +
+    (c.hs_email_last_email_name ? '<div class="dt-section"><h3>HubSpot Activity</h3><div class="dt-grid">' +
+      dtField('Last Email', c.hs_email_last_email_name) +
+      dtField('Last Email Date', D(c.hs_email_last_send_date)) +
+    '</div></div>' : '');
+  openDetailModal('🏢 ' + name, c.company || c.email || '', body);
+}
+
+function dtField(label, value, raw) {
+  return '<div class="dt-field"><span class="dt-label">' + label + '</span><span class="dt-value">' + (raw ? value : E(String(value))) + '</span></div>';
+}
+
 function switchTab(btn, name) {
   document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
   document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
@@ -138,12 +236,13 @@ function renderChat() {
   }
   document.getElementById('ch-tbody').innerHTML = leads.map(function(l) {
     var bc = chatBadge(l.service);
-    return '<tr>' +
+    var origIdx = chatLeads.indexOf(l);
+    return '<tr class="clickable-row" onclick="openChatDetail(' + origIdx + ')">' +
       '<td><strong>' + E(l.name || '-') + '</strong></td>' +
-      '<td><a href="mailto:' + E(l.email || '') + '">' + E(l.email || '-') + '</a></td>' +
+      '<td><a href="mailto:' + E(l.email || '') + '" onclick="event.stopPropagation()">' + E(l.email || '-') + '</a></td>' +
       '<td>' + E(l.phone || '-') + '</td>' +
       '<td><span class="badge ' + bc + '">' + E(l.service || '-') + '</span></td>' +
-      '<td class="td-sm">' + E(l.notes || '-') + '</td>' +
+      '<td class="td-sm">' + E((l.notes || '-').slice(0, 60)) + (l.notes && l.notes.length > 60 ? '…' : '') + '</td>' +
       '<td class="td-xs">' + D(l.capturedAt) + '</td>' +
       '</tr>';
   }).join('');
@@ -275,10 +374,11 @@ function renderOutbound() {
 
     // Reply button
     var replyBtn = (l.status === 'emailed' || l.status === 'follow_up_sent') && !l.replied && l.id
-      ? '<button onclick="markReplied(\'' + l.id + '\',this)" style="font-size:11px;padding:2px 7px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;cursor:pointer;margin-top:4px">Mark Replied</button>'
+      ? '<button onclick="event.stopPropagation();markReplied(\'' + l.id + '\',this)" style="font-size:11px;padding:2px 7px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;cursor:pointer;margin-top:4px">Mark Replied</button>'
       : (l.replied ? '<span style="font-size:11px;color:#16a34a">✓ Replied</span>' : '');
 
-    return '<tr style="' + rowStyle + '">' +
+    var origIdx = outboundLeads.indexOf(l);
+    return '<tr class="clickable-row" style="' + rowStyle + '" onclick="openOutboundDetail(' + origIdx + ')">' +
       '<td><div class="bn">' + E(l.name || '-') + scoreBadge + '</div><div class="bs">' + E(l.address || '') + '</div></td>' +
       '<td>' + contact + '</td>' +
       '<td><span class="badge b-' + (l.status || 'other') + '">' + obLabel(l.status) + '</span><div style="margin-top:4px">' + signals + '</div>' + replyBtn + '</td>' +
@@ -288,7 +388,7 @@ function renderOutbound() {
       '</tr>';
   }).join('');
   document.querySelectorAll('.ep').forEach(function(el) {
-    el.addEventListener('click', function() { this.classList.toggle('open'); });
+    el.addEventListener('click', function(e) { e.stopPropagation(); this.classList.toggle('open'); });
   });
 }
 
@@ -569,9 +669,10 @@ function renderCrmContacts() {
     var stageLabels = { appointmentscheduled: 'Appt. Scheduled', qualifiedtobuy: 'Qualified', presentationscheduled: 'Presentation', decisionmakerboughtin: 'Decision Maker', contractsent: 'Contract Sent', closedwon: '✅ Won', closedlost: '❌ Lost', prospect: 'Prospect', opportunity: 'Opportunity' };
     var stageCell = deal ? (stageLabels[deal.dealstage] || deal.dealstage || '-') : '-';
     var lastMod = c.lastmodifieddate || c.hs_lastmodifieddate || null;
-    return '<tr>' +
+    var origIdx = crmContacts.indexOf(c);
+    return '<tr class="clickable-row" onclick="openCrmDetail(' + origIdx + ')">' +
       '<td><strong>' + E(name) + '</strong></td>' +
-      '<td>' + (c.email ? '<a href="mailto:' + E(c.email) + '">' + E(c.email) + '</a>' : '-') + '</td>' +
+      '<td><a href="mailto:' + E(c.email || '') + '" onclick="event.stopPropagation()">' + E(c.email || '-') + '</a></td>' +
       '<td>' + E(c.company || '-') + '</td>' +
       '<td>' + E(c.phone || '-') + '</td>' +
       '<td><span style="font-size:11px;font-weight:700;color:' + statusBg + ';background:' + statusBg + '1a;padding:2px 8px;border-radius:10px">' + E(status) + '</span></td>' +
