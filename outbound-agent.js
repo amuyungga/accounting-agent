@@ -1467,4 +1467,64 @@ async function pushLeadsToGitHub(leads) {
             resolve();
           });
         });
-        putReq.on('error', e => { console.
+        putReq.on('error', e => { console.log('[GitHub] Error:', e.message); resolve(); });
+        putReq.write(body);
+        putReq.end();
+      });
+    });
+    getReq.on('error', e => { console.log('[GitHub] Error:', e.message); resolve(); });
+    getReq.end();
+  });
+}
+
+// ── Railway live sync ──────────────────────────────────────────────────────
+const RAILWAY_URL  = 'https://accounting-agent-production-cf69.up.railway.app';
+const SYNC_SECRET  = process.env.SYNC_SECRET || 'spectrum-sync';
+
+async function syncLeadsToRailway(leads) {
+  // Only send today's leads — keeps payload small and avoids Railway proxy body limits
+  const today = new Date().toISOString().slice(0, 10);
+  const newLeads = leads.filter(l => {
+    const d = l.emailSentAt || l.foundAt || l.updatedAt || '';
+    return d.startsWith(today);
+  });
+  if (!newLeads.length) {
+    console.log('[Railway] No new leads today to sync');
+    return;
+  }
+  console.log(`[Railway] Syncing ${newLeads.length} new leads to live dashboard...`);
+  const body = JSON.stringify(newLeads);
+  return new Promise((resolve) => {
+    const url = new URL(RAILWAY_URL + '/outbound-leads/sync');
+    const req = https.request({
+      hostname: url.hostname,
+      path: url.pathname,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body),
+        'x-sync-key': SYNC_SECRET,
+      }
+    }, (res) => {
+      let d = '';
+      res.on('data', c => d += c);
+      res.on('end', () => {
+        try {
+          const result = JSON.parse(d);
+          console.log(`[Railway] ✅ Sync complete — ${result.merged} new leads added, ${result.total} total on dashboard`);
+        } catch {
+          console.log(`[Railway] Sync response: HTTP ${res.statusCode} — ${d.slice(0, 200)}`);
+        }
+        resolve();
+      });
+    });
+    req.on('error', e => { console.log('[Railway] Sync error:', e.message); resolve(); });
+    req.write(body);
+    req.end();
+  });
+}
+
+run().catch(err => {
+  console.error('\n[Fatal Error]', err.message);
+  process.exit(1);
+});
