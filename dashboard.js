@@ -307,8 +307,8 @@ function renderObStats() {
     var src = l.source || l.intentSource || (l.placeId ? 'google_places' : null);
     if (src) sourceCounts[src] = (sourceCounts[src] || 0) + 1;
   });
-  var srcNames = { linkedin: 'LinkedIn', indeed: 'Indeed', ziprecruiter: 'ZipRecruiter', glassdoor: 'Glassdoor', monster: 'Monster', craigslist: 'Craigslist', bark: 'Bark.com', fiverr: 'Fiverr', reddit: 'Reddit', acctg_software: 'Acctg Software', new_business: 'New Business', google_places: 'Google Places', intent: 'Intent' };
-  var srcIcons = { linkedin: '💼', indeed: '🔍', ziprecruiter: '⚡', glassdoor: '🪟', monster: '👾', craigslist: '📋', bark: '🐕', fiverr: '🟢', reddit: '🔴', acctg_software: '📊', new_business: '🏪', google_places: '📍', intent: '🎯' };
+  var srcNames = { linkedin: 'LinkedIn', indeed: 'Indeed', ziprecruiter: 'ZipRecruiter', glassdoor: 'Glassdoor', monster: 'Monster', craigslist: 'Craigslist', bark: 'Bark.com', fiverr: 'Fiverr', reddit: 'Reddit', cl_services: 'CL Services', thumbtack: 'Thumbtack', reddit_indiv: 'Reddit (Personal)', acctg_software: 'Acctg Software', new_business: 'New Business', google_places: 'Google Places', intent: 'Intent' };
+  var srcIcons = { linkedin: '💼', indeed: '🔍', ziprecruiter: '⚡', glassdoor: '🪟', monster: '👾', craigslist: '📋', bark: '🐕', fiverr: '🟢', reddit: '🔴', cl_services: '📌', thumbtack: '👍', reddit_indiv: '🙋', acctg_software: '📊', new_business: '🏪', google_places: '📍', intent: '🎯' };
   var sortedSrcs = Object.keys(sourceCounts).sort(function(a, b) { return sourceCounts[b] - sourceCounts[a]; });
 
   // Populate source dropdown — preserve current selection

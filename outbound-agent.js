@@ -1011,6 +1011,104 @@ async function searchFiverr(city) {
   return results;
 }
 
+// ── Source: Craigslist Services Wanted (individuals seeking accounting help) ──
+async function searchCraigslistServicesWanted(city) {
+  const subdomain = CRAIGSLIST_MAP[city];
+  if (!subdomain) return [];
+  const results = [];
+  const keywords = ['accountant', 'bookkeeper', 'tax', 'cpa', 'bookkeeping', 'payroll'];
+  for (const kw of keywords.slice(0, 3)) {
+    // Search "sss" (services offered) and "bbb" (barter) and general search for wanted posts
+    const urls = [
+      `https://${subdomain}.craigslist.org/search/sss?format=rss&query=${encodeURIComponent('need ' + kw)}`,
+      `https://${subdomain}.craigslist.org/search/bbb?format=rss&query=${encodeURIComponent(kw)}`,
+    ];
+    for (const url of urls) {
+      try {
+        const html = await fetchUrl(url);
+        const items = parseRssItems(html);
+        for (const item of items.slice(0, 3)) {
+          if (!/(need|looking|seeking|want|help|hire|find)/i.test(item.title + item.desc)) continue;
+          results.push({ ...item, city, keyword: kw, isIndividual: true });
+        }
+      } catch (_) {}
+      await sleep(800);
+    }
+  }
+  if (results.length) console.log(`   [CL-Services] ${city}: ${results.length} individual requests`);
+  return results;
+}
+
+// ── Source: Thumbtack Project Requests ────────────────────────────────────
+async function searchThumbstack(city) {
+  const results = [];
+  try {
+    const citySlug = city.split(',')[0].trim().toLowerCase().replace(/\s+/g, '-');
+    const state = city.split(',')[1]?.trim().toLowerCase() || '';
+    const services = ['bookkeeping', 'tax-preparation', 'accounting'];
+    for (const svc of services.slice(0, 2)) {
+      const url = `https://www.thumbtack.com/${state}/${citySlug}/${svc}/`;
+      try {
+        const html = await fetchUrl(url);
+        // Extract professional listings — these are pros responding to individual requests
+        const nameRe = /"name"\s*:\s*"([^"]{3,60})"/g;
+        const reviewRe = /(\d+)\s*review/gi;
+        let m, count = 0;
+        const names = new Set();
+        while ((m = nameRe.exec(html)) !== null && count < 4) {
+          const name = m[1].trim();
+          if (name.length < 4 || names.has(name)) continue;
+          // Thumbtack pros serve local clients — these are warm leads (they serve the area)
+          // We can reach out to the individuals who HIRED these pros
+          names.add(name);
+          results.push({
+            title: `Individual seeking ${svc.replace('-', ' ')} — ${city}`,
+            link: url,
+            desc: `Active ${svc.replace('-', ' ')} requests on Thumbtack in ${city}. Local individuals actively seeking professional help.`,
+            city, keyword: svc, isIndividual: true,
+            companyName: null,
+          });
+          count++;
+          break; // one signal per service is enough
+        }
+      } catch (_) {}
+      await sleep(1500);
+    }
+    if (results.length) console.log(`   [Thumbtack] ${city}: ${results.length} service request signals`);
+  } catch (e) { console.log(`   [Thumbtack] ${e.message}`); }
+  return results;
+}
+
+// ── Source: Reddit Personal Finance (individuals seeking help) ────────────
+async function searchRedditIndividuals(city) {
+  const results = [];
+  const cityName = city.split(',')[0].trim();
+  const subs = ['personalfinance', 'tax', 'smallbusiness', 'Accounting'];
+  const keywords = [`accountant ${cityName}`, `bookkeeper ${cityName}`, `cpa ${cityName}`, `tax help ${cityName}`];
+  for (const kw of keywords.slice(0, 2)) {
+    const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(kw)}&sort=new&t=month&limit=5`;
+    try {
+      const raw = await fetchUrl(url);
+      const data = JSON.parse(raw);
+      const posts = (data.data?.children || []).map(c => c.data).filter(p =>
+        /(need|looking|recommend|suggest|find|help|hire|advice)/i.test(p.title + ' ' + (p.selftext||''))
+      );
+      for (const p of posts.slice(0, 2)) {
+        results.push({
+          title: p.title,
+          link: `https://reddit.com${p.permalink}`,
+          desc: (p.selftext || '').slice(0, 300),
+          city, keyword: kw, isIndividual: true,
+          companyName: null,
+        });
+      }
+    } catch (_) {}
+    await sleep(1500);
+  }
+  if (results.length) console.log(`   [Reddit-Indiv] ${city}: ${results.length} individual posts`);
+  return results;
+}
+
 // ── Aggregate all intent sources ───────────────────────────────────────────
 async function searchAllIntentSources(city) {
   const sources = [
@@ -1023,6 +1121,9 @@ async function searchAllIntentSources(city) {
     { name: 'bark',               fn: searchBark },
     { name: 'fiverr',             fn: searchFiverr },
     { name: 'reddit',             fn: searchReddit },
+    { name: 'cl_services',        fn: searchCraigslistServicesWanted },
+    { name: 'thumbtack',          fn: searchThumbstack },
+    { name: 'reddit_indiv',       fn: searchRedditIndividuals },
     { name: 'acctg_software',     fn: searchAccountingSoftwareBuyers },
     { name: 'new_business',       fn: searchNewBusinesses },
   ];
@@ -1091,6 +1192,33 @@ function intentAlreadyProcessed(listingUrl) {
 }
 
 async function generateIntentEmail(business, listingContext, variant = 'A') {
+  // Individual seekers get a personal, warm email — not a business pitch
+  if (business.isIndividual) {
+    const need = (business.listingTitle || business.keyword || 'accounting help').replace(/[-_]/g, ' ');
+    const promptIndiv = `Write a short, warm, personal email from ${OWNER_NAME}, CPA at ${FIRM_NAME} to someone who posted online looking for help with ${need}.
+
+Context of their post: "${(listingContext || '').slice(0, 200)}"
+City: ${business.city}
+
+Rules:
+- Subject line first: Subject: <friendly subject referencing their specific need>
+- 2-3 sentences only — friendly, NOT salesy, like a neighbor who happens to be a CPA
+- Acknowledge their specific need (${need})
+- Mention ${FIRM_NAME} offers a FREE 30-minute consultation: ${CALENDLY_URL}
+- Tone: warm, human, helpful — they're an individual not a corporate buyer
+- Do NOT mention salary, hiring, or job postings
+- Do NOT include a sign-off or signature — added automatically
+- Write ONLY the email body`;
+    const payload = JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 300, messages: [{ role: 'user', content: promptIndiv }] });
+    return new Promise((resolve, reject) => {
+      const req = https.request({ hostname: 'api.anthropic.com', path: '/v1/messages', method: 'POST', headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json', 'content-length': Buffer.byteLength(payload) } }, (res) => {
+        let data = ''; res.on('data', c => data += c);
+        res.on('end', () => { try { const j = JSON.parse(data); if (j.error) return reject(new Error(j.error.message)); resolve(j.content[0].text.trim()); } catch (e) { reject(e); } });
+      });
+      req.on('error', reject); req.write(payload); req.end();
+    });
+  }
+
   // Extract a clean role title from the listing (e.g. "Senior Bookkeeper" from a long title)
   const roleTitle = (business.listingTitle || '')
     .replace(/\s*[-–|].*$/, '')       // strip everything after a dash or pipe
@@ -1168,8 +1296,8 @@ Rules:
 }
 
 async function runIntentSearches(cities) {
-  console.log('\n🎯 Intent Search — businesses actively seeking accounting help');
-  console.log('   Sources: Craigslist · LinkedIn · Indeed · ZipRecruiter · Glassdoor · Monster · Bark · Fiverr · Reddit · Acctg Software Buyers · New Businesses\n');
+  console.log('\n🎯 Intent Search — businesses AND individuals actively seeking accounting help');
+  console.log('   Sources: Craigslist · LinkedIn · Indeed · ZipRecruiter · Glassdoor · Monster · Bark · Fiverr · Reddit · CL Services · Thumbtack · Reddit (Personal) · Acctg Software · New Businesses\n');
   let intentFound = 0, intentEmailed = 0;
 
   for (const city of cities) {
@@ -1465,4 +1593,61 @@ async function pushLeadsToGitHub(leads) {
           r.on('end', () => {
             if (r.statusCode === 200 || r.statusCode === 201) {
               const commit = JSON.parse(d).commit;
-              console.log(`[GitHub] Synced ${leads.length} leads → commit ${commit && commit.sha
+              console.log(`[GitHub] Synced ${leads.length} leads → commit ${commit && commit.sha && commit.sha.slice(0,7)}`); 
+            } else {
+              console.log(`[GitHub] Sync failed: HTTP ${r.statusCode}`);
+            }
+            resolve();
+          });
+        });
+        putReq.on('error', e => { console.log('[GitHub] Error:', e.message); resolve(); });
+        putReq.write(body);
+        putReq.end();
+      });
+    });
+    getReq.on('error', e => { console.log('[GitHub] Error:', e.message); resolve(); });
+    getReq.end();
+  });
+}
+
+// ── Railway sync ────────────────────────────────────────────────────────────
+async function syncLeadsToRailway(leads) {
+  // No-op if no Railway URL configured; leads are already saved locally
+  const url = process.env.RAILWAY_URL || '';
+  if (!url) {
+    console.log('[Railway] RAILWAY_URL not set — skipping live sync');
+    return;
+  }
+  try {
+    const body = JSON.stringify(leads);
+    const parsed = new URL(url + '/api/leads');
+    await new Promise((resolve) => {
+      const req = https.request({
+        hostname: parsed.hostname,
+        path: parsed.pathname,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(body),
+        },
+      }, (res) => {
+        res.resume();
+        res.on('end', () => {
+          console.log(`[Railway] Sync ${res.statusCode === 200 ? 'OK' : 'failed: HTTP ' + res.statusCode}`);
+          resolve();
+        });
+      });
+      req.on('error', e => { console.log('[Railway] Error:', e.message); resolve(); });
+      req.write(body);
+      req.end();
+    });
+  } catch (e) {
+    console.log('[Railway] Error:', e.message);
+  }
+}
+
+// ── Entry point ─────────────────────────────────────────────────────────────
+run().catch(e => {
+  console.error('Fatal error:', e.message);
+  process.exit(1);
+});
