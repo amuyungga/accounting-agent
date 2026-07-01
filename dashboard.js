@@ -1016,3 +1016,161 @@ function exportObCsv() {
 
 loadAll();
 setInterval(loadAll, 60000);
+
+// ── Command Center ────────────────────────────────────────────────────────────
+var cpOpen = false;
+var cpCommands = [];   // local cache of commands from server
+
+function toggleCommandPanel() {
+  cpOpen = !cpOpen;
+  document.getElementById('cmd-panel').classList.toggle('open', cpOpen);
+  if (cpOpen) { cpLoadCommands(); document.getElementById('cp-text-input').focus(); }
+}
+
+function cpSearchCity() {
+  var f = document.getElementById('cp-city-form');
+  f.classList.toggle('show');
+  if (f.classList.contains('show')) document.getElementById('cp-city-input').focus();
+}
+
+function cpSubmitCity() {
+  var city = (document.getElementById('cp-city-input').value || '').trim();
+  if (!city) { document.getElementById('cp-city-input').focus(); return; }
+  var indiv = document.getElementById('cp-indiv-chk').checked;
+  var label = indiv
+    ? '🔍 Search individuals in ' + city
+    : '🔍 Search businesses + individuals in ' + city;
+  cpQueue('search-city', { city: city, individualsOnly: indiv }, label);
+  document.getElementById('cp-city-input').value = '';
+  document.getElementById('cp-indiv-chk').checked = false;
+  document.getElementById('cp-city-form').classList.remove('show');
+}
+
+function cpSendText() {
+  var txt = (document.getElementById('cp-text-input').value || '').trim();
+  if (!txt) return;
+  document.getElementById('cp-text-input').value = '';
+  // Parse simple natural language commands
+  var lower = txt.toLowerCase();
+  var cityMatch = lower.match(/search\s+(.+?)(?:\s+individuals?)?$/i);
+  if (lower.includes('search') && cityMatch) {
+    var indiv = lower.includes('individual');
+    cpQueue('search-city', { city: cityMatch[1].trim(), individualsOnly: indiv }, '🔍 Search: ' + cityMatch[1].trim());
+  } else if (lower.includes('follow') || lower.includes('followup') || lower.includes('follow-up')) {
+    cpQueue('send-followups', {}, '📤 Send follow-up emails');
+  } else if (lower.includes('schedule') || lower.includes('run today') || lower.includes('daily')) {
+    cpQueue('run-schedule', {}, '📅 Run today\'s schedule');
+  } else if (lower.includes('sync')) {
+    cpQueue('sync-now', {}, '🔄 Sync leads to dashboard');
+  } else {
+    cpQueue('text', { text: txt }, txt);
+  }
+}
+
+function cpQueue(type, params, label) {
+  // Optimistically add to log
+  var tempId = 'tmp_' + Date.now();
+  cpAddMessage('user', label);
+  cpAddMessage('agent', '<span class="cp-spinner">⟳</span> Queued — will run on next agent cycle (or run-now.bat)', 'pending', tempId);
+
+  fetch(BASE + '/api/commands', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: type, params: params, label: label }),
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(cmd) {
+    // Replace temp message with real one
+    var el = document.getElementById(tempId);
+    if (el) el.id = 'cmd_' + cmd.id;
+    cpUpdateBadge();
+  })
+  .catch(function(e) {
+    var el = document.getElementById(tempId);
+    if (el) { el.className = 'cp-bubble cp-bubble-agent error'; el.textContent = '❌ Failed to queue: ' + e.message; }
+  });
+}
+
+function cpAddMessage(who, html, cls, id) {
+  var log = document.getElementById('cp-log');
+  // Remove placeholder if present
+  var ph = log.querySelector('div[style*="text-align:center"]');
+  if (ph) ph.remove();
+
+  var wrap = document.createElement('div');
+  wrap.className = 'cp-msg cp-msg-' + who;
+
+  var bubble = document.createElement('div');
+  bubble.className = 'cp-bubble cp-bubble-' + who + (cls ? ' ' + cls : '');
+  if (id) bubble.id = id;
+  bubble.innerHTML = html;
+
+  var ts = document.createElement('div');
+  ts.className = 'cp-ts';
+  ts.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  wrap.appendChild(bubble);
+  wrap.appendChild(ts);
+  log.appendChild(wrap);
+  log.scrollTop = log.scrollHeight;
+  return bubble;
+}
+
+function cpLoadCommands() {
+  fetch(BASE + '/api/commands')
+  .then(function(r) { return r.json(); })
+  .then(function(cmds) {
+    cpCommands = cmds;
+    // Render any commands not already shown
+    var log = document.getElementById('cp-log');
+    if (cmds.length && !log.querySelector('.cp-msg')) {
+      log.innerHTML = '';
+      cmds.slice(-20).forEach(function(cmd) {
+        cpRenderCommand(cmd);
+      });
+    }
+    cpUpdateBadge();
+  })
+  .catch(function() {});
+}
+
+function cpRenderCommand(cmd) {
+  cpAddMessage('user', cmd.label || cmd.params && cmd.params.text || cmd.type);
+  var cls = cmd.status === 'done' ? 'done' : cmd.status === 'error' ? 'error' : 'pending';
+  var icon = cmd.status === 'done' ? '✅' : cmd.status === 'error' ? '❌' : '<span class="cp-spinner">⟳</span>';
+  var msg = cmd.result ? (icon + ' ' + cmd.result) : (icon + ' ' + (cmd.status === 'pending' ? 'Queued — waiting for agent' : cmd.status));
+  var el = cpAddMessage('agent', msg, cls);
+  el.id = 'cmd_' + cmd.id;
+}
+
+function cpUpdateBadge() {
+  var pending = cpCommands.filter(function(c) { return c.status === 'pending'; }).length;
+  var badge = document.getElementById('cmd-badge');
+  if (pending > 0) { badge.textContent = pending; badge.classList.add('show'); }
+  else badge.classList.remove('show');
+}
+
+// Poll for command status updates every 10s
+setInterval(function() {
+  if (!cpOpen) return;
+  fetch(BASE + '/api/commands')
+  .then(function(r) { return r.json(); })
+  .then(function(cmds) {
+    cmds.forEach(function(cmd) {
+      var old = cpCommands.find(function(c) { return c.id === cmd.id; });
+      if (old && old.status !== cmd.status) {
+        // Status changed — update bubble
+        var el = document.getElementById('cmd_' + cmd.id);
+        if (el) {
+          var cls = cmd.status === 'done' ? 'done' : cmd.status === 'error' ? 'error' : 'pending';
+          el.className = 'cp-bubble cp-bubble-agent ' + cls;
+          var icon = cmd.status === 'done' ? '✅' : cmd.status === 'error' ? '❌' : '<span class="cp-spinner">⟳</span>';
+          el.innerHTML = icon + ' ' + (cmd.result || cmd.status);
+        }
+      }
+    });
+    cpCommands = cmds;
+    cpUpdateBadge();
+  })
+  .catch(function() {});
+}, 10000);

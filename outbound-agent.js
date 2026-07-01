@@ -1399,6 +1399,94 @@ async function runIntentSearches(cities) {
   return { intentFound, intentEmailed };
 }
 
+// ── Dashboard Command Queue ────────────────────────────────────────────────
+const RAILWAY_HOSTNAME = 'accounting-agent-production-cf69.up.railway.app';
+
+function railwayRequest(method, path, body) {
+  return new Promise((resolve) => {
+    const payload = body ? JSON.stringify(body) : null;
+    const req = https.request({
+      hostname: RAILWAY_HOSTNAME,
+      path,
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}),
+      },
+    }, (res) => {
+      let d = '';
+      res.on('data', c => d += c);
+      res.on('end', () => {
+        try { resolve({ status: res.statusCode, body: JSON.parse(d) }); }
+        catch { resolve({ status: res.statusCode, body: d }); }
+      });
+    });
+    req.on('error', e => { console.log('[Commands] HTTP error:', e.message); resolve({ status: 0, body: null }); });
+    if (payload) req.write(payload);
+    req.end();
+  });
+}
+
+async function markCommand(id, status, result) {
+  await railwayRequest('PATCH', `/api/commands/${id}`, { status, result });
+}
+
+async function runQueuedCommands() {
+  console.log('[Commands] Checking for queued dashboard commands...');
+  const res = await railwayRequest('GET', '/api/commands');
+  if (!res.body || !Array.isArray(res.body)) {
+    console.log('[Commands] Could not reach command queue — skipping');
+    return;
+  }
+  const pending = res.body.filter(c => c.status === 'pending');
+  if (!pending.length) { console.log('[Commands] No pending commands'); return; }
+  console.log(`[Commands] Found ${pending.length} pending command(s)`);
+
+  for (const cmd of pending) {
+    console.log(`[Commands] ▶ ${cmd.type}: ${cmd.label}`);
+    await markCommand(cmd.id, 'running', 'Agent picked up command…');
+    try {
+      let result = '';
+
+      if (cmd.type === 'search-city') {
+        const city = (cmd.params && cmd.params.city) || '';
+        const individualsOnly = !!(cmd.params && cmd.params.individualsOnly);
+        if (!city) { await markCommand(cmd.id, 'error', 'No city specified'); continue; }
+        const { intentFound, intentEmailed } = await runIntentSearches([city]);
+        result = `Found ${intentFound} leads, emailed ${intentEmailed} in ${city}`;
+        const all = loadLeads();
+        await syncLeadsToRailway(all);
+
+      } else if (cmd.type === 'run-schedule') {
+        await runFollowUps();
+        const { intentFound, intentEmailed } = await runIntentSearches(ALL_CITIES);
+        const all = loadLeads();
+        await pushLeadsToGitHub(all);
+        await syncLeadsToRailway(all);
+        result = `Schedule complete — found ${intentFound} leads, emailed ${intentEmailed}, follow-ups sent`;
+
+      } else if (cmd.type === 'send-followups') {
+        await runFollowUps();
+        result = 'Follow-up emails sent';
+
+      } else if (cmd.type === 'sync-now') {
+        const all = loadLeads();
+        await syncLeadsToRailway(all);
+        result = `Synced ${all.length} leads to dashboard`;
+
+      } else {
+        result = `Unknown command type: ${cmd.type}`;
+      }
+
+      await markCommand(cmd.id, 'done', result);
+      console.log(`[Commands] ✅ Done: ${result}`);
+    } catch (e) {
+      await markCommand(cmd.id, 'error', e.message);
+      console.log(`[Commands] ❌ Error: ${e.message}`);
+    }
+  }
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
 async function run() {
   // Handle --reset flag
@@ -1407,6 +1495,9 @@ async function run() {
     console.log('✅ Progress reset. Run again without --reset to start fresh.');
     return;
   }
+
+  // ── Check for queued dashboard commands before anything else ────────────
+  await runQueuedCommands();
 
   console.log('\n╔══════════════════════════════════════════════════════╗');
   console.log('║  Spectrum Financial Solutions — Outbound Agent       ║');
@@ -1615,7 +1706,6 @@ async function pushLeadsToGitHub(leads) {
 
 // ── Railway sync ────────────────────────────────────────────────────────────
 async function syncLeadsToRailway(leads) {
-  const RAILWAY_HOSTNAME = 'accounting-agent-production-cf69.up.railway.app';
   const SYNC_SECRET = process.env.SYNC_SECRET || 'spectrum-sync';
 
   if (!leads.length) {
@@ -1635,7 +1725,7 @@ async function syncLeadsToRailway(leads) {
   const postChunk = (chunk) => new Promise((resolve) => {
     const body = JSON.stringify(chunk);
     const req = https.request({
-      hostname: RAILWAY_HOSTNAME,
+      hostname: 'accounting-agent-production-cf69.up.railway.app',
       path: '/outbound-leads/sync',
       method: 'POST',
       headers: {

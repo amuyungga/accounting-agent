@@ -301,6 +301,55 @@ app.get('/leads', (req, res) => {
   res.json(loadLeads());
 });
 
+// ── Command Queue ──────────────────────────────────────────────────────────
+const COMMANDS_FILE = path.join(__dirname, 'command-queue.json');
+function loadCommands() {
+  if (!fs.existsSync(COMMANDS_FILE)) return [];
+  try { return JSON.parse(fs.readFileSync(COMMANDS_FILE, 'utf8')); } catch { return []; }
+}
+function saveCommands(cmds) {
+  const tmp = COMMANDS_FILE + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(cmds, null, 2));
+  fs.renameSync(tmp, COMMANDS_FILE);
+}
+
+// GET /api/commands
+app.get('/api/commands', (req, res) => {
+  const cmds = loadCommands();
+  // Return last 50 only to keep it light
+  res.json(cmds.slice(-50));
+});
+
+// POST /api/commands — queue a new command from the dashboard
+app.post('/api/commands', (req, res) => {
+  const { type, params, label } = req.body || {};
+  if (!type) return res.status(400).json({ error: 'type required' });
+  const cmds = loadCommands();
+  const cmd = {
+    id: Date.now().toString(),
+    type,
+    params: params || {},
+    label: label || type,
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+    result: null,
+  };
+  cmds.push(cmd);
+  saveCommands(cmds);
+  console.log(`[Commands] Queued: ${cmd.type} — ${cmd.label}`);
+  res.json(cmd);
+});
+
+// PATCH /api/commands/:id — agent updates status after execution
+app.patch('/api/commands/:id', (req, res) => {
+  const cmds = loadCommands();
+  const idx = cmds.findIndex(c => c.id === req.params.id);
+  if (idx < 0) return res.status(404).json({ error: 'Not found' });
+  cmds[idx] = { ...cmds[idx], ...req.body, updatedAt: new Date().toISOString() };
+  saveCommands(cmds);
+  res.json(cmds[idx]);
+});
+
 // GET /outbound-leads — return all outbound (proactively found) leads
 app.get('/outbound-leads', (req, res) => {
   const file = path.join(__dirname, 'outbound-leads.json');

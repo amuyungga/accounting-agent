@@ -346,6 +346,112 @@ a:hover{text-decoration:underline}
 .ab-stat .av{font-size:1.4rem;font-weight:800}
 .ab-stat .al{font-size:10px;color:var(--muted)}
 .winner{box-shadow:0 0 0 2px var(--green)}
+
+/* ── Command Center ──────────────────────────────────────────────────── */
+#cmd-fab{
+  position:fixed;bottom:28px;right:28px;z-index:200;
+  background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+  color:#fff;border:none;border-radius:50px;
+  padding:13px 22px;font-size:13px;font-weight:700;
+  cursor:pointer;box-shadow:0 4px 24px rgba(59,130,246,.45);
+  display:flex;align-items:center;gap:8px;
+  transition:transform .15s,box-shadow .15s;
+}
+#cmd-fab:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(59,130,246,.55)}
+#cmd-fab .cmd-badge{
+  background:#f85149;color:#fff;font-size:10px;font-weight:800;
+  border-radius:50%;width:18px;height:18px;
+  display:none;align-items:center;justify-content:center;
+}
+#cmd-fab .cmd-badge.show{display:flex}
+
+#cmd-panel{
+  position:fixed;bottom:90px;right:28px;z-index:200;
+  width:380px;max-height:580px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.7);
+  display:flex;flex-direction:column;
+  transform:scale(.95) translateY(12px);opacity:0;
+  pointer-events:none;transition:transform .2s cubic-bezier(.34,1.4,.64,1),opacity .18s;
+}
+#cmd-panel.open{transform:scale(1) translateY(0);opacity:1;pointer-events:all}
+
+.cp-head{
+  padding:16px 18px 12px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.cp-head h3{font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px}
+.cp-close{background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1;padding:0 2px}
+.cp-close:hover{color:var(--text)}
+
+.cp-quick{
+  padding:12px 14px 8px;display:flex;flex-wrap:wrap;gap:7px;
+  border-bottom:1px solid var(--border);
+}
+.cp-chip{
+  background:var(--faint);border:1px solid var(--border);
+  color:var(--text);font-size:11px;font-weight:600;
+  padding:6px 12px;border-radius:20px;cursor:pointer;
+  transition:background .15s,border-color .15s;white-space:nowrap;
+}
+.cp-chip:hover{background:var(--blue-dim);border-color:var(--blue)}
+
+.cp-city-form{
+  padding:8px 14px 10px;border-bottom:1px solid var(--border);
+  display:none;gap:7px;align-items:center;flex-wrap:wrap;
+}
+.cp-city-form.show{display:flex}
+.cp-city-form input[type=text]{
+  flex:1;min-width:160px;background:var(--faint);border:1px solid var(--border);
+  color:var(--text);padding:7px 11px;border-radius:8px;font-size:12px;outline:none;
+}
+.cp-city-form input[type=text]:focus{border-color:var(--blue)}
+.cp-city-form label{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px;cursor:pointer}
+.cp-city-form button{
+  background:var(--blue);color:#fff;border:none;
+  padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;
+}
+
+.cp-log{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px;min-height:120px}
+.cp-msg{display:flex;flex-direction:column;gap:2px}
+.cp-msg-user{align-items:flex-end}
+.cp-msg-agent{align-items:flex-start}
+.cp-bubble{
+  max-width:86%;padding:9px 13px;border-radius:14px;font-size:12px;line-height:1.55;
+}
+.cp-bubble-user{
+  background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+  color:#fff;border-radius:14px 14px 3px 14px;
+}
+.cp-bubble-agent{
+  background:var(--faint);border:1px solid var(--border);
+  color:var(--text);border-radius:14px 14px 14px 3px;
+}
+.cp-bubble-agent.pending{color:var(--amber)}
+.cp-bubble-agent.done{color:var(--green)}
+.cp-bubble-agent.error{color:var(--red)}
+.cp-ts{font-size:10px;color:var(--muted);padding:0 4px}
+.cp-spinner{display:inline-block;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.cp-input-row{
+  padding:10px 14px 14px;border-top:1px solid var(--border);
+  display:flex;gap:8px;align-items:center;
+}
+.cp-input-row input{
+  flex:1;background:var(--faint);border:1px solid var(--border);
+  color:var(--text);padding:9px 13px;border-radius:10px;font-size:12px;outline:none;
+}
+.cp-input-row input:focus{border-color:var(--blue)}
+.cp-input-row input::placeholder{color:var(--muted)}
+.cp-send{
+  background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+  color:#fff;border:none;border-radius:10px;
+  width:36px;height:36px;font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:opacity .15s;
+}
+.cp-send:hover{opacity:.85}
 </style>
 </head>
 <body>
@@ -652,6 +758,44 @@ a:hover{text-decoration:underline}
       <div class="ms" id="m-sum-wrap"><h3>Summary</h3><div class="mt" id="m-summary"></div></div>
       <div class="ms"><h3>Transcript</h3><div class="mt" id="m-transcript"></div></div>
     </div>
+  </div>
+</div>
+
+<!-- COMMAND CENTER -->
+<button id="cmd-fab" onclick="toggleCommandPanel()">
+  ⌘ Commands
+  <span class="cmd-badge" id="cmd-badge">0</span>
+</button>
+
+<div id="cmd-panel">
+  <div class="cp-head">
+    <h3>⌘ Agent Command Center</h3>
+    <button class="cp-close" onclick="toggleCommandPanel()">&times;</button>
+  </div>
+
+  <div class="cp-quick">
+    <button class="cp-chip" onclick="cpSearchCity()">🔍 Search City</button>
+    <button class="cp-chip" onclick="cpQueue('run-schedule',{},'📅 Run today\'s schedule')">📅 Run Schedule</button>
+    <button class="cp-chip" onclick="cpQueue('send-followups',{},'📤 Send follow-up emails')">📤 Follow-ups</button>
+    <button class="cp-chip" onclick="cpQueue('sync-now',{},'🔄 Sync leads to dashboard')">🔄 Sync Now</button>
+  </div>
+
+  <div class="cp-city-form" id="cp-city-form">
+    <input type="text" id="cp-city-input" placeholder="e.g. Sacramento, CA" onkeydown="if(event.key==='Enter')cpSubmitCity()"/>
+    <label><input type="checkbox" id="cp-indiv-chk"/> Individuals only</label>
+    <button onclick="cpSubmitCity()">Go</button>
+  </div>
+
+  <div class="cp-log" id="cp-log">
+    <div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0">
+      Commands queue here and run on your next agent cycle.<br/>
+      Or run <strong>run-now.bat</strong> to execute immediately.
+    </div>
+  </div>
+
+  <div class="cp-input-row">
+    <input type="text" id="cp-text-input" placeholder="Type a command…" onkeydown="if(event.key==='Enter')cpSendText()"/>
+    <button class="cp-send" onclick="cpSendText()">➤</button>
   </div>
 </div>
 
