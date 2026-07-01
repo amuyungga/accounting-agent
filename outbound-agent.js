@@ -176,7 +176,10 @@ function saveLead(lead) {
   };
   if (idx >= 0) leads[idx] = record;
   else leads.push(record);
-  fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2));
+  // Atomic write: write to .tmp first, then rename — prevents corruption on crash/interrupt
+  const tmp = LEADS_FILE + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(leads, null, 2));
+  fs.renameSync(tmp, LEADS_FILE);
   return record;
 }
 
@@ -1615,52 +1618,57 @@ async function syncLeadsToRailway(leads) {
   const RAILWAY_HOSTNAME = 'accounting-agent-production-cf69.up.railway.app';
   const SYNC_SECRET = process.env.SYNC_SECRET || 'spectrum-sync';
 
-  // Only sync today's new leads to keep payload small (avoids Railway proxy limits)
-  const today = new Date().toISOString().slice(0, 10);
-  const newLeads = leads.filter(l => {
-    const d = l.emailSentAt || l.foundAt || l.updatedAt || '';
-    return d.startsWith(today);
-  });
-
-  if (!newLeads.length) {
-    console.log('[Railway] No new leads today to sync');
+  if (!leads.length) {
+    console.log('[Railway] No leads to sync');
     return;
   }
 
-  console.log(`[Railway] Syncing ${newLeads.length} leads from today...`);
-  try {
-    const body = JSON.stringify(newLeads);
-    await new Promise((resolve) => {
-      const req = https.request({
-        hostname: RAILWAY_HOSTNAME,
-        path: '/outbound-leads/sync',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(body),
-          'x-sync-key': SYNC_SECRET,
-        },
-      }, (res) => {
-        let d = '';
-        res.on('data', c => d += c);
-        res.on('end', () => {
-          if (res.statusCode === 200) {
-            try {
-              const result = JSON.parse(d);
-              console.log(`[Railway] ✅ Synced — merged ${result.merged} new, total ${result.total}`);
-            } catch {
-              console.log(`[Railway] ✅ Sync OK (HTTP 200)`);
-            }
-          } else {
-            console.log(`[Railway] ❌ Sync failed: HTTP ${res.statusCode} — ${d.slice(0, 200)}`);
+  // Send in chunks of 100 to stay well under Railway proxy limits
+  const CHUNK_SIZE = 100;
+  const chunks = [];
+  for (let i = 0; i < leads.length; i += CHUNK_SIZE) {
+    chunks.push(leads.slice(i, i + CHUNK_SIZE));
+  }
+
+  console.log(`[Railway] Syncing ${leads.length} leads in ${chunks.length} chunk(s)...`);
+
+  const postChunk = (chunk) => new Promise((resolve) => {
+    const body = JSON.stringify(chunk);
+    const req = https.request({
+      hostname: RAILWAY_HOSTNAME,
+      path: '/outbound-leads/sync',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body),
+        'x-sync-key': SYNC_SECRET,
+      },
+    }, (res) => {
+      let d = '';
+      res.on('data', c => d += c);
+      res.on('end', () => {
+        if (res.statusCode === 200) {
+          try {
+            const result = JSON.parse(d);
+            console.log(`[Railway] ✅ Chunk synced — merged ${result.merged} new, total ${result.total}`);
+          } catch {
+            console.log(`[Railway] ✅ Chunk OK (HTTP 200)`);
           }
-          resolve();
-        });
+        } else {
+          console.log(`[Railway] ❌ Chunk failed: HTTP ${res.statusCode} — ${d.slice(0, 200)}`);
+        }
+        resolve();
       });
-      req.on('error', e => { console.log('[Railway] ❌ Connection error:', e.message); resolve(); });
-      req.write(body);
-      req.end();
     });
+    req.on('error', e => { console.log('[Railway] ❌ Connection error:', e.message); resolve(); });
+    req.write(body);
+    req.end();
+  });
+
+  try {
+    for (const chunk of chunks) {
+      await postChunk(chunk);
+    }
   } catch (e) {
     console.log('[Railway] Error:', e.message);
   }

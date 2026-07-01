@@ -323,8 +323,16 @@ app.post('/outbound-leads/sync', (req, res) => {
     const key = lead.email || lead.id || lead.placeId;
     const idx = key ? leads.findIndex(l => (l.email && l.email === lead.email) || (l.id && l.id === lead.id) || (l.placeId && l.placeId === lead.placeId)) : -1;
     if (idx >= 0) {
-      // Preserve reply/open tracking already on server; merge in new fields from agent
-      leads[idx] = { ...lead, ...leads[idx], updatedAt: new Date().toISOString() };
+      const existing = leads[idx];
+      // Agent data wins for most fields; preserve server-side tracking (replies, opens, clicks)
+      leads[idx] = {
+        ...existing,
+        ...lead,
+        repliedAt: existing.repliedAt || lead.repliedAt,
+        openedAt: existing.openedAt || lead.openedAt,
+        clickedAt: existing.clickedAt || lead.clickedAt,
+        updatedAt: new Date().toISOString(),
+      };
     } else {
       leads.push(lead);
       merged++;
