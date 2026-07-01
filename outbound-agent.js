@@ -1612,32 +1612,52 @@ async function pushLeadsToGitHub(leads) {
 
 // ── Railway sync ────────────────────────────────────────────────────────────
 async function syncLeadsToRailway(leads) {
-  // No-op if no Railway URL configured; leads are already saved locally
-  const url = process.env.RAILWAY_URL || '';
-  if (!url) {
-    console.log('[Railway] RAILWAY_URL not set — skipping live sync');
+  const RAILWAY_HOSTNAME = 'accounting-agent-production-cf69.up.railway.app';
+  const SYNC_SECRET = process.env.SYNC_SECRET || 'spectrum-sync';
+
+  // Only sync today's new leads to keep payload small (avoids Railway proxy limits)
+  const today = new Date().toISOString().slice(0, 10);
+  const newLeads = leads.filter(l => {
+    const d = l.emailSentAt || l.foundAt || l.updatedAt || '';
+    return d.startsWith(today);
+  });
+
+  if (!newLeads.length) {
+    console.log('[Railway] No new leads today to sync');
     return;
   }
+
+  console.log(`[Railway] Syncing ${newLeads.length} leads from today...`);
   try {
-    const body = JSON.stringify(leads);
-    const parsed = new URL(url + '/api/leads');
+    const body = JSON.stringify(newLeads);
     await new Promise((resolve) => {
       const req = https.request({
-        hostname: parsed.hostname,
-        path: parsed.pathname,
+        hostname: RAILWAY_HOSTNAME,
+        path: '/outbound-leads/sync',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(body),
+          'x-sync-key': SYNC_SECRET,
         },
       }, (res) => {
-        res.resume();
+        let d = '';
+        res.on('data', c => d += c);
         res.on('end', () => {
-          console.log(`[Railway] Sync ${res.statusCode === 200 ? 'OK' : 'failed: HTTP ' + res.statusCode}`);
+          if (res.statusCode === 200) {
+            try {
+              const result = JSON.parse(d);
+              console.log(`[Railway] ✅ Synced — merged ${result.merged} new, total ${result.total}`);
+            } catch {
+              console.log(`[Railway] ✅ Sync OK (HTTP 200)`);
+            }
+          } else {
+            console.log(`[Railway] ❌ Sync failed: HTTP ${res.statusCode} — ${d.slice(0, 200)}`);
+          }
           resolve();
         });
       });
-      req.on('error', e => { console.log('[Railway] Error:', e.message); resolve(); });
+      req.on('error', e => { console.log('[Railway] ❌ Connection error:', e.message); resolve(); });
       req.write(body);
       req.end();
     });
