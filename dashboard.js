@@ -1071,7 +1071,7 @@ function cpQueue(type, params, label) {
   // Optimistically add to log
   var tempId = 'tmp_' + Date.now();
   cpAddMessage('user', label);
-  cpAddMessage('agent', '<span class="cp-spinner">⟳</span> Queued — will run on next agent cycle (or run-now.bat)', 'pending', tempId);
+  cpAddMessage('agent', '<span class="cp-spinner">⟳</span> Executing… (if watch-commands.bat is running, this completes in ~5s)', 'pending', tempId);
 
   fetch(BASE + '/api/commands', {
     method: 'POST',
@@ -1138,7 +1138,7 @@ function cpRenderCommand(cmd) {
   cpAddMessage('user', cmd.label || cmd.params && cmd.params.text || cmd.type);
   var cls = cmd.status === 'done' ? 'done' : cmd.status === 'error' ? 'error' : 'pending';
   var icon = cmd.status === 'done' ? '✅' : cmd.status === 'error' ? '❌' : '<span class="cp-spinner">⟳</span>';
-  var msg = cmd.result ? (icon + ' ' + cmd.result) : (icon + ' ' + (cmd.status === 'pending' ? 'Queued — waiting for agent' : cmd.status));
+  var msg = cmd.result ? (icon + ' ' + cmd.result) : (icon + ' ' + (cmd.status === 'pending' ? 'Queued — waiting for watch-commands.bat' : cmd.status === 'running' ? 'Running…' : cmd.status));
   var el = cpAddMessage('agent', msg, cls);
   el.id = 'cmd_' + cmd.id;
 }

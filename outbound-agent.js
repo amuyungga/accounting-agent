@@ -1496,6 +1496,12 @@ async function run() {
     return;
   }
 
+  // Handle --run-commands flag (called by command-watcher.js for immediate execution)
+  if (process.argv.includes('--run-commands')) {
+    await runQueuedCommands();
+    return;
+  }
+
   // ── Check for queued dashboard commands before anything else ────────────
   await runQueuedCommands();
 
