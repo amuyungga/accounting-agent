@@ -1474,6 +1474,22 @@ async function runQueuedCommands() {
         await syncLeadsToRailway(all);
         result = `Synced ${all.length} leads to dashboard`;
 
+      } else if (cmd.type === 'text') {
+        // Free-text that wasn't parsed on the frontend — try to interpret it
+        const t = (cmd.params && cmd.params.text || '').toLowerCase();
+        if (t.includes('follow')) {
+          await runFollowUps();
+          result = 'Follow-up emails sent';
+        } else if (t.includes('sync')) {
+          await syncLeadsToRailway(loadLeads());
+          result = `Synced ${loadLeads().length} leads`;
+        } else if (t.includes('run') || t.includes('schedule')) {
+          await runFollowUps();
+          const { intentFound, intentEmailed } = await runIntentSearches(ALL_CITIES);
+          result = `Schedule done — found ${intentFound}, emailed ${intentEmailed}`;
+        } else {
+          result = `Command not understood: "${cmd.params && cmd.params.text}"`;
+        }
       } else {
         result = `Unknown command type: ${cmd.type}`;
       }

@@ -350,6 +350,111 @@ app.patch('/api/commands/:id', (req, res) => {
   res.json(cmds[idx]);
 });
 
+// POST /api/chat-command — AI interprets free-text and answers or queues an action
+app.post('/api/chat-command', async (req, res) => {
+  const { message } = req.body || {};
+  if (!message) return res.status(400).json({ error: 'message required' });
+
+  // Build lead data summary for context
+  const obFile = path.join(__dirname, 'outbound-leads.json');
+  let leads = [];
+  try { leads = JSON.parse(fs.readFileSync(obFile, 'utf8')); } catch {}
+
+  const total = leads.length;
+  const emailed = leads.filter(l => l.status === 'emailed' || l.status === 'follow-up sent').length;
+  const replied = leads.filter(l => l.repliedAt).length;
+
+  // Top cities
+  const byCityMap = {};
+  leads.forEach(l => { const c = l.city || (l.address || '').split(',').slice(-2).join(',').trim() || 'Unknown'; byCityMap[c] = (byCityMap[c] || 0) + 1; });
+  const topCities = Object.entries(byCityMap).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([c,n])=>`${c}: ${n}`).join(', ');
+
+  // Top sources
+  const bySrcMap = {};
+  leads.forEach(l => { const s = l.source || 'unknown'; bySrcMap[s] = (bySrcMap[s] || 0) + 1; });
+  const topSources = Object.entries(bySrcMap).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([s,n])=>`${s}: ${n}`).join(', ');
+
+  // Top industries
+  const byIndMap = {};
+  leads.forEach(l => { const i = l.industry || 'unknown'; byIndMap[i] = (byIndMap[i] || 0) + 1; });
+  const topIndustries = Object.entries(byIndMap).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([i,n])=>`${i}: ${n}`).join(', ');
+
+  // Recent (last 7 days)
+  const week = new Date(Date.now() - 7*24*60*60*1000).toISOString();
+  const recent = leads.filter(l => (l.foundAt || '') >= week).length;
+
+  const summary = `
+LEAD DATABASE SNAPSHOT:
+- Total leads found: ${total}
+- Emailed: ${emailed} | Replied: ${replied} | Reply rate: ${total ? ((replied/Math.max(emailed,1))*100).toFixed(1) : 0}%
+- New leads this week: ${recent}
+- Top cities: ${topCities || 'none yet'}
+- Top sources: ${topSources || 'none yet'}
+- Top industries: ${topIndustries || 'none yet'}
+`.trim();
+
+  const systemPrompt = `You are the AI assistant for Spectrum Financial Solutions' outbound marketing agent.
+Asante (the owner, a CPA) uses you to find and contact businesses and individuals who need accounting, bookkeeping, tax, or payroll services.
+The agent searches job boards, Craigslist, Reddit, LinkedIn, Indeed, Bark.com, Thumbtack, and more.
+
+${summary}
+
+When the user sends a message, respond in ONE of two ways:
+
+1. If it's an ACTION to execute, respond with ONLY this JSON (no other text):
+{"action":"<type>","params":<object>,"reply":"<short confirmation message>"}
+Valid action types:
+- "search-city": params = {"city":"City, ST","individualsOnly":false}
+- "run-schedule": params = {} (runs full daily search + follow-ups)
+- "send-followups": params = {}
+- "sync-now": params = {}
+
+2. If it's a QUESTION or REQUEST FOR ANALYSIS, answer it directly in 2-4 sentences using the data above. Be specific and actionable. No JSON.
+
+Examples of questions: "where should I focus?", "which source works best?", "how many leads do I have?", "what cities have the most leads?"
+Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync now", "search for individuals in Fresno"`;
+
+  try {
+    const aiRes = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 400,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: message }],
+    });
+
+    const text = (aiRes.content[0].text || '').trim();
+
+    // Try to parse as action JSON
+    try {
+      const parsed = JSON.parse(text);
+      if (parsed.action) {
+        // Queue the command
+        const cmds = loadCommands();
+        const cmd = {
+          id: Date.now().toString(),
+          type: parsed.action,
+          params: parsed.params || {},
+          label: parsed.reply || parsed.action,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+          result: null,
+        };
+        cmds.push(cmd);
+        saveCommands(cmds);
+        console.log(`[AI Command] Queued: ${cmd.type} — ${cmd.label}`);
+        return res.json({ type: 'action', cmd, reply: parsed.reply || 'Command queued.' });
+      }
+    } catch {}
+
+    // It's a plain text answer
+    res.json({ type: 'answer', reply: text });
+
+  } catch (e) {
+    console.error('[AI Command] Error:', e.message);
+    res.status(500).json({ error: 'AI error', reply: 'Sorry, I had trouble processing that. Try again.' });
+  }
+});
+
 // GET /outbound-leads — return all outbound (proactively found) leads
 app.get('/outbound-leads', (req, res) => {
   const file = path.join(__dirname, 'outbound-leads.json');

@@ -1050,21 +1050,47 @@ function cpSendText() {
   var txt = (document.getElementById('cp-text-input').value || '').trim();
   if (!txt) return;
   document.getElementById('cp-text-input').value = '';
-  // Parse simple natural language commands
-  var lower = txt.toLowerCase();
-  var cityMatch = lower.match(/search\s+(.+?)(?:\s+individuals?)?$/i);
-  if (lower.includes('search') && cityMatch) {
-    var indiv = lower.includes('individual');
-    cpQueue('search-city', { city: cityMatch[1].trim(), individualsOnly: indiv }, '🔍 Search: ' + cityMatch[1].trim());
-  } else if (lower.includes('follow') || lower.includes('followup') || lower.includes('follow-up')) {
-    cpQueue('send-followups', {}, '📤 Send follow-up emails');
-  } else if (lower.includes('schedule') || lower.includes('run today') || lower.includes('daily')) {
-    cpQueue('run-schedule', {}, '📅 Run today\'s schedule');
-  } else if (lower.includes('sync')) {
-    cpQueue('sync-now', {}, '🔄 Sync leads to dashboard');
-  } else {
-    cpQueue('text', { text: txt }, txt);
-  }
+
+  // Show user bubble immediately
+  cpAddMessage('user', txt);
+
+  // Show typing indicator
+  var thinkingId = 'think_' + Date.now();
+  cpAddMessage('agent', '<span class="cp-spinner">⟳</span> Thinking…', 'pending', thinkingId);
+
+  // Send to AI endpoint
+  fetch(BASE + '/api/chat-command', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: txt }),
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var el = document.getElementById(thinkingId);
+    if (data.type === 'action' && data.cmd) {
+      // Action queued — update thinking bubble + add status bubble
+      if (el) el.parentNode.remove();
+      var cmdEl = cpAddMessage('agent',
+        '<span class="cp-spinner">⟳</span> ' + (data.reply || 'Command queued — executing in ~5s…'),
+        'pending'
+      );
+      if (cmdEl && data.cmd) cmdEl.id = 'cmd_' + data.cmd.id;
+      cpUpdateBadge();
+    } else {
+      // Plain answer — replace thinking bubble
+      if (el) {
+        el.className = 'cp-bubble cp-bubble-agent';
+        el.innerHTML = data.reply || data.error || 'No response.';
+      }
+    }
+  })
+  .catch(function(e) {
+    var el = document.getElementById(thinkingId);
+    if (el) {
+      el.className = 'cp-bubble cp-bubble-agent error';
+      el.textContent = '❌ ' + e.message;
+    }
+  });
 }
 
 function cpQueue(type, params, label) {
