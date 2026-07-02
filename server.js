@@ -401,7 +401,7 @@ ${summary}
 
 When the user sends a message, respond in ONE of two ways:
 
-1. If it's an ACTION to execute, respond with ONLY this JSON (no other text):
+1. If it's an ACTION to execute, respond with ONLY raw JSON on a single line — no markdown, no code fences, no explanation:
 {"action":"<type>","params":<object>,"reply":"<short confirmation message>"}
 Valid action types:
 - "search-city": params = {"city":"City, ST","individualsOnly":false}
