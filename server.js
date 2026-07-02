@@ -424,9 +424,10 @@ Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync
 
     const text = (aiRes.content[0].text || '').trim();
 
-    // Try to parse as action JSON
+    // Try to parse as action JSON (strip markdown code fences if present)
+    const cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
     try {
-      const parsed = JSON.parse(text);
+      const parsed = JSON.parse(cleaned);
       if (parsed.action) {
         // Queue the command
         const cmds = loadCommands();
