@@ -1122,7 +1122,7 @@ async function searchAllIntentSources(city) {
     { name: 'glassdoor',          fn: searchGlassdoor },
     { name: 'monster',            fn: searchMonster },
     { name: 'bark',               fn: searchBark },
-    { name: 'fiverr',             fn: searchFiverr },
+    // Fiverr removed — JS-rendered, always returns 0; buyer requests require login
     { name: 'reddit',             fn: searchReddit },
     { name: 'cl_services',        fn: searchCraigslistServicesWanted },
     { name: 'thumbtack',          fn: searchThumbstack },
@@ -1300,7 +1300,7 @@ Rules:
 
 async function runIntentSearches(cities) {
   console.log('\n🎯 Intent Search — businesses AND individuals actively seeking accounting help');
-  console.log('   Sources: Craigslist · LinkedIn · Indeed · ZipRecruiter · Glassdoor · Monster · Bark · Fiverr · Reddit · CL Services · Thumbtack · Reddit (Personal) · Acctg Software · New Businesses\n');
+  console.log('   Sources: Craigslist · LinkedIn · Indeed · ZipRecruiter · Glassdoor · Monster · Bark · Reddit · CL Services · Thumbtack · Reddit (Personal) · Acctg Software · New Businesses\n');
   let intentFound = 0, intentEmailed = 0;
 
   for (const city of cities) {
@@ -1789,5 +1789,4 @@ async function syncLeadsToRailway(leads) {
 // ── Entry point ─────────────────────────────────────────────────────────────
 run().catch(e => {
   console.error('Fatal error:', e.message);
-  process.exit(1);
-});
+ 
