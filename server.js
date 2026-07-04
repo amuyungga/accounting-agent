@@ -12,7 +12,6 @@ const express    = require('express');
 const cors       = require('cors');
 const fs         = require('fs');
 const path       = require('path');
-const https      = require('https');
 const Anthropic  = require('@anthropic-ai/sdk');
 const nodemailer = require('nodemailer');
 
@@ -409,12 +408,12 @@ Valid action types:
 - "run-schedule": params = {} (runs full daily search + follow-ups)
 - "send-followups": params = {}
 - "sync-now": params = {}
-- "trigger-github-run": params = {} (triggers cloud agent run on GitHub Actions — use when user says "run now", "trigger a run", "start the agent", "run in the cloud")
+- "trigger-github-run": params = {} (triggers cloud agent run on GitHub Actions — use when user says "run now", "trigger a run", "start the agent", "run the agent", "run in the cloud")
 
 2. If it's a QUESTION or REQUEST FOR ANALYSIS, answer it directly in 2-4 sentences using the data above. Be specific and actionable. No JSON.
 
 Examples of questions: "where should I focus?", "which source works best?", "how many leads do I have?", "what cities have the most leads?"
-Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync now", "search for individuals in Fresno"`;
+Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync now", "search for individuals in Fresno", "trigger a run"`;
 
   try {
     const aiRes = await anthropic.messages.create({
@@ -431,48 +430,35 @@ Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync
     try {
       const parsed = JSON.parse(cleaned);
       if (parsed.action) {
-        // Handle GitHub Actions trigger directly (no local watcher needed)
+        // Handle GitHub Actions trigger directly — no local watcher needed
         if (parsed.action === 'trigger-github-run') {
           const ghToken = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || '';
-          if (!ghToken) {
-            return res.json({ type: 'answer', reply: 'GH_TOKEN not set on this server — cannot trigger GitHub Actions.' });
+          if (!ghToken) return res.json({ type: 'answer', reply: '⚠️ GH_TOKEN not set in Railway variables — cannot trigger GitHub Actions.' });
+          const result = await new Promise((resolve) => {
+            const body = JSON.stringify({ ref: 'main' });
+            const req2 = https.request({
+              hostname: 'api.github.com',
+              path: '/repos/amuyungga/accounting-agent/actions/workflows/daily-agent.yml/dispatches',
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${ghToken}`,
+                'Accept': 'application/vnd.github+json',
+                'User-Agent': 'spectrum-dashboard',
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(body),
+              },
+            }, (r) => { let d = ''; r.on('data', c => d += c); r.on('end', () => resolve({ status: r.statusCode })); });
+            req2.on('error', e => resolve({ status: 0, err: e.message }));
+            req2.write(body); req2.end();
+          });
+          if (result.status === 204) {
+            console.log('[GitHub Actions] Workflow triggered');
+            return res.json({ type: 'answer', reply: '✅ Agent run triggered on GitHub Actions! It will run in the cloud and sync new leads here in ~30 minutes.' });
           }
-          try {
-            const triggerResult = await new Promise((resolve, reject) => {
-              const body = JSON.stringify({ ref: 'main' });
-              const req2 = https.request({
-                hostname: 'api.github.com',
-                path: '/repos/amuyungga/accounting-agent/actions/workflows/daily-agent.yml/dispatches',
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${ghToken}`,
-                  'Accept': 'application/vnd.github+json',
-                  'User-Agent': 'spectrum-dashboard',
-                  'Content-Type': 'application/json',
-                  'Content-Length': Buffer.byteLength(body),
-                },
-              }, (r) => {
-                let d = '';
-                r.on('data', c => d += c);
-                r.on('end', () => resolve({ status: r.statusCode, body: d }));
-              });
-              req2.on('error', reject);
-              req2.write(body);
-              req2.end();
-            });
-            if (triggerResult.status === 204) {
-              console.log('[GitHub Actions] Workflow triggered successfully');
-              return res.json({ type: 'answer', reply: '✅ GitHub Actions run triggered! The agent is now running in the cloud. Check github.com/amuyungga/accounting-agent/actions to watch the logs. New leads will sync to this dashboard when it completes (~30 min).' });
-            } else {
-              console.log('[GitHub Actions] Trigger failed:', triggerResult.status, triggerResult.body);
-              return res.json({ type: 'answer', reply: `Failed to trigger GitHub Actions (HTTP ${triggerResult.status}). Check that GH_TOKEN has workflow scope.` });
-            }
-          } catch (e) {
-            return res.json({ type: 'answer', reply: `Error triggering GitHub Actions: ${e.message}` });
-          }
+          return res.json({ type: 'answer', reply: `❌ Could not trigger GitHub Actions (HTTP ${result.status}). Check GH_TOKEN has workflow scope.` });
         }
 
-        // Queue all other commands for local watcher
+        // Queue all other commands for the local watcher
         const cmds = loadCommands();
         const cmd = {
           id: Date.now().toString(),
