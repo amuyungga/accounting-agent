@@ -697,13 +697,17 @@ const CRAIGSLIST_MAP = {
   'Seattle, WA': 'seattle',    'Milwaukee, WI': 'milwaukee',
 };
 
-const INTENT_KEYWORDS = ['bookkeeper', 'accountant', 'bookkeeping', 'accounting help'];
+const INTENT_KEYWORDS = [
+  'bookkeeper', 'accountant', 'bookkeeping', 'accounting help',
+  'controller', 'CFO', 'finance manager', 'tax preparer',
+  'payroll', 'accounts payable', 'accounts receivable', 'CPA',
+];
 
 // ── Source: LinkedIn Jobs (public guest API) ───────────────────────────────
 async function searchLinkedInJobs(city) {
   const results = [];
   try {
-    const url = `https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=bookkeeper+accountant&location=${encodeURIComponent(city)}&start=0`;
+    const url = `https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=bookkeeper+accountant+controller+CFO+payroll&location=${encodeURIComponent(city)}&start=0`;
     const html = await fetchUrl(url);
     const companyRe = /class="base-search-card__subtitle"[^>]*>[\s\S]*?<a[^>]*>\s*([^<]+)\s*<\/a>/g;
     const titleRe   = /class="base-search-card__title"[^>]*>\s*([^<]+)\s*</g;
@@ -731,7 +735,7 @@ async function searchLinkedInJobs(city) {
 async function searchIndeedJobs(city) {
   const results = [];
   try {
-    const url = `https://www.indeed.com/jobs?q=bookkeeper+accountant&l=${encodeURIComponent(city)}&sort=date&fromage=14`;
+    const url = `https://www.indeed.com/jobs?q=bookkeeper+accountant+controller+payroll+CFO&l=${encodeURIComponent(city)}&sort=date&fromage=14`;
     const html = await fetchUrl(url);
     const companyRe = /data-company-name="([^"]+)"/g;
     const titleRe   = /"jobTitle"[^>]*>\s*<span[^>]*>([^<]+)<\/span>/g;
@@ -845,8 +849,8 @@ async function searchGlassdoor(city) {
   const results = [];
   try {
     const citySlug = city.split(',')[0].toLowerCase().replace(/\s+/g, '-');
-    const keywords = ['bookkeeper', 'accountant', 'accounting+clerk'];
-    for (const kw of keywords.slice(0, 2)) {
+    const keywords = ['bookkeeper', 'accountant', 'controller', 'CFO', 'payroll manager', 'finance manager'];
+    for (const kw of keywords.slice(0, 3)) {
       const url = `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${encodeURIComponent(kw)}&locT=C&locId=0&typedLocation=${encodeURIComponent(city)}&fromAge=14`;
       try {
         const html = await fetchUrl(url);
@@ -879,8 +883,8 @@ async function searchMonster(city) {
   try {
     const citySlug = city.split(',')[0].toLowerCase().replace(/\s+/g, '-');
     const stateSlug = (city.split(',')[1] || '').trim().toLowerCase();
-    const keywords = ['bookkeeper', 'accountant'];
-    for (const kw of keywords) {
+    const keywords = ['bookkeeper', 'accountant', 'controller', 'payroll', 'CFO', 'finance manager'];
+    for (const kw of keywords.slice(0, 4)) {
       const url = `https://www.monster.com/jobs/search?q=${encodeURIComponent(kw)}&where=${encodeURIComponent(city)}&recency=14`;
       try {
         const html = await fetchUrl(url);
@@ -1087,8 +1091,8 @@ async function searchRedditIndividuals(city) {
   const results = [];
   const cityName = city.split(',')[0].trim();
   const subs = ['personalfinance', 'tax', 'smallbusiness', 'Accounting'];
-  const keywords = [`accountant ${cityName}`, `bookkeeper ${cityName}`, `cpa ${cityName}`, `tax help ${cityName}`];
-  for (const kw of keywords.slice(0, 2)) {
+  const keywords = [`accountant ${cityName}`, `bookkeeper ${cityName}`, `cpa ${cityName}`, `tax help ${cityName}`, `payroll help ${cityName}`, `controller ${cityName}`];
+  for (const kw of keywords.slice(0, 3)) {
     const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(kw)}&sort=new&t=month&limit=5`;
     try {
       const raw = await fetchUrl(url);
@@ -1781,13 +1785,4 @@ async function syncLeadsToRailway(leads) {
     for (const chunk of chunks) {
       await postChunk(chunk);
     }
-  } catch (e) {
-    console.log('[Railway] Error:', e.message);
-  }
-}
-
-// ── Entry point ─────────────────────────────────────────────────────────────
-run().catch(e => {
-  console.error('Fatal error:', e.message);
-  process.exit(1);
-});
+  } catch (e)
