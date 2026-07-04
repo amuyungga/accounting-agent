@@ -1789,4 +1789,5 @@ async function syncLeadsToRailway(leads) {
 // ── Entry point ─────────────────────────────────────────────────────────────
 run().catch(e => {
   console.error('Fatal error:', e.message);
- 
+  process.exit(1);
+});
