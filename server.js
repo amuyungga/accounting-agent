@@ -643,4 +643,47 @@ app.post('/webhook/resend', express.raw({ type: '*/*' }), (req, res) => {
 app.get('/hubspot-contacts', async (req, res) => {
   if (!process.env.HUBSPOT_API_KEY) return res.json({ contacts: [], deals: [], _debug: 'no_api_key' });
   try {
-    const [contactsRes, dealsRes] 
+    const [contactsRes, dealsRes] = await Promise.all([
+      hubspotRequest('POST', '/crm/v3/objects/contacts/search', {
+        filterGroups: [],
+        properties: ['email','firstname','lastname','company','phone','hs_lead_status','lifecyclestage','createdate','lastmodifieddate'],
+        sorts: [{ propertyName: 'lastmodifieddate', direction: 'DESCENDING' }],
+        limit: 100,
+      }),
+      hubspotRequest('POST', '/crm/v3/objects/deals/search', {
+        filterGroups: [],
+        properties: ['dealname','dealstage','amount','closedate','createdate'],
+        sorts: [{ propertyName: 'createdate', direction: 'DESCENDING' }],
+        limit: 100,
+      }),
+    ]);
+    console.log('[HubSpot] contacts status:', contactsRes.status, 'total:', contactsRes.body.total);
+    console.log('[HubSpot] deals status:', dealsRes.status, 'total:', dealsRes.body.total);
+    const contacts = (contactsRes.body.results || []).map(r => ({ id: r.id, ...r.properties }));
+    const deals    = (dealsRes.body.results || []).map(r => ({ id: r.id, ...r.properties }));
+    res.json({ contacts, deals, _debug: { contactsStatus: contactsRes.status, dealsStatus: dealsRes.status, contactsTotal: contactsRes.body.total, dealsTotal: dealsRes.body.total } });
+  } catch (e) {
+    console.error('[HubSpot] Fetch error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /leads/export.csv — CSV export
+app.get('/leads/export.csv', (req, res) => {
+  const leads = loadLeads();
+  const headers = ['id','name','email','phone','service','notes','capturedAt','updatedAt'];
+  const rows = leads.map(l => headers.map(h => JSON.stringify(l[h] ?? '')).join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="leads.csv"');
+  res.send(csv);
+});
+
+// ── Start ───────────────────────────────────────────────────────────────────
+app.listen(PORT, () => {
+  console.log(`\n✅ Accounting Firm AI Agent running on http://localhost:${PORT}`);
+  console.log(`   Chat endpoint : POST http://localhost:${PORT}/chat`);
+  console.log(`   Leads JSON    : GET  http://localhost:${PORT}/leads`);
+  console.log(`   Leads CSV     : GET  http://localhost:${PORT}/leads/export.csv`);
+  console.log(`   Dashboard     : GET  http://localhost:${PORT}/dashboard.html\n`);
+});
