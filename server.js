@@ -383,6 +383,29 @@ app.post('/api/chat-command', async (req, res) => {
   const week = new Date(Date.now() - 7*24*60*60*1000).toISOString();
   const recent = leads.filter(l => (l.foundAt || '') >= week).length;
 
+  // Fetch GitHub Actions latest run status
+  let agentRunStatus = 'unknown';
+  try {
+    const ghToken = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || '';
+    if (ghToken) {
+      const runInfo = await new Promise((resolve) => {
+        const req2 = https.request({
+          hostname: 'api.github.com',
+          path: '/repos/amuyungga/accounting-agent/actions/workflows/daily-agent.yml/runs?per_page=1',
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${ghToken}`, 'Accept': 'application/vnd.github+json', 'User-Agent': 'spectrum-dashboard' },
+        }, (r) => { let d = ''; r.on('data', c => d += c); r.on('end', () => { try { resolve(JSON.parse(d)); } catch { resolve({}); } }); });
+        req2.on('error', () => resolve({}));
+        req2.end();
+      });
+      const run = (runInfo.workflow_runs || [])[0];
+      if (run) {
+        const ago = Math.round((Date.now() - new Date(run.updated_at)) / 60000);
+        agentRunStatus = `${run.status === 'in_progress' ? '🟡 RUNNING NOW' : run.conclusion === 'success' ? '✅ Last run succeeded' : '❌ Last run ' + run.conclusion} — ${ago < 60 ? ago + 'm ago' : Math.round(ago/60) + 'h ago'} (${new Date(run.updated_at).toLocaleDateString()})`;
+      }
+    }
+  } catch (_) {}
+
   const summary = `
 LEAD DATABASE SNAPSHOT:
 - Total leads found: ${total}
@@ -391,6 +414,7 @@ LEAD DATABASE SNAPSHOT:
 - Top cities: ${topCities || 'none yet'}
 - Top sources: ${topSources || 'none yet'}
 - Top industries: ${topIndustries || 'none yet'}
+- GitHub Actions agent status: ${agentRunStatus}
 `.trim();
 
   const systemPrompt = `You are the AI assistant for Spectrum Financial Solutions' outbound marketing agent.
