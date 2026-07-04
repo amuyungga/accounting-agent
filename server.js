@@ -12,6 +12,7 @@ const express    = require('express');
 const cors       = require('cors');
 const fs         = require('fs');
 const path       = require('path');
+const https      = require('https');
 const Anthropic  = require('@anthropic-ai/sdk');
 const nodemailer = require('nodemailer');
 
@@ -408,6 +409,7 @@ Valid action types:
 - "run-schedule": params = {} (runs full daily search + follow-ups)
 - "send-followups": params = {}
 - "sync-now": params = {}
+- "trigger-github-run": params = {} (triggers cloud agent run on GitHub Actions — use when user says "run now", "trigger a run", "start the agent", "run in the cloud")
 
 2. If it's a QUESTION or REQUEST FOR ANALYSIS, answer it directly in 2-4 sentences using the data above. Be specific and actionable. No JSON.
 
@@ -429,7 +431,48 @@ Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync
     try {
       const parsed = JSON.parse(cleaned);
       if (parsed.action) {
-        // Queue the command
+        // Handle GitHub Actions trigger directly (no local watcher needed)
+        if (parsed.action === 'trigger-github-run') {
+          const ghToken = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || '';
+          if (!ghToken) {
+            return res.json({ type: 'answer', reply: 'GH_TOKEN not set on this server — cannot trigger GitHub Actions.' });
+          }
+          try {
+            const triggerResult = await new Promise((resolve, reject) => {
+              const body = JSON.stringify({ ref: 'main' });
+              const req2 = https.request({
+                hostname: 'api.github.com',
+                path: '/repos/amuyungga/accounting-agent/actions/workflows/daily-agent.yml/dispatches',
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${ghToken}`,
+                  'Accept': 'application/vnd.github+json',
+                  'User-Agent': 'spectrum-dashboard',
+                  'Content-Type': 'application/json',
+                  'Content-Length': Buffer.byteLength(body),
+                },
+              }, (r) => {
+                let d = '';
+                r.on('data', c => d += c);
+                r.on('end', () => resolve({ status: r.statusCode, body: d }));
+              });
+              req2.on('error', reject);
+              req2.write(body);
+              req2.end();
+            });
+            if (triggerResult.status === 204) {
+              console.log('[GitHub Actions] Workflow triggered successfully');
+              return res.json({ type: 'answer', reply: '✅ GitHub Actions run triggered! The agent is now running in the cloud. Check github.com/amuyungga/accounting-agent/actions to watch the logs. New leads will sync to this dashboard when it completes (~30 min).' });
+            } else {
+              console.log('[GitHub Actions] Trigger failed:', triggerResult.status, triggerResult.body);
+              return res.json({ type: 'answer', reply: `Failed to trigger GitHub Actions (HTTP ${triggerResult.status}). Check that GH_TOKEN has workflow scope.` });
+            }
+          } catch (e) {
+            return res.json({ type: 'answer', reply: `Error triggering GitHub Actions: ${e.message}` });
+          }
+        }
+
+        // Queue all other commands for local watcher
         const cmds = loadCommands();
         const cmd = {
           id: Date.now().toString(),
@@ -600,47 +643,4 @@ app.post('/webhook/resend', express.raw({ type: '*/*' }), (req, res) => {
 app.get('/hubspot-contacts', async (req, res) => {
   if (!process.env.HUBSPOT_API_KEY) return res.json({ contacts: [], deals: [], _debug: 'no_api_key' });
   try {
-    const [contactsRes, dealsRes] = await Promise.all([
-      hubspotRequest('POST', '/crm/v3/objects/contacts/search', {
-        filterGroups: [],
-        properties: ['email','firstname','lastname','company','phone','hs_lead_status','lifecyclestage','createdate','lastmodifieddate'],
-        sorts: [{ propertyName: 'lastmodifieddate', direction: 'DESCENDING' }],
-        limit: 100,
-      }),
-      hubspotRequest('POST', '/crm/v3/objects/deals/search', {
-        filterGroups: [],
-        properties: ['dealname','dealstage','amount','closedate','createdate'],
-        sorts: [{ propertyName: 'createdate', direction: 'DESCENDING' }],
-        limit: 100,
-      }),
-    ]);
-    console.log('[HubSpot] contacts status:', contactsRes.status, 'total:', contactsRes.body.total);
-    console.log('[HubSpot] deals status:', dealsRes.status, 'total:', dealsRes.body.total);
-    const contacts = (contactsRes.body.results || []).map(r => ({ id: r.id, ...r.properties }));
-    const deals    = (dealsRes.body.results || []).map(r => ({ id: r.id, ...r.properties }));
-    res.json({ contacts, deals, _debug: { contactsStatus: contactsRes.status, dealsStatus: dealsRes.status, contactsTotal: contactsRes.body.total, dealsTotal: dealsRes.body.total } });
-  } catch (e) {
-    console.error('[HubSpot] Fetch error:', e.message);
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// GET /leads/export.csv — CSV export
-app.get('/leads/export.csv', (req, res) => {
-  const leads = loadLeads();
-  const headers = ['id','name','email','phone','service','notes','capturedAt','updatedAt'];
-  const rows = leads.map(l => headers.map(h => JSON.stringify(l[h] ?? '')).join(','));
-  const csv = [headers.join(','), ...rows].join('\n');
-  res.setHeader('Content-Type', 'text/csv');
-  res.setHeader('Content-Disposition', 'attachment; filename="leads.csv"');
-  res.send(csv);
-});
-
-// ── Start ───────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`\n✅ Accounting Firm AI Agent running on http://localhost:${PORT}`);
-  console.log(`   Chat endpoint : POST http://localhost:${PORT}/chat`);
-  console.log(`   Leads JSON    : GET  http://localhost:${PORT}/leads`);
-  console.log(`   Leads CSV     : GET  http://localhost:${PORT}/leads/export.csv`);
-  console.log(`   Dashboard     : GET  http://localhost:${PORT}/dashboard.html\n`);
-});
+    const [contactsRes, dealsRes] 
