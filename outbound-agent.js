@@ -1785,4 +1785,13 @@ async function syncLeadsToRailway(leads) {
     for (const chunk of chunks) {
       await postChunk(chunk);
     }
-  } catch (e)
+  } catch (e) {
+    console.log('[Railway] Error:', e.message);
+  }
+}
+
+// ── Entry point ─────────────────────────────────────────────────────────────
+run().catch(e => {
+  console.error('Fatal error:', e.message);
+  process.exit(1);
+});
