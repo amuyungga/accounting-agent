@@ -105,6 +105,11 @@ const INDUSTRIES = [
   'catering company',
 ];
 
+// ── Runtime limit ──────────────────────────────────────────────────────────
+const RUN_START = Date.now();
+const MAX_RUN_MS = 2.5 * 60 * 60 * 1000; // 2.5 hours — stays under 3h GH Actions timeout
+function isOutOfTime() { return Date.now() - RUN_START > MAX_RUN_MS; }
+
 // ── Progress tracker ────────────────────────────────────────────────────────
 // Generates every city+industry combination, rotates through them daily
 function buildSearchQueue() {
@@ -1308,6 +1313,7 @@ async function runIntentSearches(cities) {
   let intentFound = 0, intentEmailed = 0;
 
   for (const city of cities) {
+    if (isOutOfTime()) { console.log('\n⏱️  Time limit reached — stopping searches and syncing results.'); break; }
     const listings = await searchAllIntentSources(city);
     if (!listings.length) continue;
     console.log(`   [Intent] ${city}: ${listings.length} total signals across all sources`);
