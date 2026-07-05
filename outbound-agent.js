@@ -379,7 +379,7 @@ async function generateColdEmail(business, variant = 'A') {
   const promptA = `Write a brief, warm cold outreach email from ${OWNER_NAME} at ${FIRM_NAME} (a CPA & financial advisory firm) to the owner/manager of "${business.name}" — a ${business.industry} in ${business.city || business.address}.
 
 Rules:
-- First line must be: Subject: <compelling, specific subject line>
+- First line must be: Subject: <personalized subject — MUST include their business name OR industry AND city. Examples: "Quick question for ${business.name}", "Bookkeeping for ${business.industry}s in ${business.city || business.address}", "Are ${business.industry} owners in ${business.city || business.address} overpaying on taxes?". Never use generic subjects like "Accounting services" or "Financial help".>
 - 3 short paragraphs max, conversational tone, NOT salesy or generic
 - Mention their industry (${business.industry}) and a relevant financial pain point (e.g., tax deadlines, payroll complexity, cash flow, bookkeeping overhead)
 - Offer a FREE 30-minute consultation
@@ -393,7 +393,7 @@ Rules:
 Angle: Lead with one specific, surprising insight about what businesses in their industry typically overpay or miss on taxes and bookkeeping.
 
 Rules:
-- First line: Subject: <curiosity-driven subject line — ask a question or name a dollar amount>
+- First line: Subject: <curiosity-driven, personalized subject — MUST reference their business name OR industry AND include either a dollar amount or a question. Examples: "Most ${business.industry}s in ${business.city || business.address} overpay $8K+ in taxes", "Quick tax question for ${business.name}", "Are you leaving money on the table, ${business.name}?". Never use generic subjects.>
 - 2 punchy paragraphs only — open with the insight, close with a soft ask
 - Offer a FREE 30-minute consultation: ${CALENDLY_URL}
 - Do NOT include a sign-off or signature — it will be added automatically
@@ -445,7 +445,7 @@ async function generateFollowUpEmail(lead) {
 Context: We sent them a cold email ${daysAgo} days ago offering a free financial consultation and haven't heard back.
 
 Rules:
-- First line: Subject: Re: <short callback to original subject>
+- First line: Subject: Re: <callback to original subject — must reference their business name or industry, e.g. 'Re: Bookkeeping for ${business.name}' or 'Re: Tax savings for ${business.industry}s'>
 - 2 short paragraphs max — acknowledge they're busy, briefly restate the value of a free 30-min call
 - Soft close: just ask if they're still open to a quick chat, link: ${CALENDLY_URL}
 - Keep total email under 80 words
@@ -495,7 +495,7 @@ City: ${lead.city || ''}
 Angle: Keep it extremely brief — 2-3 sentences max. Be genuine, not pushy. Acknowledge they're likely busy. Leave the door open without pressure. End with a soft offer for the free call: ${CALENDLY_URL}
 
 Rules:
-- First line: Subject: <short subject, different from previous emails>
+- First line: Subject: <short, personalized subject different from previous — include their industry or city, e.g. 'Still thinking about it, ${business.name}?' or 'One more thing for ${business.industry} owners in ${business.city || business.address}'>
 - 2-3 sentences only
 - Warm, human tone — not a sales pitch
 - Do NOT include a sign-off or signature`;
@@ -1246,7 +1246,7 @@ Role they're hiring for: "${roleTitle}"
 Listing context: "${listingContext.slice(0, 200)}"
 
 Rules:
-- First line must be: Subject: <subject referencing their specific "${roleTitle}" search>
+- First line must be: Subject: <personalized subject referencing their ${roleTitle} search AND company name. Examples: "Re: Your ${roleTitle} search at ${companyName}", "Helping ${companyName} with ${roleTitle} needs", "A better option for ${companyName}'s ${roleTitle} role". Never use generic subjects.>
 - 3 short paragraphs, conversational tone, NOT salesy
 - Mention their search for a "${roleTitle}" to show this is personal, not a mass email
 - Position ${FIRM_NAME} as a smarter alternative to hiring full-time (outsourced/fractional accounting)
@@ -1264,7 +1264,7 @@ Role they're posting for: "${roleTitle}"
 Angle: We saw their listing — position ${FIRM_NAME} as the smarter, faster alternative to the full hiring cycle (posting, interviewing, onboarding takes months).
 
 Rules:
-- First line: Subject: <bold subject line referencing the "${roleTitle}" role they're hiring for>
+- First line: Subject: <bold, personalized subject referencing the ${roleTitle} role AND company name. Example: "Re: ${companyName}'s ${roleTitle} opening — an alternative worth considering". Must name the company or role specifically.>
 - 2 paragraphs only — lead with empathy for the hiring burden, end with a soft ask
 - Offer FREE 30-minute call: ${CALENDLY_URL}
 - Do NOT mention salary ranges or compensation figures
