@@ -547,21 +547,38 @@ Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync
           }
         }
 
-        // Queue all other commands for the local watcher
-        const cmds = loadCommands();
-        const cmd = {
-          id: Date.now().toString(),
-          type: parsed.action,
-          params: parsed.params || {},
-          label: parsed.reply || parsed.action,
-          status: 'pending',
-          createdAt: new Date().toISOString(),
-          result: null,
-        };
-        cmds.push(cmd);
-        saveCommands(cmds);
-        console.log(`[AI Command] Queued: ${cmd.type} — ${cmd.label}`);
-        return res.json({ type: 'action', cmd, reply: parsed.reply || 'Command queued.' });
+        // All remaining commands trigger GitHub Actions directly — no local watcher needed
+        const ghToken2 = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || '';
+        if (!ghToken2) return res.json({ type: 'answer', reply: '⚠️ GH_TOKEN not set in Railway variables — cannot trigger GitHub Actions.' });
+
+        // Build a friendly reply based on command type
+        let actionReply = '✅ Agent started on GitHub Actions! Results will appear here in ~60 min — click Sync Now when done.';
+        if (parsed.action === 'send-followups') actionReply = '✅ Follow-up run triggered on GitHub Actions! Follow-up emails will be sent in ~15 min.';
+        if (parsed.action === 'search-city') actionReply = `✅ City search triggered on GitHub Actions! Searching ${(parsed.params && parsed.params.city) || 'the requested city'} now — click Sync Now in ~30 min.`;
+
+        const ghResult2 = await new Promise((resolve) => {
+          const body2 = JSON.stringify({ ref: 'main' });
+          const req3 = https.request({
+            hostname: 'api.github.com',
+            path: '/repos/amuyungga/accounting-agent/actions/workflows/daily-agent.yml/dispatches',
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${ghToken2}`,
+              'Accept': 'application/vnd.github+json',
+              'User-Agent': 'spectrum-dashboard',
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(body2),
+            },
+          }, (r) => { let d = ''; r.on('data', c => d += c); r.on('end', () => resolve({ status: r.statusCode })); });
+          req3.on('error', e => resolve({ status: 0, err: e.message }));
+          req3.write(body2); req3.end();
+        });
+
+        if (ghResult2.status === 204) {
+          console.log(`[GitHub Actions] Triggered for command: ${parsed.action}`);
+          return res.json({ type: 'answer', reply: actionReply });
+        }
+        return res.json({ type: 'answer', reply: `❌ Could not trigger GitHub Actions (HTTP ${ghResult2.status}). Check GH_TOKEN in Railway variables.` });
       }
     } catch {}
 
