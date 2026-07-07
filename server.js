@@ -482,6 +482,44 @@ Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync
           return res.json({ type: 'answer', reply: `❌ Could not trigger GitHub Actions (HTTP ${result.status}). Check GH_TOKEN has workflow scope.` });
         }
 
+        // Handle sync-now directly — pull latest outbound-leads.json from GitHub into Railway
+        if (parsed.action === 'sync-now') {
+          const ghToken = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || '';
+          if (!ghToken) return res.json({ type: 'answer', reply: '⚠️ GH_TOKEN not set — cannot sync from GitHub.' });
+          const syncResult = await new Promise((resolve) => {
+            const req2 = https.request({
+              hostname: 'api.github.com',
+              path: '/repos/amuyungga/accounting-agent/contents/outbound-leads.json',
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${ghToken}`,
+                'Accept': 'application/vnd.github+json',
+                'User-Agent': 'spectrum-dashboard',
+              },
+            }, (r) => {
+              let d = '';
+              r.on('data', c => d += c);
+              r.on('end', () => resolve({ status: r.statusCode, body: d }));
+            });
+            req2.on('error', e => resolve({ status: 0, err: e.message }));
+            req2.end();
+          });
+          if (syncResult.status !== 200) {
+            return res.json({ type: 'answer', reply: `❌ Could not fetch leads from GitHub (HTTP ${syncResult.status}).` });
+          }
+          try {
+            const ghData = JSON.parse(syncResult.body);
+            const leads = JSON.parse(Buffer.from(ghData.content, 'base64').toString('utf8'));
+            const leadsFile = path.join(__dirname, 'outbound-leads.json');
+            fs.writeFileSync(leadsFile, JSON.stringify(leads, null, 2));
+            const emailed = leads.filter(l => l.emailSent).length;
+            console.log(`[Sync] Pulled ${leads.length} leads from GitHub (${emailed} emailed)`);
+            return res.json({ type: 'answer', reply: `✅ Synced! Dashboard now has ${leads.length} leads (${emailed} emailed). Refresh the page to see updated numbers.` });
+          } catch (e) {
+            return res.json({ type: 'answer', reply: `❌ Sync failed — could not parse leads file: ${e.message}` });
+          }
+        }
+
         // Queue all other commands for the local watcher
         const cmds = loadCommands();
         const cmd = {
