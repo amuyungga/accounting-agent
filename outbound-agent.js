@@ -641,6 +641,11 @@ async function sendColdEmail(toEmail, emailContent, business) {
         { name: 'variant',  value: business.emailVariant || 'A' },
         { name: 'type',     value: 'cold_outreach' },
       ],
+      headers: {
+        'List-Unsubscribe': '<mailto:asante@spectrumfinancialsolution.com?subject=Unsubscribe>',
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        'X-Mailer': 'Spectrum-Outbound-Agent/1.0',
+      },
     });
     const req = https.request({
       hostname: 'api.resend.com',
@@ -669,6 +674,68 @@ async function sendColdEmail(toEmail, emailContent, business) {
 }
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// ── VAPI Outbound Calling ──────────────────────────────────────────────────
+const VAPI_API_KEY = process.env.VAPI_API_KEY || '';
+
+async function callLeadViaVapi(lead) {
+  if (!VAPI_API_KEY || !lead.phone) return null;
+  const rawPhone = lead.phone.replace(/[^\d+]/g, '');
+  // Normalize to E.164 (+1XXXXXXXXXX for US)
+  const phone = rawPhone.startsWith('+') ? rawPhone : `+1${rawPhone.replace(/^1/, '')}`;
+  if (phone.length < 12) return null;
+
+  const payload = JSON.stringify({
+    type: 'outboundPhoneCall',
+    assistant: {
+      name: 'Asante',
+      model: {
+        provider: 'anthropic',
+        model: 'claude-haiku-4-5-20251001',
+        systemPrompt: `You are Asante, a friendly CPA calling from Spectrum Financial Solutions. You are calling ${lead.name || 'the business owner'} to introduce our bookkeeping and tax services.\n\nKey points:\n- FREE 30-min consultation available\n- We specialize in ${lead.industry || 'small businesses'} like theirs\n- Services: bookkeeping, tax prep, payroll, CFO advisory\n- Booking link: ${CALENDLY_URL}\n\nBe warm and brief. If they're interested, give them the Calendly link. If not, thank them and hang up. Never be pushy.`,
+      },
+      voice: { provider: 'playht', voiceId: 'jennifer' },
+      firstMessage: `Hi, may I speak with the owner or manager? This is Asante calling from Spectrum Financial Solutions — I'm a CPA. I work with ${lead.industry || 'local businesses'} in ${lead.city || 'your area'} on bookkeeping and taxes. Do you have just 60 seconds?`,
+      endCallMessage: 'Great, thank you for your time! Have a wonderful day.',
+      endCallPhrases: ['not interested', 'no thank you', 'remove me', 'do not call'],
+    },
+    customer: {
+      number: phone,
+      name: lead.name || '',
+    },
+  });
+
+  return new Promise((resolve) => {
+    const req = https.request({
+      hostname: 'api.vapi.ai',
+      path: '/call/phone',
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${VAPI_API_KEY}`,
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload),
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          if (json.id) {
+            console.log(`   📞 [VAPI] Call queued for ${lead.name} (${phone}) — ID: ${json.id}`);
+            resolve(json.id);
+          } else {
+            console.log(`   [VAPI] Call not placed: ${JSON.stringify(json).slice(0, 120)}`);
+            resolve(null);
+          }
+        } catch { resolve(null); }
+      });
+    });
+    req.on('error', e => { console.log(`   [VAPI] Request error: ${e.message}`); resolve(null); });
+    req.write(payload);
+    req.end();
+  });
+}
 
 // ── INTENT-BASED LEAD SEARCH (Craigslist) ─────────────────────────────────
 // Finds businesses actively posting for bookkeepers/accountants — warm leads
@@ -1121,6 +1188,139 @@ async function searchRedditIndividuals(city) {
   return results;
 }
 
+// ── PRIMARY: Google Places Lead Generation ─────────────────────────────────
+// Searches for real small businesses, finds their email, sends cold email + VAPI call
+async function runGooglePlacesLeads(cities) {
+  if (!GOOGLE_API) {
+    console.log('   [Google Places Primary] No API key — skipping');
+    return { found: 0, emailed: 0, called: 0 };
+  }
+  console.log('\n🏢 Google Places — targeting small businesses needing a CPA');
+
+  const GP_INDUSTRIES = [
+    'restaurant', 'retail store', 'law firm', 'medical clinic', 'dental office',
+    'real estate agency', 'construction company', 'hair salon', 'auto repair shop',
+    'landscaping company', 'property management company', 'insurance agency',
+    'chiropractic office', 'physical therapy clinic', 'veterinary clinic',
+    'plumbing company', 'electrical contractor', 'HVAC company',
+    'accounting software user', 'e-commerce store',
+  ];
+
+  // Each run picks a random subset so coverage rotates over time
+  const todayIndustries = [...GP_INDUSTRIES].sort(() => 0.5 - Math.random()).slice(0, 6);
+  const cityCap = Math.min(cities.length, 12);
+
+  let found = 0, emailed = 0, called = 0;
+
+  for (const city of cities.slice(0, cityCap)) {
+    if (isOutOfTime()) { console.log('⏱️  Time limit — stopping Google Places search'); break; }
+
+    for (const industry of todayIndustries.slice(0, 3)) {
+      if (isOutOfTime()) break;
+
+      try {
+        const places = await searchGooglePlaces(industry, city);
+        if (!places.length) { await sleep(1000); continue; }
+        console.log(`   [Places] ${city} / ${industry}: ${places.length} businesses`);
+
+        for (const biz of places.slice(0, MAX_LEADS_PER_SEARCH)) {
+          if (isOutOfTime()) break;
+          const listingKey = `places_${biz.placeId}`;
+          if (intentAlreadyProcessed(listingKey)) continue;
+
+          const lead = {
+            ...biz,
+            id: `gp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+            source: 'google_places_primary',
+            listingUrl: listingKey,
+            status: 'found',
+            foundAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+
+          // Find email on their website
+          let email = null;
+          if (biz.website) {
+            try { email = await findEmailOnWebsite(biz.website); } catch (_) {}
+          }
+
+          if (!email) {
+            lead.status = biz.website ? 'no_email' : 'no_website';
+            saveLead(lead);
+
+            // No email but have phone → VAPI call (score must be decent)
+            if (biz.phone && VAPI_API_KEY) {
+              lead.score = scoreLead(lead);
+              if (lead.score >= 45) {
+                const callId = await callLeadViaVapi(lead);
+                if (callId) {
+                  lead.vapiCallId = callId;
+                  lead.calledAt = new Date().toISOString();
+                  saveLead(lead);
+                  called++;
+                  await sleep(4000);
+                }
+              }
+            }
+            continue;
+          }
+
+          if (alreadyEmailedAddress(email)) continue;
+
+          lead.email = email;
+          lead.score = scoreLead(lead);
+          lead.emailVariant = Math.random() < 0.5 ? 'A' : 'B';
+          found++;
+
+          let emailContent;
+          try {
+            emailContent = await generateColdEmail(lead, lead.emailVariant);
+          } catch (err) {
+            lead.status = 'error'; lead.error = err.message;
+            saveLead(lead); continue;
+          }
+
+          try {
+            await sendColdEmail(email, emailContent, lead);
+            lead.status = 'emailed';
+            lead.emailSent = true;
+            lead.emailSentAt = new Date().toISOString();
+            lead.emailContent = emailContent;
+            await syncLeadToHubSpot(lead);
+            console.log(`   ✅ [Places] ${lead.name} (${industry}, ${city}) → ${email}`);
+            emailed++;
+          } catch (err) {
+            lead.status = 'send_error'; lead.error = err.message;
+          }
+
+          saveLead(lead);
+
+          // High-score leads with phone get a follow-up VAPI call too
+          if (lead.phone && lead.score >= 65 && VAPI_API_KEY && emailed <= 5) {
+            const callId = await callLeadViaVapi(lead);
+            if (callId) {
+              lead.vapiCallId = callId;
+              lead.calledAt = new Date().toISOString();
+              saveLead(lead);
+              called++;
+              await sleep(4000);
+            }
+          }
+
+          if (RESEND_API_KEY) await sleep(EMAIL_DELAY_MS);
+        }
+      } catch (e) {
+        console.log(`   [Places] ${city}/${industry}: ${e.message}`);
+      }
+      await sleep(1500);
+    }
+    await sleep(2000);
+  }
+
+  console.log(`   Google Places: ${found} leads found, ${emailed} emailed, ${called} VAPI calls made\n`);
+  return { found, emailed, called };
+}
+
 // ── Aggregate all intent sources ───────────────────────────────────────────
 async function searchAllIntentSources(city) {
   const sources = [
@@ -1547,19 +1747,27 @@ async function run() {
   // Send follow-ups to leads from 3-5 days ago
   await runFollowUps();
 
-  // Run intent-based searches across all cities
+  // PRIMARY: Google Places — real small businesses (emails + VAPI calls)
+  const { found: gpFound, emailed: gpEmailed, called: gpCalled } = await runGooglePlacesLeads(todayCities);
+  totalFound += gpFound;
+  totalEmailed += gpEmailed;
+
+  // SECONDARY: Intent searches — job boards, Craigslist, Reddit etc.
   const { intentFound, intentEmailed } = await runIntentSearches(todayCities);
   totalFound += intentFound;
   totalEmailed += intentEmailed;
 
   const all = loadLeads();
   const totalEver = all.filter(l => l.status === 'emailed').length;
+  const totalCalled = all.filter(l => l.vapiCallId).length;
   console.log('\n╔══════════════════════════════════════════════════════╗');
   console.log(`║  Today's run complete                                ║`);
   console.log(`║  New leads found      : ${String(totalFound).padEnd(28)}║`);
   console.log(`║  Emails sent today    : ${String(totalEmailed).padEnd(28)}║`);
+  console.log(`║  VAPI calls made      : ${String(gpCalled).padEnd(28)}║`);
   console.log(`║  Total leads in DB    : ${String(all.length).padEnd(28)}║`);
   console.log(`║  Total emailed ever   : ${String(totalEver).padEnd(28)}║`);
+  console.log(`║  Total ever called    : ${String(totalCalled).padEnd(28)}║`);
   console.log('╚══════════════════════════════════════════════════════╝\n');
 
   // Sync leads to GitHub (persistence across Railway deploys)

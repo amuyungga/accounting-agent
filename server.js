@@ -482,7 +482,7 @@ Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync
           return res.json({ type: 'answer', reply: `❌ Could not trigger GitHub Actions (HTTP ${result.status}). Check GH_TOKEN has workflow scope.` });
         }
 
-        // Handle sync-now directly — pull latest outbound-leads.json from GitHub into Railway
+        // Handle sync-now directly — pull GitHub leads and MERGE email status from local
         if (parsed.action === 'sync-now') {
           const ghToken = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || '';
           if (!ghToken) return res.json({ type: 'answer', reply: '⚠️ GH_TOKEN not set — cannot sync from GitHub.' });
@@ -509,52 +509,41 @@ Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync
           }
           try {
             const ghData = JSON.parse(syncResult.body);
-            const leads = JSON.parse(Buffer.from(ghData.content, 'base64').toString('utf8'));
+            const ghLeads = JSON.parse(Buffer.from(ghData.content, 'base64').toString('utf8'));
             const leadsFile = path.join(__dirname, 'outbound-leads.json');
-            fs.writeFileSync(leadsFile, JSON.stringify(leads, null, 2));
-            const emailed = leads.filter(l => l.emailSent).length;
-            console.log(`[Sync] Pulled ${leads.length} leads from GitHub (${emailed} emailed)`);
-            return res.json({ type: 'answer', reply: `✅ Synced! Dashboard now has ${leads.length} leads (${emailed} emailed). Refresh the page to see updated numbers.` });
-          } catch (e) {
-            return res.json({ type: 'answer', reply: `❌ Sync failed — could not parse leads file: ${e.message}` });
-          }
-        }
-
-        // Handle sync-now directly — pull latest outbound-leads.json from GitHub into Railway
-        if (parsed.action === 'sync-now') {
-          const ghToken = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || '';
-          if (!ghToken) return res.json({ type: 'answer', reply: '⚠️ GH_TOKEN not set — cannot sync from GitHub.' });
-          const syncResult = await new Promise((resolve) => {
-            const req2 = https.request({
-              hostname: 'api.github.com',
-              path: '/repos/amuyungga/accounting-agent/contents/outbound-leads.json',
-              method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${ghToken}`,
-                'Accept': 'application/vnd.github+json',
-                'User-Agent': 'spectrum-dashboard',
-              },
-            }, (r) => {
-              let d = '';
-              r.on('data', c => d += c);
-              r.on('end', () => resolve({ status: r.statusCode, body: d }));
+            // Load local Railway copy to preserve email status flags
+            let localLeads = [];
+            try { localLeads = JSON.parse(fs.readFileSync(leadsFile, 'utf8')); } catch {}
+            // Build lookup of local email status keyed by listingUrl or email
+            const localMap = {};
+            for (const l of localLeads) {
+              const key = l.listingUrl || l.email || l.id;
+              if (key) localMap[key] = l;
+            }
+            // Merge: take GitHub leads, restore email flags from local if present
+            const merged = ghLeads.map(lead => {
+              const key = lead.listingUrl || lead.email || lead.id;
+              const local = key ? localMap[key] : null;
+              if (local && (local.emailSent || local.emailSentAt || local.followUpSent)) {
+                return { ...lead, ...{
+                  emailSent: local.emailSent || lead.emailSent,
+                  emailSentAt: local.emailSentAt || lead.emailSentAt,
+                  emailVariant: local.emailVariant || lead.emailVariant,
+                  followUpSent: local.followUpSent || lead.followUpSent,
+                  followUpSentAt: local.followUpSentAt || lead.followUpSentAt,
+                  opened: local.opened || lead.opened,
+                  clicked: local.clicked || lead.clicked,
+                  replied: local.replied || lead.replied,
+                }};
+              }
+              return lead;
             });
-            req2.on('error', e => resolve({ status: 0, err: e.message }));
-            req2.end();
-          });
-          if (syncResult.status !== 200) {
-            return res.json({ type: 'answer', reply: `❌ Could not fetch leads from GitHub (HTTP ${syncResult.status}).` });
-          }
-          try {
-            const ghData = JSON.parse(syncResult.body);
-            const leads = JSON.parse(Buffer.from(ghData.content, 'base64').toString('utf8'));
-            const leadsFile = path.join(__dirname, 'outbound-leads.json');
-            fs.writeFileSync(leadsFile, JSON.stringify(leads, null, 2));
-            const emailed = leads.filter(l => l.emailSent).length;
-            console.log(`[Sync] Pulled ${leads.length} leads from GitHub (${emailed} emailed)`);
-            return res.json({ type: 'answer', reply: `✅ Synced! Dashboard now has ${leads.length} leads (${emailed} emailed). Refresh the page to see updated numbers.` });
+            fs.writeFileSync(leadsFile, JSON.stringify(merged, null, 2));
+            const emailed = merged.filter(l => l.emailSent).length;
+            console.log(`[Sync] Merged ${merged.length} leads from GitHub (${emailed} emailed)`);
+            return res.json({ type: 'answer', reply: `✅ Synced! Dashboard now has ${merged.length} leads (${emailed} emailed). Refresh the page to see updated numbers.` });
           } catch (e) {
-            return res.json({ type: 'answer', reply: `❌ Sync failed — could not parse leads file: ${e.message}` });
+            return res.json({ type: 'answer', reply: `❌ Sync failed: ${e.message}` });
           }
         }
 
