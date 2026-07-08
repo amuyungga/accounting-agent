@@ -1721,6 +1721,15 @@ async function runQueuedCommands() {
 
 // ── Main ───────────────────────────────────────────────────────────────────
 async function run() {
+  // Heartbeat: keep the event loop alive for the entire run.
+  // Without this, a chain of microtask-only Promises (e.g. Anthropic SDK fetch
+  // using undici with an unref'd keep-alive pool) can drain the event loop
+  // mid-loop before the next `await sleep()` registers its timer, causing
+  // silent premature exit with code 0.
+  const heartbeat = setInterval(() => {}, 1000);
+
+  try {
+
   // Handle --reset flag
   if (process.argv.includes('--reset')) {
     fs.writeFileSync(PROGRESS_FILE, JSON.stringify({ completed: [], nextIndex: 0 }, null, 2));
@@ -1781,6 +1790,10 @@ async function run() {
 
   // Push directly to live Railway server so dashboard updates immediately
   await syncLeadsToRailway(all);
+
+  } finally {
+    clearInterval(heartbeat);
+  }
 }
 
 // ── HubSpot CRM sync ───────────────────────────────────────────────────────
