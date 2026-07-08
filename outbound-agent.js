@@ -294,6 +294,7 @@ async function searchGooglePlaces(industry, city) {
       hostname: 'places.googleapis.com',
       path: '/v1/places:searchText',
       method: 'POST',
+      timeout: 12000,
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': GOOGLE_API,
@@ -330,6 +331,7 @@ async function searchGooglePlaces(industry, city) {
         }
       });
     });
+    req.on('timeout', () => { console.warn(`[Google Places] Timeout for ${industry} in ${city}`); req.destroy(); resolve([]); });
     req.on('error', err => { console.error(`[Google Places] ${err.message}`); resolve([]); });
     req.write(payload);
     req.end();
