@@ -1017,6 +1017,126 @@ function exportObCsv() {
 loadAll();
 setInterval(loadAll, 60000);
 
+// ── Agent Status Tab ──────────────────────────────────────────────────────────
+var agentRun = null;
+var agentElapsedTimer = null;
+var AG_MAX_MS = 90 * 60 * 1000;
+
+function fetchAgentStatus() {
+  fetch(BASE + '/agent-status')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var runs = data.workflow_runs || [];
+      agentRun = runs[0] || null;
+      renderAgentStatus();
+      renderAgentHistory(runs.slice(0, 10));
+    })
+    .catch(function() {
+      var t = document.getElementById('ag-title');
+      if (t) t.textContent = 'Status unavailable';
+    });
+}
+
+function renderAgentStatus() {
+  if (!agentRun) return;
+  var dot    = document.getElementById('ag-dot');
+  var title  = document.getElementById('ag-title');
+  var elapsed= document.getElementById('ag-elapsed');
+  var meta   = document.getElementById('ag-meta');
+  var fill   = document.getElementById('ag-fill');
+  var commit = document.getElementById('ag-commit');
+  var card   = document.getElementById('ag-status-card');
+  if (!dot) return;
+
+  var isRunning = agentRun.status === 'in_progress';
+  var isSuccess = agentRun.conclusion === 'success';
+  var isFailed  = agentRun.conclusion === 'failure' || agentRun.conclusion === 'cancelled';
+  var startedAt = new Date(agentRun.created_at);
+  var finishedAt= agentRun.updated_at ? new Date(agentRun.updated_at) : null;
+
+  dot.className = 'agent-dot ' + (isRunning ? 'running' : isSuccess ? 'success' : isFailed ? 'failed' : '');
+  card.className= 'agent-status-card' + (isRunning ? ' running' : '');
+
+  if (isRunning)       { title.textContent = 'Agent Running'; title.style.color = '#22c55e'; }
+  else if (isSuccess)  { title.textContent = 'Last Run Completed'; title.style.color = 'var(--text)'; }
+  else if (isFailed)   { title.textContent = 'Last Run Failed'; title.style.color = 'var(--red)'; }
+  else                 { title.textContent = 'Agent Idle'; title.style.color = 'var(--muted)'; }
+
+  var msg = agentRun.head_commit && agentRun.head_commit.message ? agentRun.head_commit.message : '';
+  commit.textContent = 'Run #' + agentRun.run_number + ' · ' + msg.slice(0, 70);
+
+  if (agentElapsedTimer) { clearInterval(agentElapsedTimer); agentElapsedTimer = null; }
+
+  function tick() {
+    var end = isRunning ? new Date() : (finishedAt || startedAt);
+    var ms  = Math.max(0, end - startedAt);
+    var m   = Math.floor(ms / 60000);
+    var s   = Math.floor((ms % 60000) / 1000);
+    elapsed.textContent = m + 'm ' + String(s).padStart(2,'0') + 's';
+    elapsed.style.color = isRunning ? '#22c55e' : isSuccess ? 'var(--text)' : isFailed ? 'var(--red)' : 'var(--muted)';
+    fill.style.width = Math.min(100, (ms / AG_MAX_MS) * 100) + '%';
+    fill.className = 'ag-fill' + (isSuccess ? ' complete' : isFailed ? ' failed' : '');
+    if (!isRunning && finishedAt) {
+      var dur = finishedAt - startedAt;
+      meta.textContent = 'Finished ' + D(agentRun.updated_at) + ' · Duration ' + Math.floor(dur/60000) + 'm ' + Math.floor((dur%60000)/1000) + 's';
+    } else if (isRunning) {
+      meta.textContent = 'Searching for leads across all cities…';
+    } else {
+      meta.textContent = 'Started ' + D(agentRun.created_at);
+    }
+  }
+  tick();
+  if (isRunning) agentElapsedTimer = setInterval(tick, 1000);
+}
+
+function renderAgentHistory(runs) {
+  var tbody = document.getElementById('ag-history-body');
+  if (!tbody || !runs.length) return;
+  var statusLabels = { success: '✓ Success', failure: '✕ Failed', cancelled: '⊘ Cancelled', in_progress: '● Running' };
+  tbody.innerHTML = runs.map(function(r) {
+    var state = r.status === 'in_progress' ? 'in_progress' : (r.conclusion || 'cancelled');
+    var label = statusLabels[state] || state;
+    var started = new Date(r.created_at);
+    var finished = r.updated_at ? new Date(r.updated_at) : null;
+    var dur = (finished && state !== 'in_progress') ? (function() {
+      var ms = finished - started;
+      return Math.floor(ms/60000) + 'm ' + Math.floor((ms%60000)/1000) + 's';
+    })() : (state === 'in_progress' ? 'Running…' : '—');
+    var msg = r.head_commit && r.head_commit.message ? r.head_commit.message.slice(0,55) : '—';
+    return '<tr>' +
+      '<td style="color:var(--muted);font-variant-numeric:tabular-nums">#' + r.run_number + '</td>' +
+      '<td><span class="run-pill ' + state + '">' + label + '</span></td>' +
+      '<td style="font-variant-numeric:tabular-nums">' + dur + '</td>' +
+      '<td style="color:var(--muted);max-width:260px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">' + E(msg) + '</td>' +
+      '<td>' + D(r.created_at) + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function triggerAgentRun() {
+  var btn = document.getElementById('ag-trigger-btn');
+  var msg = document.getElementById('ag-trigger-msg');
+  btn.disabled = true;
+  btn.textContent = '⏳ Triggering…';
+  fetch(BASE + '/agent-trigger', { method: 'POST' })
+    .then(function(r) {
+      if (r.status === 204 || r.ok) {
+        msg.textContent = '✅ Run queued — check back in 30 seconds.';
+        msg.style.color = '#22c55e';
+        btn.textContent = '✓ Triggered';
+        setTimeout(fetchAgentStatus, 5000);
+      } else {
+        throw new Error('Status ' + r.status);
+      }
+    })
+    .catch(function(e) {
+      msg.textContent = '❌ Failed: ' + e.message;
+      msg.style.color = 'var(--red)';
+      btn.disabled = false;
+      btn.textContent = '▶ Trigger Run Now';
+    });
+}
+
 // ── Command Center ────────────────────────────────────────────────────────────
 var cpOpen = false;
 var cpCommands = [];   // local cache of commands from server

@@ -452,6 +452,54 @@ a:hover{text-decoration:underline}
   flex-shrink:0;transition:opacity .15s;
 }
 .cp-send:hover{opacity:.85}
+
+/* ── Agent Tab ─────────────────────────────────────────────────────────── */
+.agent-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:24px 32px 8px}
+.agent-status-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:24px 26px;position:relative;overflow:hidden;
+}
+.agent-status-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#1d4ed8,#22c55e)}
+.agent-status-card.running::before{animation:bar-flow 2s linear infinite;background-size:200% 100%;background:linear-gradient(90deg,#1d4ed8,#06b6d4,#22c55e,#1d4ed8)}
+@keyframes bar-flow{0%{background-position:0% 0}100%{background-position:200% 0}}
+.agent-dot{width:12px;height:12px;border-radius:50%;background:var(--muted);display:inline-block;margin-right:8px;flex-shrink:0}
+.agent-dot.running{background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:adot 1.6s infinite}
+.agent-dot.success{background:#22c55e}
+.agent-dot.failed{background:var(--red)}
+@keyframes adot{0%{box-shadow:0 0 0 0 rgba(34,197,94,.6)}70%{box-shadow:0 0 0 9px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+.agent-title-row{display:flex;align-items:center;margin-bottom:6px}
+.agent-title{font-size:15px;font-weight:700}
+.agent-elapsed{font-size:36px;font-weight:800;letter-spacing:-1.5px;line-height:1;margin:10px 0 4px;font-variant-numeric:tabular-nums}
+.agent-meta{font-size:11px;color:var(--muted)}
+.agent-commit{font-size:11px;color:var(--muted);margin-top:6px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+/* progress bar */
+.ag-track{height:8px;background:var(--faint);border-radius:999px;margin:16px 0 8px;position:relative;overflow:hidden;border:1px solid var(--border)}
+.ag-fill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#1d4ed8,#3b82f6,#06b6d4);position:relative;overflow:hidden;transition:width .9s cubic-bezier(.4,0,.2,1)}
+.ag-fill.complete{background:linear-gradient(90deg,#15803d,#22c55e)}
+.ag-fill.failed{background:linear-gradient(90deg,#991b1b,#ef4444)}
+.ag-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.3) 50%,transparent 100%);background-size:200% 100%;animation:ag-sweep 1.8s linear infinite}
+.ag-fill.complete::after,.ag-fill.failed::after{display:none}
+@keyframes ag-sweep{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.ag-marks{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-bottom:2px}
+/* run history */
+.agent-history-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin:0 32px 32px}
+.agent-history-card table{width:100%;border-collapse:collapse;font-size:13px}
+.agent-history-card th{padding:10px 16px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--surface)}
+.agent-history-card td{padding:12px 16px;border-top:1px solid rgba(48,54,61,.4)}
+.run-pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700}
+.run-pill.success{background:rgba(63,185,80,.15);color:#3fb950}
+.run-pill.in_progress{background:rgba(88,166,255,.15);color:#58a6ff}
+.run-pill.failure{background:rgba(248,81,73,.15);color:#f85149}
+.run-pill.cancelled{background:rgba(139,148,158,.15);color:#8b949e}
+.trigger-btn{
+  background:linear-gradient(135deg,#1d4ed8,#7c3aed);color:#fff;
+  border:none;border-radius:10px;padding:11px 22px;
+  font-size:13px;font-weight:700;cursor:pointer;
+  transition:opacity .15s,transform .1s;display:flex;align-items:center;gap:8px;
+}
+.trigger-btn:hover{opacity:.9;transform:translateY(-1px)}
+.trigger-btn:active{transform:translateY(0)}
+.trigger-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
 </style>
 </head>
 <body>
@@ -477,6 +525,7 @@ a:hover{text-decoration:underline}
   <button class="tab-btn" onclick="switchTab(this,'calls')">📞 Calls</button>
   <button class="tab-btn" onclick="switchTab(this,'crm')">🏢 CRM</button>
   <button class="tab-btn" onclick="switchTab(this,'kpi');renderKpi()">📈 KPIs</button>
+  <button class="tab-btn" onclick="switchTab(this,'agent');fetchAgentStatus()">🤖 Agent</button>
 </div>
 
 <!-- OVERVIEW -->
@@ -744,6 +793,47 @@ a:hover{text-decoration:underline}
       <button class="mc" onclick="document.getElementById('detail-modal').classList.remove('open')">&times;</button>
     </div>
     <div class="mb" id="dt-body"></div>
+  </div>
+</div>
+
+<!-- AGENT TAB -->
+<div id="s-agent" class="section">
+  <div class="agent-grid">
+    <!-- Status card -->
+    <div class="agent-status-card" id="ag-status-card">
+      <div class="agent-title-row">
+        <span class="agent-dot" id="ag-dot"></span>
+        <span class="agent-title" id="ag-title">Checking…</span>
+      </div>
+      <div class="agent-elapsed" id="ag-elapsed">—</div>
+      <div class="agent-meta" id="ag-meta"></div>
+      <div class="ag-marks"><span>0m</span><span>15m</span><span>30m</span><span>45m</span><span>60m</span><span>75m</span><span>90m</span></div>
+      <div class="ag-track"><div class="ag-fill" id="ag-fill"></div></div>
+      <div class="agent-commit" id="ag-commit"></div>
+    </div>
+    <!-- Action card -->
+    <div class="agent-status-card" style="display:flex;flex-direction:column;justify-content:space-between">
+      <div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text)">Manual Trigger</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:20px">
+          The agent runs automatically every day at midnight UTC.<br>
+          Use this to kick off an extra run anytime — useful after code changes or to test new cities.
+        </div>
+      </div>
+      <button class="trigger-btn" id="ag-trigger-btn" onclick="triggerAgentRun()">
+        ▶ Trigger Run Now
+      </button>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px" id="ag-trigger-msg"></div>
+    </div>
+  </div>
+
+  <!-- Run history -->
+  <div style="padding:4px 32px 8px;font-size:14px;font-weight:700;color:var(--text)">Run History</div>
+  <div class="agent-history-card">
+    <table>
+      <thead><tr><th>#</th><th>Status</th><th>Duration</th><th>Commit</th><th>Started</th></tr></thead>
+      <tbody id="ag-history-body"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+    </table>
   </div>
 </div>
 

@@ -771,6 +771,40 @@ app.get('/leads/export.csv', (req, res) => {
   res.send(csv);
 });
 
+// ── GitHub Actions trigger ──────────────────────────────────────────────────
+app.post('/agent-trigger', async (req, res) => {
+  const token = process.env.GITHUB_TOKEN;
+  const repo  = 'amuyungga/accounting-agent';
+  if (!token) return res.status(503).json({ error: 'GITHUB_TOKEN not configured' });
+  try {
+    const response = await new Promise((resolve, reject) => {
+      const body = JSON.stringify({ ref: 'main' });
+      const options = {
+        hostname: 'api.github.com',
+        path: `/repos/${repo}/actions/workflows/daily-agent.yml/dispatches`,
+        method: 'POST',
+        headers: {
+          Authorization: `token ${token}`,
+          Accept: 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(body),
+          'User-Agent': 'accounting-agent-dashboard'
+        }
+      };
+      const req2 = https.request(options, r => {
+        r.resume();
+        r.on('end', () => resolve({ status: r.statusCode }));
+      });
+      req2.on('error', reject);
+      req2.write(body);
+      req2.end();
+    });
+    res.status(response.status).end();
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── GitHub Actions agent status proxy ──────────────────────────────────────
 app.get('/agent-status', async (req, res) => {
   const token = process.env.GITHUB_TOKEN;
