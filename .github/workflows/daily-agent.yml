@@ -2,53 +2,36 @@ name: Daily Outbound Agent
 
 on:
   schedule:
-    - cron: '0 14 * * 1-5'  # 9 AM EST (2 PM UTC), Monday–Friday
-  workflow_dispatch:          # Also allows manual trigger from GitHub UI
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   run-agent:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 100
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GH_TOKEN }}
+      - name: Checkout
+        uses: actions/checkout@v3
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run outbound agent
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          HUBSPOT_API_KEY: ${{ secrets.HUBSPOT_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          SYNC_SECRET: ${{ secrets.SYNC_SECRET }}
           GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+          HUBSPOT_API_KEY: ${{ secrets.HUBSPOT_API_KEY }}
           VAPI_API_KEY: ${{ secrets.VAPI_API_KEY }}
-        run: node outbound-agent.js 2>&1 | tee /tmp/agent-log.txt; exit ${PIPESTATUS[0]}
+          RAILWAY_SYNC_URL: ${{ secrets.RAILWAY_SYNC_URL }}
+        run: node outbound-agent.js 2>&1 | tee /tmp/agent-log.txt
 
-      - name: Show agent output summary
+      - name: Show agent summary
         if: always()
-        run: |
-          echo "=== AGENT OUTPUT (last 150 lines) ==="
-          tail -150 /tmp/agent-log.txt 2>/dev/null || echo "No log captured"
-          echo "=== END ==="
-
-      - name: Commit updated leads back to repo
-        run: |
-          git config user.name "Spectrum Agent"
-          git config user.email "agent@spectrumfinancialsolution.com"
-          git add outbound-leads.json outbound-progress.json command-queue.json 2>/dev/null || true
-          git diff --staged --quiet || git commit -m "agent: daily run $(date +%Y-%m-%d)"
-          git pull --rebase origin main || true
-          git push origin main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: tail -50 /tmp/agent-log.txt || true
