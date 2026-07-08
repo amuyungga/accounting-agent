@@ -101,6 +101,102 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .ts { font-size: 11px; color: var(--muted); }
+
+    /* ── Agent Status Banner ─────────────────────────────────────────────── */
+    .agent-banner {
+      margin: 20px 28px 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: visible;
+    }
+    .agent-banner-top {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px 14px; gap: 16px; flex-wrap: wrap;
+    }
+    .agent-left { display: flex; align-items: center; gap: 14px; }
+    .agent-dot {
+      width: 13px; height: 13px; border-radius: 50%;
+      background: var(--muted); flex-shrink: 0; transition: background .4s;
+    }
+    .agent-dot.running {
+      background: var(--green);
+      box-shadow: 0 0 0 0 rgba(34,197,94,.6);
+      animation: pulse-dot 1.6s infinite;
+    }
+    .agent-dot.success { background: var(--green); }
+    .agent-dot.failed  { background: var(--red); }
+    @keyframes pulse-dot {
+      0%   { box-shadow: 0 0 0 0 rgba(34,197,94,.6); }
+      70%  { box-shadow: 0 0 0 9px rgba(34,197,94,0); }
+      100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+    }
+    .agent-title { font-weight: 700; font-size: 15px; }
+    .agent-sub   { font-size: 12px; color: var(--muted); margin-top: 3px; max-width: 480px; }
+    .agent-right { text-align: right; flex-shrink: 0; }
+    .agent-elapsed {
+      font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums;
+      letter-spacing: -1px; line-height: 1;
+    }
+    .agent-run-meta { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    /* progress track */
+    .progress-wrap { position: relative; padding: 0 20px 14px; }
+    .progress-markers {
+      display: flex; justify-content: space-between;
+      font-size: 10px; color: var(--muted); margin-bottom: 5px;
+      padding: 0 1px;
+    }
+    .progress-track {
+      position: relative; height: 10px;
+      background: var(--surface2); border-radius: 999px;
+      border: 1px solid var(--border); overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, #1d4ed8, #3b82f6, #06b6d4);
+      border-radius: 999px;
+      transition: width .9s cubic-bezier(.4,0,.2,1), background .5s;
+      position: relative; overflow: hidden;
+    }
+    .progress-fill.complete {
+      background: linear-gradient(90deg, #15803d, #22c55e, #86efac);
+    }
+    .progress-fill.failed {
+      background: linear-gradient(90deg, #991b1b, #ef4444);
+    }
+    /* shimmer sweep on the fill */
+    .progress-fill::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.28) 50%, transparent 100%);
+      background-size: 200% 100%;
+      animation: sweep 1.8s linear infinite;
+    }
+    .progress-fill.complete::after,
+    .progress-fill.failed::after { display: none; }
+    @keyframes sweep {
+      0%   { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    /* tick marks inside track */
+    .p-tick {
+      position: absolute; top: 0; bottom: 0; width: 1px;
+      background: rgba(255,255,255,.1); pointer-events: none;
+    }
+    .progress-footer {
+      display: flex; justify-content: space-between;
+      font-size: 11px; color: var(--muted); margin-top: 5px;
+    }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      border-radius: 999px; padding: 3px 10px 3px 8px;
+      font-size: 12px; font-weight: 600;
+    }
+    .status-pill.running { background: rgba(34,197,94,.15); color: var(--green); }
+    .status-pill.success { background: rgba(34,197,94,.1);  color: var(--green); }
+    .status-pill.idle    { background: rgba(148,163,184,.1);color: var(--muted); }
+    .status-pill.failed  { background: rgba(239,68,68,.12); color: var(--red); }
   </style>
 </head>
 <body>
@@ -112,6 +208,40 @@
   </div>
   <button class="refresh-btn" onclick="loadData()">↺ Refresh</button>
 </header>
+
+<!-- ── Agent Status Banner ────────────────────────────────────────────── -->
+<div class="agent-banner" id="agent-banner">
+  <div class="agent-banner-top">
+    <div class="agent-left">
+      <div class="agent-dot" id="agent-dot"></div>
+      <div>
+        <div class="agent-title" id="agent-title">Checking agent status…</div>
+        <div class="agent-sub" id="agent-sub"></div>
+      </div>
+    </div>
+    <div class="agent-right">
+      <div class="agent-elapsed" id="agent-elapsed">—</div>
+      <div class="agent-run-meta" id="agent-run-meta"></div>
+    </div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-markers">
+      <span>0m</span><span>15m</span><span>30m</span><span>45m</span><span>60m</span><span>75m</span><span>90m</span>
+    </div>
+    <div class="progress-track">
+      <div class="p-tick" style="left:16.66%"></div>
+      <div class="p-tick" style="left:33.33%"></div>
+      <div class="p-tick" style="left:50%"></div>
+      <div class="p-tick" style="left:66.66%"></div>
+      <div class="p-tick" style="left:83.33%"></div>
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <div class="progress-footer">
+      <span id="agent-started-label"></span>
+      <span id="agent-status-pill"></span>
+    </div>
+  </div>
+</div>
 
 <div class="stats" id="stats">
   <div class="stat"><div class="stat-val" id="s-total">—</div><div class="stat-lbl">Total Found</div></div>
@@ -257,6 +387,109 @@
   // Auto-refresh every 60 seconds
   loadData();
   setInterval(loadData, 60000);
+
+  // ── GitHub Actions Status ────────────────────────────────────────────────
+  const AGENT_STATUS_URL = 'https://accounting-agent-production-cf69.up.railway.app/agent-status';
+  const MAX_RUN_MS       = 90 * 60 * 1000; // expected max run duration
+
+  let agentRun      = null;
+  let elapsedTimer  = null;
+
+  async function fetchAgentStatus() {
+    try {
+      const r    = await fetch(AGENT_STATUS_URL);
+      const data = await r.json();
+      agentRun = data.workflow_runs?.[0] || null;
+      renderAgentStatus();
+    } catch(e) {
+      document.getElementById('agent-title').textContent = 'Status unavailable';
+    }
+  }
+
+  function renderAgentStatus() {
+    if (!agentRun) return;
+
+    const dot        = document.getElementById('agent-dot');
+    const title      = document.getElementById('agent-title');
+    const sub        = document.getElementById('agent-sub');
+    const elapsedEl  = document.getElementById('agent-elapsed');
+    const runMetaEl  = document.getElementById('agent-run-meta');
+    const fill       = document.getElementById('progress-fill');
+    const startLabel = document.getElementById('agent-started-label');
+    const pillEl     = document.getElementById('agent-status-pill');
+
+    const isRunning  = agentRun.status === 'in_progress';
+    const isSuccess  = agentRun.conclusion === 'success';
+    const isFailed   = agentRun.conclusion === 'failure' || agentRun.conclusion === 'cancelled';
+    const startedAt  = new Date(agentRun.created_at);
+    const finishedAt = agentRun.updated_at ? new Date(agentRun.updated_at) : null;
+
+    // Dot
+    dot.className = 'agent-dot ' + (isRunning ? 'running' : isSuccess ? 'success' : isFailed ? 'failed' : 'idle');
+
+    // Title + color
+    if (isRunning) {
+      title.textContent = 'Agent is Running';
+      title.style.color = 'var(--green)';
+    } else if (isSuccess) {
+      title.textContent = 'Last Run Completed Successfully';
+      title.style.color = 'var(--text)';
+    } else if (isFailed) {
+      title.textContent = 'Last Run Failed';
+      title.style.color = 'var(--red)';
+    } else {
+      title.textContent = 'Agent Idle';
+      title.style.color = 'var(--muted)';
+    }
+
+    // Sub — commit message
+    const msg = agentRun.head_commit?.message || '';
+    sub.textContent = `Run #${agentRun.run_number}  ·  ${msg.slice(0, 72)}${msg.length > 72 ? '…' : ''}`;
+
+    // Started label
+    startLabel.textContent = `Started ${fmtDate(agentRun.created_at)}`;
+
+    // Status pill
+    const pillState = isRunning ? 'running' : isSuccess ? 'success' : isFailed ? 'failed' : 'idle';
+    const pillIcon  = isRunning ? '●' : isSuccess ? '✓' : isFailed ? '✕' : '○';
+    const pillText  = isRunning ? 'Running' : isSuccess ? 'Done' : isFailed ? 'Failed' : 'Idle';
+    pillEl.innerHTML = `<span class="status-pill ${pillState}">${pillIcon} ${pillText}</span>`;
+
+    // Clear old tick timer
+    if (elapsedTimer) { clearInterval(elapsedTimer); elapsedTimer = null; }
+
+    function tick() {
+      const endTime  = isRunning ? new Date() : (finishedAt || startedAt);
+      const ms       = Math.max(0, endTime - startedAt);
+      const totalSec = Math.floor(ms / 1000);
+      const m        = Math.floor(totalSec / 60);
+      const s        = totalSec % 60;
+
+      elapsedEl.textContent = `${m}m ${String(s).padStart(2, '0')}s`;
+      elapsedEl.style.color = isRunning ? 'var(--green)' : isSuccess ? 'var(--text)' : isFailed ? 'var(--red)' : 'var(--muted)';
+
+      const pct = Math.min(100, (ms / MAX_RUN_MS) * 100);
+      fill.style.width = pct + '%';
+      fill.className   = 'progress-fill' + (isSuccess ? ' complete' : isFailed ? ' failed' : '');
+
+      // Run meta: show finished time once done
+      if (!isRunning && finishedAt) {
+        const durMs  = finishedAt - startedAt;
+        const dm     = Math.floor(durMs / 60000);
+        const ds     = Math.floor((durMs % 60000) / 1000);
+        runMetaEl.textContent = `Finished ${fmtDate(agentRun.updated_at)}  ·  Duration ${dm}m ${ds}s`;
+      } else if (isRunning) {
+        runMetaEl.textContent = 'Searching for leads across all cities…';
+      }
+    }
+
+    tick();
+    if (isRunning) elapsedTimer = setInterval(tick, 1000);
+  }
+
+  // Poll GitHub every 30 seconds
+  fetchAgentStatus();
+  setInterval(fetchAgentStatus, 30000);
 </script>
 </body>
 </html>

@@ -771,6 +771,35 @@ app.get('/leads/export.csv', (req, res) => {
   res.send(csv);
 });
 
+// ── GitHub Actions agent status proxy ──────────────────────────────────────
+app.get('/agent-status', async (req, res) => {
+  const token = process.env.GITHUB_TOKEN;
+  const repo  = 'amuyungga/accounting-agent';
+  if (!token) return res.status(503).json({ error: 'GITHUB_TOKEN not configured' });
+  try {
+    const response = await new Promise((resolve, reject) => {
+      const options = {
+        hostname: 'api.github.com',
+        path: `/repos/${repo}/actions/runs?per_page=5`,
+        headers: {
+          Authorization: `token ${token}`,
+          Accept: 'application/vnd.github.v3+json',
+          'User-Agent': 'accounting-agent-dashboard'
+        }
+      };
+      https.get(options, r => {
+        let body = '';
+        r.on('data', d => body += d);
+        r.on('end', () => resolve({ status: r.statusCode, body }));
+      }).on('error', reject);
+    });
+    res.set('Cache-Control', 'no-store');
+    res.status(response.status).send(response.body);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── Start ───────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`\n✅ Accounting Firm AI Agent running on http://localhost:${PORT}`);
