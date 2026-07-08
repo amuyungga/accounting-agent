@@ -1214,7 +1214,8 @@ async function runGooglePlacesLeads(cities) {
 
   let found = 0, emailed = 0, called = 0;
 
-  for (const city of cities.slice(0, cityCap)) {
+  for (const [cityIdx, city] of cities.slice(0, cityCap).entries()) {
+    console.log(`   [Places] ── City ${cityIdx + 1}/${cityCap}: ${city} ──`);
     if (isOutOfTime()) { console.log('⏱️  Time limit — stopping Google Places search'); break; }
 
     for (const industry of todayIndustries.slice(0, 3)) {
@@ -1222,7 +1223,7 @@ async function runGooglePlacesLeads(cities) {
 
       try {
         const places = await searchGooglePlaces(industry, city);
-        if (!places.length) { await sleep(1000); continue; }
+        if (!places.length) { console.log(`   [Places] ${city} / ${industry}: 0 results, skipping`); await sleep(1000); continue; }
         console.log(`   [Places] ${city} / ${industry}: ${places.length} businesses`);
         console.log(`   [Places] Processing up to ${Math.min(places.length, MAX_LEADS_PER_SEARCH)} businesses...`);
 
@@ -1315,8 +1316,10 @@ async function runGooglePlacesLeads(cities) {
       } catch (e) {
         console.error(`   [Places] ERROR in ${city}/${industry}:`, e.message, e.stack || '');
       }
+      console.log(`   [Places] industry "${industry}" done, sleeping 1.5s`);
       await sleep(1500);
     }
+    console.log(`   [Places] city "${city}" done, sleeping 2s`);
     await sleep(2000);
   }
 
