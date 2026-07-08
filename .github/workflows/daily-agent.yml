@@ -33,7 +33,14 @@ jobs:
           SYNC_SECRET: ${{ secrets.SYNC_SECRET }}
           GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
           VAPI_API_KEY: ${{ secrets.VAPI_API_KEY }}
-        run: node outbound-agent.js
+        run: node outbound-agent.js 2>&1 | tee /tmp/agent-log.txt; exit ${PIPESTATUS[0]}
+
+      - name: Show agent output summary
+        if: always()
+        run: |
+          echo "=== AGENT OUTPUT (last 150 lines) ==="
+          tail -150 /tmp/agent-log.txt 2>/dev/null || echo "No log captured"
+          echo "=== END ==="
 
       - name: Commit updated leads back to repo
         run: |
