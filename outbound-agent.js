@@ -710,6 +710,7 @@ async function callLeadViaVapi(lead) {
       hostname: 'api.vapi.ai',
       path: '/call/phone',
       method: 'POST',
+      timeout: 15000,
       headers: {
         'Authorization': `Bearer ${VAPI_API_KEY}`,
         'Content-Type': 'application/json',
@@ -731,6 +732,7 @@ async function callLeadViaVapi(lead) {
         } catch { resolve(null); }
       });
     });
+    req.on('timeout', () => { req.destroy(); resolve(null); });
     req.on('error', e => { console.log(`   [VAPI] Request error: ${e.message}`); resolve(null); });
     req.write(payload);
     req.end();
@@ -1222,6 +1224,7 @@ async function runGooglePlacesLeads(cities) {
         const places = await searchGooglePlaces(industry, city);
         if (!places.length) { await sleep(1000); continue; }
         console.log(`   [Places] ${city} / ${industry}: ${places.length} businesses`);
+        console.log(`   [Places] Processing up to ${Math.min(places.length, MAX_LEADS_PER_SEARCH)} businesses...`);
 
         for (const biz of places.slice(0, MAX_LEADS_PER_SEARCH)) {
           if (isOutOfTime()) break;
@@ -1310,7 +1313,7 @@ async function runGooglePlacesLeads(cities) {
           if (RESEND_API_KEY) await sleep(EMAIL_DELAY_MS);
         }
       } catch (e) {
-        console.log(`   [Places] ${city}/${industry}: ${e.message}`);
+        console.error(`   [Places] ERROR in ${city}/${industry}:`, e.message, e.stack || '');
       }
       await sleep(1500);
     }
@@ -2005,7 +2008,31 @@ async function syncLeadsToRailway(leads) {
 }
 
 // ── Entry point ─────────────────────────────────────────────────────────────
+
+// Catch all unhandled promise rejections (silent exits in Node 18)
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[FATAL] Unhandled promise rejection:', reason);
+  process.exit(1);
+});
+
+// Catch any uncaught synchronous exceptions
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] Uncaught exception:', err.message, err.stack);
+  process.exit(1);
+});
+
+// Log if GitHub Actions sends a kill signal
+process.on('SIGTERM', () => {
+  console.log('[FATAL] Received SIGTERM — process was killed externally');
+  process.exit(1);
+});
+
+// Log exit reason for diagnostics
+process.on('exit', (code) => {
+  console.log(`[EXIT] Process exiting with code ${code} at ${new Date().toISOString()}`);
+});
+
 run().catch(e => {
-  console.error('Fatal error:', e.message);
+  console.error('[FATAL] run() threw:', e.message, e.stack);
   process.exit(1);
 });
