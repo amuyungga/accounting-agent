@@ -418,6 +418,7 @@ Rules:
       hostname: 'api.anthropic.com',
       path: '/v1/messages',
       method: 'POST',
+      timeout: 30000,
       headers: {
         'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
@@ -437,6 +438,7 @@ Rules:
         }
       });
     });
+    req.on('timeout', () => { req.destroy(); reject(new Error('Anthropic API timeout')); });
     req.on('error', reject);
     req.write(payload);
     req.end();
@@ -469,6 +471,7 @@ Rules:
       hostname: 'api.anthropic.com',
       path: '/v1/messages',
       method: 'POST',
+      timeout: 30000,
       headers: {
         'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
@@ -486,6 +489,7 @@ Rules:
         } catch (e) { reject(new Error(`Parse error: ${e.message}`)); }
       });
     });
+    req.on('timeout', () => { req.destroy(); reject(new Error('Anthropic API timeout')); });
     req.on('error', reject);
     req.write(payload);
     req.end();
@@ -517,6 +521,7 @@ Rules:
       hostname: 'api.anthropic.com',
       path: '/v1/messages',
       method: 'POST',
+      timeout: 30000,
       headers: {
         'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
@@ -534,6 +539,7 @@ Rules:
         } catch (e) { reject(new Error(`Parse error: ${e.message}`)); }
       });
     });
+    req.on('timeout', () => { req.destroy(); reject(new Error('Anthropic API timeout')); });
     req.on('error', reject);
     req.write(payload);
     req.end();
@@ -1438,10 +1444,11 @@ Rules:
 - Write ONLY the email body`;
     const payload = JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 300, messages: [{ role: 'user', content: promptIndiv }] });
     return new Promise((resolve, reject) => {
-      const req = https.request({ hostname: 'api.anthropic.com', path: '/v1/messages', method: 'POST', headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json', 'content-length': Buffer.byteLength(payload) } }, (res) => {
+      const req = https.request({ hostname: 'api.anthropic.com', path: '/v1/messages', method: 'POST', timeout: 30000, headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json', 'content-length': Buffer.byteLength(payload) } }, (res) => {
         let data = ''; res.on('data', c => data += c);
         res.on('end', () => { try { const j = JSON.parse(data); if (j.error) return reject(new Error(j.error.message)); resolve(j.content[0].text.trim()); } catch (e) { reject(e); } });
       });
+      req.on('timeout', () => { req.destroy(); reject(new Error('Anthropic API timeout')); });
       req.on('error', reject); req.write(payload); req.end();
     });
   }
@@ -1499,6 +1506,7 @@ Rules:
       hostname: 'api.anthropic.com',
       path: '/v1/messages',
       method: 'POST',
+      timeout: 30000,
       headers: {
         'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
@@ -1516,6 +1524,7 @@ Rules:
         } catch (e) { reject(new Error(`Parse error: ${e.message}`)); }
       });
     });
+    req.on('timeout', () => { req.destroy(); reject(new Error('Anthropic API timeout')); });
     req.on('error', reject);
     req.write(payload);
     req.end();
