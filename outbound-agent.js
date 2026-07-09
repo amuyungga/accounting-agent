@@ -110,6 +110,11 @@ const RUN_START = Date.now();
 const MAX_RUN_MS = 2.5 * 60 * 60 * 1000; // 2.5 hours — stays under 3h GH Actions timeout
 function isOutOfTime() { return Date.now() - RUN_START > MAX_RUN_MS; }
 
+// ── Per-run lead cap ────────────────────────────────────────────────────────
+const DAILY_EMAIL_CAP = 20;   // max emails sent per run
+let emailedThisRun = 0;
+function isCapReached() { return emailedThisRun >= DAILY_EMAIL_CAP; }
+
 // ── Progress tracker ────────────────────────────────────────────────────────
 // Generates every city+industry combination, rotates through them daily
 function buildSearchQueue() {
@@ -1219,9 +1224,11 @@ async function runGooglePlacesLeads(cities) {
   for (const [cityIdx, city] of cities.slice(0, cityCap).entries()) {
     console.log(`   [Places] ── City ${cityIdx + 1}/${cityCap}: ${city} ──`);
     if (isOutOfTime()) { console.log('⏱️  Time limit — stopping Google Places search'); break; }
+    if (isCapReached()) { console.log(`🎯  Cap reached (${DAILY_EMAIL_CAP} emails) — stopping Google Places search`); break; }
 
     for (const industry of todayIndustries.slice(0, 3)) {
       if (isOutOfTime()) break;
+      if (isCapReached()) break;
 
       try {
         const places = await searchGooglePlaces(industry, city);
@@ -1231,6 +1238,7 @@ async function runGooglePlacesLeads(cities) {
 
         for (const biz of places.slice(0, MAX_LEADS_PER_SEARCH)) {
           if (isOutOfTime()) break;
+          if (isCapReached()) break;
           const listingKey = `places_${biz.placeId}`;
           if (intentAlreadyProcessed(listingKey)) continue;
 
@@ -1295,6 +1303,8 @@ async function runGooglePlacesLeads(cities) {
             await syncLeadToHubSpot(lead);
             console.log(`   ✅ [Places] ${lead.name} (${industry}, ${city}) → ${email}`);
             emailed++;
+            emailedThisRun++;
+            console.log(`   📊 Cap: ${emailedThisRun}/${DAILY_EMAIL_CAP} emails sent this run`);
           } catch (err) {
             lead.status = 'send_error'; lead.error = err.message;
           }
@@ -1522,6 +1532,7 @@ async function runIntentSearches(cities) {
 
   for (const city of cities) {
     if (isOutOfTime()) { console.log('\n⏱️  Time limit reached — stopping searches and syncing results.'); break; }
+    if (isCapReached()) { console.log(`\n🎯  Cap reached (${DAILY_EMAIL_CAP} emails) — stopping intent searches.`); break; }
     const listings = await searchAllIntentSources(city);
     if (!listings.length) continue;
     console.log(`   [Intent] ${city}: ${listings.length} total signals across all sources`);
@@ -1603,6 +1614,8 @@ async function runIntentSearches(cities) {
         await syncLeadToHubSpot(biz);
         console.log(`   ✅ [Intent] ${biz.name} → ${email} (actively seeking accounting help)`);
         intentEmailed++;
+        emailedThisRun++;
+        console.log(`   📊 Cap: ${emailedThisRun}/${DAILY_EMAIL_CAP} emails sent this run`);
       } catch (err) {
         biz.status = 'send_error'; biz.error = err.message;
       }
