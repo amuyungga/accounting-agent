@@ -39,7 +39,7 @@ const GOOGLE_API   = process.env.GOOGLE_PLACES_API_KEY || null;
 
 // ── Daily search limit ──────────────────────────────────────────────────────
 const DAILY_SEARCH_LIMIT = 15;   // city+industry combinations per run
-const MAX_LEADS_PER_SEARCH = 5;  // businesses per search query
+const MAX_LEADS_PER_SEARCH = 3;  // businesses per search query (keep runs fast)
 const EMAIL_DELAY_MS = 12000;    // 12s between emails
 
 // ── California cities only ────────────────────────────────────────────────
@@ -233,7 +233,7 @@ function fetchUrl(targetUrl, redirectCount = 0) {
 
     const mod = parsed.protocol === 'https:' ? https : http;
     const req = mod.get(targetUrl, {
-      timeout: 8000,
+      timeout: 5000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36',
         'Accept': 'text/html,application/json,*/*;q=0.8',
@@ -280,11 +280,10 @@ async function findEmailOnWebsite(websiteUrl) {
     const homepageHtml = await fetchUrl(full).catch(() => '');
     let emails = extractEmails(homepageHtml, domain);
     if (emails.length) return emails[0];
-    for (const slug of ['/contact', '/contact-us', '/about']) {
-      const contactHtml = await fetchUrl(`${parsed.origin}${slug}`).catch(() => '');
-      emails = extractEmails(contactHtml, domain);
-      if (emails.length) return emails[0];
-    }
+    // Only check /contact — skip /contact-us and /about to keep each business under 10s
+    const contactHtml = await fetchUrl(`${parsed.origin}/contact`).catch(() => '');
+    emails = extractEmails(contactHtml, domain);
+    if (emails.length) return emails[0];
     return null;
   } catch {
     return null;
@@ -1341,18 +1340,15 @@ async function runGooglePlacesLeads(cities) {
 
 // ── Aggregate all intent sources ───────────────────────────────────────────
 async function searchAllIntentSources(city) {
+  // Kept only fast/reliable sources — Glassdoor, Monster, Bark, Thumbtack removed
+  // (all JS-rendered or slow multi-keyword loops that rarely return usable results)
   const sources = [
     { name: 'craigslist',         fn: searchCraigslist },
     { name: 'linkedin',           fn: searchLinkedInJobs },
     { name: 'indeed',             fn: searchIndeedJobs },
     { name: 'ziprecruiter',       fn: searchZipRecruiter },
-    { name: 'glassdoor',          fn: searchGlassdoor },
-    { name: 'monster',            fn: searchMonster },
-    { name: 'bark',               fn: searchBark },
-    // Fiverr removed — JS-rendered, always returns 0; buyer requests require login
     { name: 'reddit',             fn: searchReddit },
     { name: 'cl_services',        fn: searchCraigslistServicesWanted },
-    { name: 'thumbtack',          fn: searchThumbstack },
     { name: 'reddit_indiv',       fn: searchRedditIndividuals },
     { name: 'acctg_software',     fn: searchAccountingSoftwareBuyers },
     { name: 'new_business',       fn: searchNewBusinesses },
