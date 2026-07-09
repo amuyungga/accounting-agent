@@ -107,7 +107,7 @@ const INDUSTRIES = [
 
 // ── Runtime limit ──────────────────────────────────────────────────────────
 const RUN_START = Date.now();
-const MAX_RUN_MS = 2.5 * 60 * 60 * 1000; // 2.5 hours — stays under 3h GH Actions timeout
+const MAX_RUN_MS = 45 * 60 * 1000; // 45 minutes max — stops via isOutOfTime() checks
 function isOutOfTime() { return Date.now() - RUN_START > MAX_RUN_MS; }
 
 // ── Per-run lead cap ────────────────────────────────────────────────────────
@@ -452,7 +452,7 @@ async function generateFollowUpEmail(lead) {
 Context: We sent them a cold email ${daysAgo} days ago offering a free financial consultation and haven't heard back.
 
 Rules:
-- First line: Subject: Re: <callback to original subject — must reference their business name or industry, e.g. 'Re: Bookkeeping for ${business.name}' or 'Re: Tax savings for ${business.industry}s'>
+- First line: Subject: Re: <callback to original subject — must reference their business name or industry, e.g. 'Re: Bookkeeping for ${lead.name}' or 'Re: Tax savings for ${lead.industry}s'>
 - 2 short paragraphs max — acknowledge they're busy, briefly restate the value of a free 30-min call
 - Soft close: just ask if they're still open to a quick chat, link: ${CALENDLY_URL}
 - Keep total email under 80 words
@@ -502,7 +502,7 @@ City: ${lead.city || ''}
 Angle: Keep it extremely brief — 2-3 sentences max. Be genuine, not pushy. Acknowledge they're likely busy. Leave the door open without pressure. End with a soft offer for the free call: ${CALENDLY_URL}
 
 Rules:
-- First line: Subject: <short, personalized subject different from previous — include their industry or city, e.g. 'Still thinking about it, ${business.name}?' or 'One more thing for ${business.industry} owners in ${business.city || business.address}'>
+- First line: Subject: <short, personalized subject different from previous — include their industry or city, e.g. 'Still thinking about it, ${lead.name}?' or 'One more thing for ${lead.industry} owners in ${lead.city}'>
 - 2-3 sentences only
 - Warm, human tone — not a sales pitch
 - Do NOT include a sign-off or signature`;
@@ -1464,7 +1464,7 @@ Role they're hiring for: "${roleTitle}"
 Listing context: "${listingContext.slice(0, 200)}"
 
 Rules:
-- First line must be: Subject: <personalized subject referencing their ${roleTitle} search AND company name. Examples: "Re: Your ${roleTitle} search at ${companyName}", "Helping ${companyName} with ${roleTitle} needs", "A better option for ${companyName}'s ${roleTitle} role". Never use generic subjects.>
+- First line must be: Subject: <personalized subject referencing their ${roleTitle} search AND company name. Examples: "Re: Your ${roleTitle} search at ${business.name}", "Helping ${business.name} with ${roleTitle} needs", "A better option for ${business.name}'s ${roleTitle} role". Never use generic subjects.>
 - 3 short paragraphs, conversational tone, NOT salesy
 - Mention their search for a "${roleTitle}" to show this is personal, not a mass email
 - Position ${FIRM_NAME} as a smarter alternative to hiring full-time (outsourced/fractional accounting)
@@ -1482,7 +1482,7 @@ Role they're posting for: "${roleTitle}"
 Angle: We saw their listing — position ${FIRM_NAME} as the smarter, faster alternative to the full hiring cycle (posting, interviewing, onboarding takes months).
 
 Rules:
-- First line: Subject: <bold, personalized subject referencing the ${roleTitle} role AND company name. Example: "Re: ${companyName}'s ${roleTitle} opening — an alternative worth considering". Must name the company or role specifically.>
+- First line: Subject: <bold, personalized subject referencing the ${roleTitle} role AND company name. Example: "Re: ${business.name}'s ${roleTitle} opening — an alternative worth considering". Must name the company or role specifically.>
 - 2 paragraphs only — lead with empathy for the hiring burden, end with a soft ask
 - Offer FREE 30-minute call: ${CALENDLY_URL}
 - Do NOT mention salary ranges or compensation figures
@@ -1769,9 +1769,17 @@ async function run() {
   console.log(`📧 Mailer   : ${RESEND_API_KEY ? 'Resend live ✅' : 'DRY RUN (no RESEND_API_KEY)'}`);
   console.log(`🗺️  Google   : ${GOOGLE_API ? 'Places API ✅' : 'No key — Yellow Pages fallback'}\n`);
 
-  // Intent-only mode: skip random industry searches, target only businesses
-  // actively hiring accountants/bookkeepers on job boards
-  const todayCities = ALL_CITIES;
+  // Rotate through cities 8 at a time so each run is fast and covers new ground
+  const CITIES_PER_RUN = 8;
+  const progress = loadProgress();
+  const cityStart = progress.cityIndex || 0;
+  const todayCities = [];
+  for (let i = 0; i < CITIES_PER_RUN; i++) {
+    todayCities.push(ALL_CITIES[(cityStart + i) % ALL_CITIES.length]);
+  }
+  progress.cityIndex = (cityStart + CITIES_PER_RUN) % ALL_CITIES.length;
+  saveProgress(progress);
+  console.log(`🗺️  This run: cities ${cityStart}–${cityStart + CITIES_PER_RUN - 1} of ${ALL_CITIES.length} (${todayCities.join(', ')})\n`);
   let totalFound = 0, totalEmailed = 0;
 
   // Send follow-ups to leads from 3-5 days ago
