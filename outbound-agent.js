@@ -1527,9 +1527,18 @@ async function runIntentSearches(cities) {
   console.log('   Sources: Craigslist · LinkedIn · Indeed · ZipRecruiter · Glassdoor · Monster · Bark · Reddit · CL Services · Thumbtack · Reddit (Personal) · Acctg Software · New Businesses\n');
   let intentFound = 0, intentEmailed = 0;
 
+  // Skip cities already saturated (15+ records) — no point running 9 sources there
+  const allLeads = loadLeads();
+  const recordsPerCity = {};
+  allLeads.forEach(l => { if (l.city) recordsPerCity[l.city] = (recordsPerCity[l.city] || 0) + 1; });
+
   for (const city of cities) {
     if (isOutOfTime()) { console.log('\n⏱️  Time limit reached — stopping searches and syncing results.'); break; }
     if (isCapReached()) { console.log(`\n🎯  Cap reached (${DAILY_EMAIL_CAP} emails) — stopping intent searches.`); break; }
+    if ((recordsPerCity[city] || 0) >= 15) {
+      console.log(`   [Intent] ${city}: ${recordsPerCity[city]} records already — skipping saturated city`);
+      continue;
+    }
     const listings = await searchAllIntentSources(city);
     if (!listings.length) continue;
     console.log(`   [Intent] ${city}: ${listings.length} total signals across all sources`);
@@ -1766,8 +1775,8 @@ async function run() {
   console.log(`📧 Mailer   : ${RESEND_API_KEY ? 'Resend live ✅' : 'DRY RUN (no RESEND_API_KEY)'}`);
   console.log(`🗺️  Google   : ${GOOGLE_API ? 'Places API ✅' : 'No key — Yellow Pages fallback'}\n`);
 
-  // Rotate through cities 8 at a time so each run is fast and covers new ground
-  const CITIES_PER_RUN = 8;
+  // Rotate through cities 4 at a time — fewer cities = faster runs
+  const CITIES_PER_RUN = 4;
   const progress = loadProgress();
   const cityStart = progress.cityIndex || 0;
   const todayCities = [];

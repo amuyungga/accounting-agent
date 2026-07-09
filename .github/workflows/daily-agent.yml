@@ -8,7 +8,7 @@ on:
 jobs:
   run-agent:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 55
 
     steps:
       - name: Checkout repo
@@ -43,6 +43,7 @@ jobs:
           echo "=== END ==="
 
       - name: Commit updated leads back to repo
+        if: always()
         run: |
           git config user.name "Spectrum Agent"
           git config user.email "agent@spectrumfinancialsolution.com"
