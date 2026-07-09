@@ -1355,6 +1355,7 @@ async function searchAllIntentSources(city) {
   ];
   const all = [];
   for (const src of sources) {
+    if (isOutOfTime()) { console.log('   [Intent] Time limit — stopping sources'); break; }
     try {
       // Hard 20-second wall-clock timeout per source so one hanging site can't block the rest
       const items = await Promise.race([
@@ -1804,11 +1805,14 @@ async function run() {
   console.log(`║  Total ever called    : ${String(totalCalled).padEnd(28)}║`);
   console.log('╚══════════════════════════════════════════════════════╝\n');
 
-  // Sync leads to GitHub (persistence across Railway deploys)
-  await pushLeadsToGitHub(all);
-
-  // Push directly to live Railway server so dashboard updates immediately
-  await syncLeadsToRailway(all);
+  // Sync leads — hard 60s cap so cleanup never hangs the process
+  await Promise.race([
+    (async () => {
+      await pushLeadsToGitHub(all);
+      await syncLeadsToRailway(all);
+    })(),
+    new Promise(resolve => setTimeout(() => { console.log('[Cleanup] 60s hard timeout — exiting'); resolve(); }, 60000)),
+  ]);
 
   } finally {
     clearInterval(heartbeat);
