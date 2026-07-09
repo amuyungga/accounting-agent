@@ -1932,6 +1932,7 @@ async function pushLeadsToGitHub(leads) {
       hostname: 'api.github.com',
       path: `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`,
       method: 'GET',
+      timeout: 15000,
       headers: {
         'Authorization': `token ${GITHUB_TOKEN}`,
         'User-Agent': 'spectrum-outbound-agent',
@@ -1952,6 +1953,7 @@ async function pushLeadsToGitHub(leads) {
           hostname: 'api.github.com',
           path: `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`,
           method: 'PUT',
+          timeout: 20000,
           headers: {
             'Authorization': `token ${GITHUB_TOKEN}`,
             'User-Agent': 'spectrum-outbound-agent',
@@ -1973,11 +1975,13 @@ async function pushLeadsToGitHub(leads) {
           });
         });
         putReq.on('error', e => { console.log('[GitHub] Error:', e.message); resolve(); });
+        putReq.on('timeout', () => { console.log('[GitHub] PUT timeout'); putReq.destroy(); resolve(); });
         putReq.write(body);
         putReq.end();
       });
     });
     getReq.on('error', e => { console.log('[GitHub] Error:', e.message); resolve(); });
+    getReq.on('timeout', () => { console.log('[GitHub] GET timeout'); getReq.destroy(); resolve(); });
     getReq.end();
   });
 }
@@ -2006,6 +2010,7 @@ async function syncLeadsToRailway(leads) {
       hostname: 'accounting-agent-production-cf69.up.railway.app',
       path: '/outbound-leads/sync',
       method: 'POST',
+      timeout: 15000,
       headers: {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(body),
@@ -2029,6 +2034,7 @@ async function syncLeadsToRailway(leads) {
       });
     });
     req.on('error', e => { console.log('[Railway] ❌ Connection error:', e.message); resolve(); });
+    req.on('timeout', () => { console.log('[Railway] ❌ Chunk timeout'); req.destroy(); resolve(); });
     req.write(body);
     req.end();
   });
