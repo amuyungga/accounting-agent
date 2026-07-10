@@ -716,9 +716,13 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 // ── VAPI Outbound Calling ──────────────────────────────────────────────────
 const VAPI_API_KEY = process.env.VAPI_API_KEY || '';
+const VAPI_PHONE_NUMBER_ID = process.env.VAPI_PHONE_NUMBER_ID || '';
 
 async function callLeadViaVapi(lead) {
-  if (!VAPI_API_KEY || !lead.phone) return null;
+  if (!VAPI_API_KEY || !VAPI_PHONE_NUMBER_ID || !lead.phone) {
+    if (!VAPI_PHONE_NUMBER_ID) console.log('   [VAPI] Skipping — VAPI_PHONE_NUMBER_ID not set');
+    return null;
+  }
   const rawPhone = lead.phone.replace(/[^\d+]/g, '');
   // Normalize to E.164 (+1XXXXXXXXXX for US)
   const phone = rawPhone.startsWith('+') ? rawPhone : `+1${rawPhone.replace(/^1/, '')}`;
@@ -726,6 +730,7 @@ async function callLeadViaVapi(lead) {
 
   const payload = JSON.stringify({
     type: 'outboundPhoneCall',
+    phoneNumberId: VAPI_PHONE_NUMBER_ID,
     assistant: {
       name: 'Asante',
       model: {
