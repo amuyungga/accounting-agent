@@ -834,6 +834,52 @@ app.get('/agent-status', async (req, res) => {
   }
 });
 
+// ── Startup: pull latest outbound-leads.json from GitHub ────────────────────
+// Railway wipes the local filesystem on every redeploy. Without this, the
+// dashboard reverts to whatever stale version was baked into the git repo.
+// This runs once at boot and fetches the authoritative copy from GitHub.
+async function syncLeadsFromGitHub() {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) { console.log('[Startup] No GITHUB_TOKEN — skipping leads sync'); return; }
+  try {
+    const https = require('https');
+    const data = await new Promise((resolve, reject) => {
+      const req = https.get({
+        hostname: 'api.github.com',
+        path: '/repos/amuyungga/accounting-agent/contents/outbound-leads.json',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github+json',
+          'User-Agent': 'Spectrum-Agent/1.0',
+        },
+      }, (res) => {
+        let body = '';
+        res.on('data', c => body += c);
+        res.on('end', () => { try { resolve(JSON.parse(body)); } catch (e) { reject(e); } });
+      });
+      req.on('error', reject);
+      req.setTimeout(15000, () => { req.destroy(); reject(new Error('timeout')); });
+    });
+    if (!data.content) { console.log('[Startup] GitHub returned no content'); return; }
+    const content = Buffer.from(data.content, 'base64').toString('utf8').replace(/\0/g, '');
+    const leads = JSON.parse(content);
+    const file = path.join(__dirname, 'outbound-leads.json');
+    // Only overwrite if GitHub has MORE leads than the local file (never downgrade)
+    let localCount = 0;
+    if (fs.existsSync(file)) {
+      try { localCount = JSON.parse(fs.readFileSync(file, 'utf8')).length; } catch {}
+    }
+    if (leads.length >= localCount) {
+      fs.writeFileSync(file, JSON.stringify(leads, null, 2));
+      console.log(`[Startup] Synced ${leads.length} leads from GitHub (was ${localCount} locally)`);
+    } else {
+      console.log(`[Startup] Local file has ${localCount} leads, GitHub has ${leads.length} — keeping local`);
+    }
+  } catch (e) {
+    console.log('[Startup] Could not sync leads from GitHub:', e.message);
+  }
+}
+
 // ── Start ───────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`\n✅ Accounting Firm AI Agent running on http://localhost:${PORT}`);
@@ -841,4 +887,6 @@ app.listen(PORT, () => {
   console.log(`   Leads JSON    : GET  http://localhost:${PORT}/leads`);
   console.log(`   Leads CSV     : GET  http://localhost:${PORT}/leads/export.csv`);
   console.log(`   Dashboard     : GET  http://localhost:${PORT}/dashboard.html\n`);
+  // Pull latest leads from GitHub so a redeploy never reverts to stale data
+  syncLeadsFromGitHub();
 });
