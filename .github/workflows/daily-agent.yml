@@ -49,7 +49,9 @@ jobs:
           git config user.email "agent@spectrumfinancialsolution.com"
           git add outbound-leads.json outbound-progress.json command-queue.json 2>/dev/null || true
           git diff --staged --quiet || git commit -m "agent: daily run $(date +%Y-%m-%d)"
+          git stash || true
           git pull --rebase origin main || true
-          git push origin main
+          git stash pop || true
+          git push origin main || true
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

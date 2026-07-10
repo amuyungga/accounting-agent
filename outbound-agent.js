@@ -110,6 +110,18 @@ const RUN_START = Date.now();
 const MAX_RUN_MS = 45 * 60 * 1000; // 45 minutes max — stops via isOutOfTime() checks
 function isOutOfTime() { return Date.now() - RUN_START > MAX_RUN_MS; }
 
+// ── Hard wall-clock timeout wrapper ─────────────────────────────────────────
+// Unlike socket-inactivity timeouts, this fires after exactly `ms` milliseconds
+// regardless of whether data is slowly trickling in.
+function withTimeout(promise, ms, label = 'operation') {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} hard timeout after ${ms}ms`)), ms)
+    ),
+  ]);
+}
+
 // ── Per-run lead cap ────────────────────────────────────────────────────────
 const DAILY_EMAIL_CAP = 20;   // max emails sent per run
 let emailedThisRun = 0;
@@ -232,6 +244,12 @@ function fetchUrl(targetUrl, redirectCount = 0) {
     try { parsed = new URL(targetUrl); } catch { return reject(new Error('Invalid URL')); }
 
     const mod = parsed.protocol === 'https:' ? https : http;
+    let settled = false;
+    // Hard wall-clock timeout — fires after 5s no matter what (even if data is trickling in)
+    const hardTimer = setTimeout(() => {
+      if (!settled) { settled = true; req.destroy(); reject(new Error('Hard fetch timeout')); }
+    }, 5000);
+
     const req = mod.get(targetUrl, {
       timeout: 5000,
       headers: {
@@ -241,6 +259,7 @@ function fetchUrl(targetUrl, redirectCount = 0) {
       },
     }, (res) => {
       if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
+        clearTimeout(hardTimer); settled = true;
         res.resume();
         const next = new URL(res.headers.location, targetUrl).href;
         return fetchUrl(next, redirectCount + 1).then(resolve).catch(reject);
@@ -248,10 +267,10 @@ function fetchUrl(targetUrl, redirectCount = 0) {
       let body = '';
       res.setEncoding('utf8');
       res.on('data', chunk => { body += chunk; if (body.length > 600_000) req.destroy(); });
-      res.on('end', () => resolve(body));
+      res.on('end', () => { clearTimeout(hardTimer); settled = true; resolve(body); });
     });
-    req.on('error', reject);
-    req.on('timeout', () => { req.destroy(); reject(new Error('Request timeout')); });
+    req.on('error', err => { clearTimeout(hardTimer); settled = true; reject(err); });
+    req.on('timeout', () => { req.destroy(); clearTimeout(hardTimer); settled = true; reject(new Error('Request timeout')); });
   });
 }
 
@@ -578,7 +597,7 @@ async function runFollowUps() {
 
   for (const lead of first) {
     try {
-      const content = await generateFollowUpEmail(lead);
+      const content = await withTimeout(generateFollowUpEmail(lead), 35000, 'generateFollowUpEmail');
       await sendColdEmail(lead.email, content, { ...lead, emailVariant: 'followup1' });
       saveLead({ ...lead, status: 'follow_up_sent', followUpSent: true, followUpSentAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
       console.log(`   ✅ 1st follow-up → ${lead.name || lead.email}`);
@@ -591,7 +610,7 @@ async function runFollowUps() {
 
   for (const lead of second) {
     try {
-      const content = await generateSecondFollowUp(lead);
+      const content = await withTimeout(generateSecondFollowUp(lead), 35000, 'generateSecondFollowUp');
       await sendColdEmail(lead.email, content, { ...lead, emailVariant: 'followup2' });
       saveLead({ ...lead, secondFollowUpSent: true, secondFollowUpSentAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
       console.log(`   ✅ 2nd follow-up → ${lead.name || lead.email}`);
@@ -1260,7 +1279,7 @@ async function runGooglePlacesLeads(cities) {
           // Find email on their website
           let email = null;
           if (biz.website) {
-            try { email = await findEmailOnWebsite(biz.website); } catch (_) {}
+            try { email = await withTimeout(findEmailOnWebsite(biz.website), 8000, 'website'); } catch (_) {}
           }
 
           if (!email) {
@@ -1293,7 +1312,7 @@ async function runGooglePlacesLeads(cities) {
 
           let emailContent;
           try {
-            emailContent = await generateColdEmail(lead, lead.emailVariant);
+            emailContent = await withTimeout(generateColdEmail(lead, lead.emailVariant), 35000, 'generateColdEmail');
           } catch (err) {
             lead.status = 'error'; lead.error = err.message;
             saveLead(lead); continue;
@@ -1335,9 +1354,13 @@ async function runGooglePlacesLeads(cities) {
       }
       console.log(`   [Places] industry "${industry}" done, sleeping 1.5s`);
       await sleep(1500);
+      // Sync to Railway after every industry so leads appear on the dashboard immediately
+      syncLeadsToRailway(loadLeads()).catch(e => console.log('[Sync] Railway error:', e.message));
     }
     console.log(`   [Places] city "${city}" done, sleeping 2s`);
     await sleep(2000);
+    // Push to GitHub after every city — progress is saved even if the job is killed mid-run
+    await pushLeadsToGitHub(loadLeads()).catch(e => console.log('[Sync] GitHub error:', e.message));
   }
 
   console.log(`   Google Places: ${found} leads found, ${emailed} emailed, ${called} VAPI calls made\n`);
@@ -1593,7 +1616,7 @@ async function runIntentSearches(cities) {
       }
 
       let email = null;
-      if (biz.website) email = await findEmailOnWebsite(biz.website);
+      if (biz.website) { try { email = await withTimeout(findEmailOnWebsite(biz.website), 8000, 'website'); } catch (_) {} }
 
       if (!email) {
         biz.status = biz.website ? 'no_email' : 'no_website';
@@ -1614,7 +1637,7 @@ async function runIntentSearches(cities) {
 
       let emailContent;
       try {
-        emailContent = await generateIntentEmail(biz, listing.desc, biz.emailVariant);
+        emailContent = await withTimeout(generateIntentEmail(biz, listing.desc, biz.emailVariant), 35000, 'generateIntentEmail');
       } catch (err) {
         biz.status = 'error'; biz.error = err.message;
         saveLead(biz);
@@ -1639,6 +1662,9 @@ async function runIntentSearches(cities) {
       if (RESEND_API_KEY) await sleep(EMAIL_DELAY_MS);
     }
     await sleep(2000);
+    // Sync after every intent city — Railway immediately, GitHub to persist progress
+    syncLeadsToRailway(loadLeads()).catch(e => console.log('[Sync] Railway error:', e.message));
+    await pushLeadsToGitHub(loadLeads()).catch(e => console.log('[Sync] GitHub error:', e.message));
   }
 
   console.log(`   Intent search done — ${intentFound} leads found, ${intentEmailed} emailed\n`);
