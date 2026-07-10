@@ -296,14 +296,22 @@ async function findEmailOnWebsite(websiteUrl) {
     const full = websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`;
     const parsed = new URL(full);
     const domain = parsed.hostname.replace(/^www\./, '');
+
+    // Check homepage
     const homepageHtml = await fetchUrl(full).catch(() => '');
     let emails = extractEmails(homepageHtml, domain);
     if (emails.length) return emails[0];
-    // Only check /contact — skip /contact-us and /about to keep each business under 10s
-    const contactHtml = await fetchUrl(`${parsed.origin}/contact`).catch(() => '');
-    emails = extractEmails(contactHtml, domain);
-    if (emails.length) return emails[0];
-    return null;
+
+    // Check contact pages
+    for (const slug of ['/contact', '/contact-us', '/about', '/about-us']) {
+      const html = await fetchUrl(`${parsed.origin}${slug}`).catch(() => '');
+      emails = extractEmails(html, domain);
+      if (emails.length) return emails[0];
+    }
+
+    // Last resort: guess info@domain — most small businesses use this as their primary address.
+    // Tag it as guessed so the dashboard can show the difference.
+    return `__guess__info@${domain}`;
   } catch {
     return null;
   }
@@ -1276,20 +1284,29 @@ async function runGooglePlacesLeads(cities) {
             updatedAt: new Date().toISOString(),
           };
 
-          // Find email on their website
+          // Find email on their website (or guess info@domain as fallback)
           let email = null;
+          let emailIsGuessed = false;
           if (biz.website) {
-            try { email = await withTimeout(findEmailOnWebsite(biz.website), 8000, 'website'); } catch (_) {}
+            try {
+              const raw = await withTimeout(findEmailOnWebsite(biz.website), 12000, 'website');
+              if (raw && raw.startsWith('__guess__')) {
+                email = raw.replace('__guess__', '');
+                emailIsGuessed = true;
+              } else {
+                email = raw;
+              }
+            } catch (_) {}
           }
 
           if (!email) {
             lead.status = biz.website ? 'no_email' : 'no_website';
             saveLead(lead);
 
-            // No email but have phone → VAPI call (score must be decent)
+            // No email and no website → VAPI call if phone available (low threshold for Places leads)
             if (biz.phone && VAPI_API_KEY) {
               lead.score = scoreLead(lead);
-              if (lead.score >= 45) {
+              if (lead.score >= 10) {
                 const callId = await callLeadViaVapi(lead);
                 if (callId) {
                   lead.vapiCallId = callId;
@@ -1306,6 +1323,7 @@ async function runGooglePlacesLeads(cities) {
           if (alreadyEmailedAddress(email)) continue;
 
           lead.email = email;
+          lead.emailIsGuessed = emailIsGuessed;  // flag so dashboard can show ⚠ guessed
           lead.score = scoreLead(lead);
           lead.emailVariant = Math.random() < 0.5 ? 'A' : 'B';
           found++;
@@ -1335,8 +1353,8 @@ async function runGooglePlacesLeads(cities) {
 
           saveLead(lead);
 
-          // High-score leads with phone get a follow-up VAPI call too
-          if (lead.phone && lead.score >= 65 && VAPI_API_KEY && emailed <= 5) {
+          // High-score leads with phone get a follow-up VAPI call too (threshold lowered for Places leads)
+          if (lead.phone && lead.score >= 20 && VAPI_API_KEY && emailed <= 5) {
             const callId = await callLeadViaVapi(lead);
             if (callId) {
               lead.vapiCallId = callId;
