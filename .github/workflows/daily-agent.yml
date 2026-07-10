@@ -42,16 +42,17 @@ jobs:
           tail -150 /tmp/agent-log.txt 2>/dev/null || echo "No log captured"
           echo "=== END ==="
 
-      - name: Commit updated leads back to repo
+      - name: Commit progress back to repo
         if: always()
         run: |
           git config user.name "Spectrum Agent"
           git config user.email "agent@spectrumfinancialsolution.com"
-          git add outbound-leads.json outbound-progress.json command-queue.json 2>/dev/null || true
-          git diff --staged --quiet || git commit -m "agent: daily run $(date +%Y-%m-%d)"
-          git stash || true
+          # outbound-leads.json is already synced via GitHub API during the run — skip it here
+          # Only commit progress/queue files to avoid merge conflicts
+          git checkout -- outbound-leads.json 2>/dev/null || true
+          git add outbound-progress.json command-queue.json 2>/dev/null || true
+          git diff --staged --quiet || git commit -m "agent: progress $(date +%Y-%m-%d)"
           git pull --rebase origin main || true
-          git stash pop || true
           git push origin main || true
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
