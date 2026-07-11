@@ -198,7 +198,9 @@ function getNextSearches(count) {
 }
 
 // ── Anthropic + Mailer ─────────────────────────────────────────────────────
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// Trim the key to remove any invisible characters (newlines, spaces) from GitHub secrets
+const ANTHROPIC_API_KEY = (process.env.ANTHROPIC_API_KEY || '').trim();
+const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || null;
 if (!RESEND_API_KEY) console.warn('[Warn] RESEND_API_KEY not set in .env — emails will be logged but not sent.');
@@ -470,7 +472,7 @@ Rules:
       method: 'POST',
       timeout: 30000,
       headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'x-api-key': ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
         'content-type': 'application/json',
         'content-length': Buffer.byteLength(payload),
@@ -523,7 +525,7 @@ Rules:
       method: 'POST',
       timeout: 30000,
       headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'x-api-key': ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
         'content-type': 'application/json',
         'content-length': Buffer.byteLength(payload),
@@ -573,7 +575,7 @@ Rules:
       method: 'POST',
       timeout: 30000,
       headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'x-api-key': ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
         'content-type': 'application/json',
         'content-length': Buffer.byteLength(payload),
@@ -1513,7 +1515,7 @@ Rules:
 - Write ONLY the email body`;
     const payload = JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 300, messages: [{ role: 'user', content: promptIndiv }] });
     return new Promise((resolve, reject) => {
-      const req = https.request({ hostname: 'api.anthropic.com', path: '/v1/messages', method: 'POST', timeout: 30000, headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json', 'content-length': Buffer.byteLength(payload) } }, (res) => {
+      const req = https.request({ hostname: 'api.anthropic.com', path: '/v1/messages', method: 'POST', timeout: 30000, headers: { 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json', 'content-length': Buffer.byteLength(payload) } }, (res) => {
         let data = ''; res.on('data', c => data += c);
         res.on('end', () => { try { const j = JSON.parse(data); if (j.error) return reject(new Error(j.error.message)); resolve(j.content[0].text.trim()); } catch (e) { reject(e); } });
       });
@@ -1577,7 +1579,7 @@ Rules:
       method: 'POST',
       timeout: 30000,
       headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'x-api-key': ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
         'content-type': 'application/json',
         'content-length': Buffer.byteLength(payload),
