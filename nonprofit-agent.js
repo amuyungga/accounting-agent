@@ -497,14 +497,20 @@ async function runNonprofitSearch() {
 
     // ── 2. ProPublica nonprofits ──────────────────────────────────────────
     const npOrgs = [];
-    for (const q of NP_QUERIES.slice(0, 2)) {
+    for (const q of NP_QUERIES) {
       const orgs = await searchProPublica(state.id, q).catch(() => []);
       npOrgs.push(...orgs);
       await sleep(800);
     }
-    // Filter by reasonable revenue ($500K–$50M) — smaller can't pay, larger have in-house teams
-    const filteredNp = npOrgs.filter(o => o.revenue >= 500_000 && o.revenue <= 50_000_000);
-    console.log(`   [ProPublica] ${filteredNp.length} nonprofits (revenue-filtered from ${npOrgs.length})`);
+    // Deduplicate ProPublica orgs (revenue field is not returned by the search endpoint)
+    const seenEin = new Set();
+    const filteredNp = npOrgs.filter(o => {
+      const key = o.ein || o.name.toLowerCase().slice(0, 30);
+      if (seenEin.has(key)) return false;
+      seenEin.add(key);
+      return true;
+    });
+    console.log(`   [ProPublica] ${filteredNp.length} nonprofits`);
 
     // ── 3. Indeed high-intent job postings ────────────────────────────────
     const indeedOrgs = await searchIndeedJobs(state.name).catch(() => []);
@@ -527,7 +533,7 @@ async function runNonprofitSearch() {
     console.log(`   [Combined]   ${allOrgs.length} unique orgs to process`);
 
     // ── Process each org ──────────────────────────────────────────────────
-    for (const org of allOrgs.slice(0, 25)) {
+    for (const org of allOrgs.slice(0, 40)) {
       if (emailedThisRun >= DAILY_EMAIL_CAP) break;
 
       const listingKey = `np_${state.id}_${org.name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 30)}`;
