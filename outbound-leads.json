@@ -4673,7 +4673,7 @@
     "phone": "(951) 924-4315",
     "website": "http://managementone.com/",
     "industry": "property management company",
-    "status": "error",
+    "status": "emailed",
     "email": "info@managementone.com",
     "id": "ol_1783684498006_y6g3",
     "listingUrl": "places_ChIJq2SVCLKo3IARdb0OTr-Vu5M",
@@ -4682,7 +4682,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:55:10.440Z",
+    "emailSubject": "Property Management Tax Planning for Moreno Valley Operators"
   },
   {
     "source": "google_places_primary",
@@ -4693,7 +4694,7 @@
     "phone": "(818) 291-8900",
     "website": "http://www.publichealth.lacounty.gov/",
     "industry": "medical clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "phwebinformatics@ph.lacounty.gov",
     "id": "ol_1783684503523_c0ho",
     "listingUrl": "places_ChIJdcqWG6nBwoARUQWKvnptmPk",
@@ -4702,7 +4703,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:55:25.597Z",
+    "emailSubject": "Financial Planning for Medical Practices in Glendale"
   },
   {
     "source": "google_places_primary",
@@ -4713,7 +4715,7 @@
     "phone": "(818) 265-2264",
     "website": "https://cchccenters.org/",
     "industry": "medical clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "experience@cchccenters.org",
     "id": "ol_1783684504338_xsbj",
     "listingUrl": "places_ChIJ8ctTmBDBwoARgwbqPKOz1MY",
@@ -4722,7 +4724,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:55:41.181Z",
+    "emailSubject": "Tax Planning for Medical Clinics in Glendale"
   },
   {
     "source": "google_places_primary",
@@ -4733,7 +4736,7 @@
     "phone": "(818) 552-2011",
     "website": "https://www.glendalefamilymedical.com/",
     "industry": "medical clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "drarmennercessian@gmail.com",
     "id": "ol_1783684505049_o7ww",
     "listingUrl": "places_ChIJAakzg0zAwoARVEpL8vbBzr0",
@@ -4742,7 +4745,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:55:56.904Z",
+    "emailSubject": "Tax Planning for Medical Practices in Glendale"
   },
   {
     "source": "google_places_primary",
@@ -4753,7 +4757,7 @@
     "phone": "(818) 651-9029",
     "website": "https://www.kjtlawgroup.com/glendale/?utm_source=google&utm_medium=organic&utm_campaign=gbp-listing-glendale",
     "industry": "law firm",
-    "status": "error",
+    "status": "emailed",
     "email": "info@kjtlawgroup.com",
     "id": "ol_1783684507888_rijd",
     "listingUrl": "places_ChIJ878iJVXAwoARD8Fi8y2aLSY",
@@ -4762,7 +4766,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:56:12.878Z",
+    "emailSubject": "Tax planning for law firms in Glendale"
   },
   {
     "source": "google_places_primary",
@@ -4773,7 +4778,7 @@
     "phone": "(310) 943-1171",
     "website": "https://kaass.law/",
     "industry": "law firm",
-    "status": "error",
+    "status": "emailed",
     "email": "info@kaass.law",
     "id": "ol_1783684508007_bn66",
     "listingUrl": "places_ChIJ59RlRgTBwoARxrTkMoyA6X0",
@@ -4782,7 +4787,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:56:28.154Z",
+    "emailSubject": "Tax planning strategies for law firms in Glendale"
   },
   {
     "source": "google_places_primary",
@@ -4793,7 +4799,7 @@
     "phone": "(818) 818-1948",
     "website": "https://glendalelawfirm.com/",
     "industry": "law firm",
-    "status": "error",
+    "status": "emailed",
     "email": "info@glendalelawfirm.com",
     "id": "ol_1783684511352_miif",
     "listingUrl": "places_ChIJLzrsdz_BwoARY6J0JbzR44c",
@@ -4802,7 +4808,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:56:43.021Z",
+    "emailSubject": "Quick question about tax planning for Glendale Law Firm"
   },
   {
     "source": "google_places_primary",
@@ -4813,7 +4820,7 @@
     "phone": "(818) 658-1111",
     "website": "https://utopiamanagement.com/office-location/glendale",
     "industry": "property management company",
-    "status": "error",
+    "status": "emailed",
     "email": "glendale@utopiamanagement.com",
     "id": "ol_1783684514107_7h1n",
     "listingUrl": "places_ChIJEyUb3P7BwoAR0Xr5b3kJEN4",
@@ -4822,7 +4829,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:56:58.227Z",
+    "emailSubject": "Property Management Tax Strategies for Utopia PM | Glendale"
   },
   {
     "source": "google_places_primary",
@@ -4833,7 +4841,7 @@
     "phone": "(818) 740-7476",
     "website": "https://rentalhousepm.com/?utm_source=gmb&utm_medium=organic&utm_campaign=gbp",
     "industry": "property management company",
-    "status": "error",
+    "status": "emailed",
     "email": "info@rentalhousepm.com",
     "id": "ol_1783684514314_nlgr",
     "listingUrl": "places_ChIJuymr-UzBwoARHUkBrOi8QJI",
@@ -4842,7 +4850,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:57:13.174Z",
+    "emailSubject": "Tax strategies for property managers in Glendale"
   },
   {
     "source": "google_places_primary",
@@ -4853,7 +4862,7 @@
     "phone": "(818) 465-4065",
     "website": "http://www.glendalepropertymanagers.com/",
     "industry": "property management company",
-    "status": "error",
+    "status": "emailed",
     "email": "info@glendalepm.com",
     "id": "ol_1783684515741_6jba",
     "listingUrl": "places_ChIJ54c15pXBwoARs8xhvBzQ9vc",
@@ -4862,7 +4871,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:57:28.680Z",
+    "emailSubject": "Tax strategies for property management companies in Glendale"
   },
   {
     "source": "google_places_primary",
