@@ -3706,7 +3706,7 @@
     "phone": "(909) 600-0530",
     "website": "https://www.specialtybuilders1.com/",
     "industry": "construction company",
-    "status": "error",
+    "status": "emailed",
     "email": "info.specialtybuilders@gmail.com",
     "id": "ol_1783659076839_kt3s",
     "listingUrl": "places_ChIJxd_lpI2XwoARcQsfudrbE6M",
@@ -3715,7 +3715,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:44:50.694Z",
+    "emailSubject": "Construction Tax Planning for Specialty Builders in Fontana"
   },
   {
     "source": "google_places_primary",
@@ -3726,7 +3727,7 @@
     "phone": "(415) 457-1290",
     "website": "https://www.fontanaco.com/",
     "industry": "construction company",
-    "status": "error",
+    "status": "emailed",
     "email": "info@fontanaco.com",
     "id": "ol_1783659077331_42ar",
     "listingUrl": "places_ChIJLTQojaybhYARIws8PelATf8",
@@ -3735,7 +3736,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:45:06.119Z",
+    "emailSubject": "Construction tax strategies for Fontana-area builders"
   },
   {
     "source": "google_places_primary",
@@ -3746,7 +3748,7 @@
     "phone": "(909) 845-3588",
     "website": "https://tmbcr.com/?utm_source=organic&utm_medium=gbp_listing",
     "industry": "construction company",
-    "status": "error",
+    "status": "emailed",
     "email": "info@tmbcr.com",
     "id": "ol_1783659079530_tgfq",
     "listingUrl": "places_ChIJbwzwowvCpEARCZoD3eMkLHM",
@@ -3755,7 +3757,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:45:20.944Z",
+    "emailSubject": "Tax planning for construction companies in Fontana"
   },
   {
     "source": "google_places_primary",
@@ -3766,7 +3769,7 @@
     "phone": "(909) 365-3557",
     "website": "http://www.primerehabcenter.com/",
     "industry": "physical therapy clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "info@primerehabcenter.com",
     "id": "ol_1783659087482_92o3",
     "listingUrl": "places_ChIJpU3UK15Mw4ARZ259FZgwAAs",
@@ -3775,7 +3778,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:45:36.342Z",
+    "emailSubject": "Tax planning for physical therapy clinics in Fontana"
   },
   {
     "source": "google_places_primary",
@@ -3802,7 +3806,7 @@
     "phone": "(951) 472-0927",
     "website": "http://www.speedyins.com/",
     "industry": "insurance agency",
-    "status": "error",
+    "status": "emailed",
     "email": "info@speedyins.com",
     "id": "ol_1783659092678_4eh9",
     "listingUrl": "places_ChIJPTxffqqo3IARGd06dyRHIN8",
@@ -3811,7 +3815,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:45:51.612Z",
+    "emailSubject": "Tax planning for insurance agencies in Moreno Valley"
   },
   {
     "source": "google_places_primary",
@@ -3822,7 +3827,7 @@
     "phone": "(951) 386-4006",
     "website": "https://locations.acceptance.com/moreno-valley-insurance-california-92557/?utm_medium=directory&utm_source=google&utm_campaign=ACAMV1_MorenoValley_CA",
     "industry": "insurance agency",
-    "status": "error",
+    "status": "emailed",
     "email": "ima-quickquote-car-lg@2x.webp",
     "id": "ol_1783659093277_x0bo",
     "listingUrl": "places_ChIJBTAdPCqm3IARIdU0ulvwuwQ",
@@ -3831,7 +3836,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:46:06.713Z",
+    "emailSubject": "Financial planning for insurance agencies in Moreno Valley"
   },
   {
     "source": "google_places_primary",
@@ -3842,7 +3848,7 @@
     "phone": "(951) 247-2003",
     "website": "http://www.allsolutionsinsurance.com/",
     "industry": "insurance agency",
-    "status": "error",
+    "status": "emailed",
     "email": "info@allsolins.com",
     "id": "ol_1783659093653_3yb9",
     "listingUrl": "places_ChIJ3SduKKCo3IAR7aZujOvyaUQ",
@@ -3851,7 +3857,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:46:23.304Z",
+    "emailSubject": "Financial planning strategies for insurance agencies in Moreno Valley"
   },
   {
     "source": "google_places_primary",
@@ -3862,7 +3869,7 @@
     "phone": "(951) 830-5596",
     "website": "http://chacageneralcontractors.com/",
     "industry": "construction company",
-    "status": "error",
+    "status": "emailed",
     "email": "info@chacageneralcontractors.com",
     "id": "ol_1783659100039_glra",
     "listingUrl": "places_ChIJj-zSOKGo3IARZCYrhnA8dzM",
@@ -3871,7 +3878,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:46:38.635Z",
+    "emailSubject": "Construction accounting strategies for Chaca General Contractors"
   },
   {
     "source": "google_places_primary",
@@ -3914,7 +3922,7 @@
     "phone": "(951) 924-8300",
     "website": "https://passpt.com/",
     "industry": "physical therapy clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "Beaumont@passpt.com",
     "id": "ol_1783659103323_zlb2",
     "listingUrl": "places_ChIJCZA1DiKm3IARM7XybqL24ug",
@@ -3923,7 +3931,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:46:53.472Z",
+    "emailSubject": "Tax Planning for Physical Therapy Clinics in Moreno Valley"
   },
   {
     "source": "google_places_primary",
@@ -3934,7 +3943,7 @@
     "phone": "(951) 379-1500",
     "website": "https://green-pt.com/",
     "industry": "physical therapy clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "info@green-pt.com",
     "id": "ol_1783659103806_3id2",
     "listingUrl": "places_ChIJyQYscQSm3IARidmN55_rnIY",
@@ -3943,7 +3952,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:47:08.725Z",
+    "emailSubject": "Tax & Cash Flow Planning for Physical Therapy Clinics in Moreno Valley"
   },
   {
     "source": "google_places_primary",
