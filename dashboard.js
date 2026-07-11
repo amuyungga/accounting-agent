@@ -1025,6 +1025,9 @@ function exportObCsv() {
 loadAll();
 setInterval(loadAll, 60000);
 
+// Kick off nonprofit status check on load
+fetchNpStatus();
+
 // ── Agent Status Tab ──────────────────────────────────────────────────────────
 var agentRun = null;
 var agentElapsedTimer = null;
@@ -1143,6 +1146,86 @@ function triggerAgentRun() {
       btn.disabled = false;
       btn.textContent = '▶ Trigger Run Now';
     });
+}
+
+// ── Nonprofit Search ──────────────────────────────────────────────────────────
+var NP_TRIGGER_URL = BASE + '/api/nonprofit-search/trigger';
+var NP_STATUS_URL  = BASE + '/api/nonprofit-search/status';
+var npPolling = null;
+
+function triggerNonprofitSearch() {
+  var btn    = document.getElementById('np-run-btn');
+  var pill   = document.getElementById('np-status-pill');
+  var detail = document.getElementById('np-run-detail');
+  btn.disabled = true;
+  btn.textContent = '⏳ Starting…';
+  pill.textContent = '';
+  fetch(NP_TRIGGER_URL, { method: 'POST' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) {
+        btn.textContent = '🔄 Running…';
+        detail.textContent = 'Search triggered — polling for status…';
+        detail.style.display = 'block';
+        if (npPolling) clearInterval(npPolling);
+        npPolling = setInterval(fetchNpStatus, 20000);
+        setTimeout(fetchNpStatus, 5000);
+      } else {
+        btn.textContent = '▶ Run Nonprofit Search';
+        btn.disabled = false;
+        pill.textContent = '⚠ ' + (data.error || 'Trigger failed');
+        pill.style.color = 'var(--red)';
+      }
+    })
+    .catch(function(e) {
+      btn.textContent = '▶ Run Nonprofit Search';
+      btn.disabled = false;
+      pill.textContent = '⚠ Network error';
+      pill.style.color = 'var(--red)';
+    });
+}
+
+function fetchNpStatus() {
+  var btn    = document.getElementById('np-run-btn');
+  var pill   = document.getElementById('np-status-pill');
+  var detail = document.getElementById('np-run-detail');
+  if (!btn) return;
+  fetch(NP_STATUS_URL)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var run = (data.workflow_runs || [])[0];
+      if (!run) return;
+      var isRunning = run.status === 'in_progress' || run.status === 'queued';
+      var isSuccess = run.conclusion === 'success';
+      var isFailed  = run.conclusion === 'failure' || run.conclusion === 'cancelled';
+      if (isRunning) {
+        btn.textContent = '🔄 Running…';
+        btn.disabled = true;
+        pill.textContent = '● Running  ·  Run #' + run.run_number;
+        pill.style.color = '#22c55e';
+        detail.style.display = 'block';
+        detail.textContent = 'Started ' + D(run.created_at) + '  ·  Searching CA, AZ, WA, UT, TX, MO, MT, NM, ND, SD…';
+        if (!npPolling) npPolling = setInterval(fetchNpStatus, 20000);
+      } else if (isSuccess) {
+        if (npPolling) { clearInterval(npPolling); npPolling = null; }
+        btn.textContent = '▶ Run Nonprofit Search';
+        btn.disabled = false;
+        pill.textContent = '✓ Done  ·  Run #' + run.run_number + '  ·  ' + D(run.updated_at);
+        pill.style.color = '#22c55e';
+        detail.style.display = 'none';
+      } else if (isFailed) {
+        if (npPolling) { clearInterval(npPolling); npPolling = null; }
+        btn.textContent = '▶ Run Nonprofit Search';
+        btn.disabled = false;
+        pill.textContent = '✕ Failed  ·  Run #' + run.run_number;
+        pill.style.color = 'var(--red)';
+        detail.style.display = 'none';
+      } else {
+        pill.textContent = 'Last run: #' + run.run_number + '  ·  ' + D(run.updated_at || run.created_at);
+        pill.style.color = 'var(--muted)';
+      }
+    })
+    .catch(function() {});
 }
 
 // ── Command Center ────────────────────────────────────────────────────────────

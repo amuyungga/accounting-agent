@@ -827,8 +827,31 @@ a:hover{text-decoration:underline}
     </div>
   </div>
 
+  <!-- Nonprofit Search Panel -->
+  <div style="margin:24px 0 0;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:14px">
+        <span style="font-size:24px">🏥</span>
+        <div>
+          <div style="font-weight:700;font-size:15px">Nonprofit &amp; FQHC Lead Search</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">
+            Targets: ProPublica · HRSA Health Centers · Indeed Jobs &nbsp;·&nbsp; CA, AZ, WA, UT, TX, MO, MT, NM, ND, SD
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+        <span id="np-status-pill" style="font-size:12px;color:var(--muted)"></span>
+        <button id="np-run-btn" onclick="triggerNonprofitSearch()"
+          style="background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .2s;white-space:nowrap">
+          ▶ Run Nonprofit Search
+        </button>
+      </div>
+    </div>
+    <div id="np-run-detail" style="display:none;padding:0 20px 14px;font-size:12px;color:var(--muted)"></div>
+  </div>
+
   <!-- Run history -->
-  <div style="padding:4px 32px 8px;font-size:14px;font-weight:700;color:var(--text)">Run History</div>
+  <div style="padding:20px 0 8px;font-size:14px;font-weight:700;color:var(--text)">Run History (Regular Agent)</div>
   <div class="agent-history-card">
     <table>
       <thead><tr><th>#</th><th>Status</th><th>Duration</th><th>Commit</th><th>Started</th></tr></thead>
