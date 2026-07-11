@@ -197,6 +197,10 @@ function loadAll() {
   Promise.all([loadChat(), loadOutbound(), loadCalls(), loadCrm()]).then(function() {
     updateOverview();
     document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+    // Re-render KPI if that tab is currently visible
+    if (document.getElementById('s-kpi') && document.getElementById('s-kpi').classList.contains('active')) {
+      renderKpi();
+    }
   });
 }
 
@@ -718,8 +722,9 @@ function kpiLeads() {
   if (toInput)   { kpiTo   = new Date(toInput);   kpiTo.setHours(23, 59, 59, 999); }
 
   return outboundLeads.filter(function(l) {
-    if (!l.emailSentAt) return false;
-    var d = new Date(l.emailSentAt);
+    var sentAt = l.emailSentAt || l.emailedAt;
+    if (!sentAt) return false;
+    var d = new Date(sentAt);
     if (kpiFrom && d < kpiFrom) return false;
     if (kpiTo   && d > kpiTo)   return false;
     return true;
