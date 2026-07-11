@@ -541,7 +541,7 @@ function updateOverview() {
   }
   var ev = [].concat(
     chatLeads.map(function(l) { return { t: 'Chat', n: l.name || 'Unknown', c: l.email || '', d: l.service || '-', dt: l.capturedAt }; }),
-    outboundLeads.filter(function(l) { return l.status === 'emailed'; }).map(function(l) { return { t: 'Email', n: l.name || 'Unknown', c: l.email || '', d: l.industry || '-', dt: l.emailSentAt || l.foundAt }; }),
+    outboundLeads.filter(function(l) { return l.status === 'emailed'; }).map(function(l) { return { t: 'Email', n: l.name || 'Unknown', c: l.email || '', d: l.industry || '-', dt: l.emailSentAt || l.emailedAt || l.foundAt }; }),
     callLogs.map(function(c) { return { t: 'Call', n: (c.customer && (c.customer.number || c.customer.name)) || 'Unknown', c: '', d: (c.endedReason || '-').replace(/-/g, ' '), dt: c.startedAt || c.createdAt }; })
   ).sort(function(a, b) { return new Date(b.dt) - new Date(a.dt); }).slice(0, 20);
   var typeClass = { Chat: 'type-chat', Email: 'type-email', Call: 'type-call' };
@@ -834,7 +834,10 @@ function buildDailyData(leads, days) {
   var sent = {}, opened = {}, replied = {};
   days.forEach(function(d) { sent[d] = 0; opened[d] = 0; replied[d] = 0; });
   leads.forEach(function(l) {
-    var d = (l.emailSentAt || '').slice(0, 10);
+    var sentAt = l.emailSentAt || l.emailedAt;
+    if (!sentAt) return;
+    var dt = new Date(sentAt);
+    var d = dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
     if (sent[d] !== undefined) {
       sent[d]++;
       if (l.openCount > 0) opened[d]++;
@@ -860,7 +863,7 @@ function renderOverviewChart() {
   var now = new Date();
   for (var i = 13; i >= 0; i--) {
     var d = new Date(now); d.setDate(d.getDate() - i);
-    days.push(d.toISOString().slice(0, 10));
+    days.push(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'));
   }
 
   var daily = buildDailyData(outboundLeads, days);
@@ -894,7 +897,7 @@ function renderKpiActivityChart(leads) {
   var to   = kpiTo   || new Date();
   var days = [], cur = new Date(from);
   while (cur <= to && days.length < 90) {
-    days.push(cur.toISOString().slice(0, 10));
+    days.push(cur.getFullYear() + '-' + String(cur.getMonth()+1).padStart(2,'0') + '-' + String(cur.getDate()).padStart(2,'0'));
     cur.setDate(cur.getDate() + 1);
   }
 
