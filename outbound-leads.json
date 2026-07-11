@@ -268,12 +268,13 @@
     "phone": "(205) 407-5028",
     "website": "https://workoutanytime.com/irondale",
     "industry": "gym fitness center",
-    "status": "error",
+    "status": "emailed",
     "email": "irondale@workoutanytime.com",
-    "error": "Invalid response body while trying to fetch https://api.anthropic.com/v1/messages: Premature close",
     "id": "ol_1782529770095_s98p",
     "foundAt": "2026-06-27T03:09:30.095Z",
-    "updatedAt": "2026-06-27T03:09:34.376Z"
+    "updatedAt": "2026-06-27T03:09:34.376Z",
+    "emailedAt": "2026-07-11T04:42:13.348Z",
+    "emailSubject": "Financial Planning for Fitness Businesses in Birmingham"
   },
   {
     "source": "google_places",
@@ -284,12 +285,13 @@
     "phone": "(205) 547-3100",
     "website": "https://www.lifetime.life/locations/al/vestavia-hills.html?utm_source=google&utm_medium=local&utm_campaign=google-local-club",
     "industry": "gym fitness center",
-    "status": "error",
+    "status": "emailed",
     "email": "VestaviaHills@ltfinc.onmicrosoft.com",
-    "error": "Invalid response body while trying to fetch https://api.anthropic.com/v1/messages: Premature close",
     "id": "ol_1782529774377_50pd",
     "foundAt": "2026-06-27T03:09:34.377Z",
-    "updatedAt": "2026-06-27T03:09:37.760Z"
+    "updatedAt": "2026-06-27T03:09:37.760Z",
+    "emailedAt": "2026-07-11T04:42:32.033Z",
+    "emailSubject": "Tax & Cash Flow Planning for Fitness Centers in Birmingham"
   },
   {
     "source": "google_places",
@@ -300,12 +302,13 @@
     "phone": "(205) 236-0125",
     "website": "https://mrdrippyplumbing.com/?utm_source=google&utm_medium=search_engine&utm_campaign=gmb",
     "industry": "plumbing company",
-    "status": "error",
+    "status": "emailed",
     "email": "service@mrdrippyplumbing.com",
-    "error": "Invalid response body while trying to fetch https://api.anthropic.com/v1/messages: Premature close",
     "id": "ol_1782529780418_bwt0",
     "foundAt": "2026-06-27T03:09:40.418Z",
-    "updatedAt": "2026-06-27T03:09:43.648Z"
+    "updatedAt": "2026-06-27T03:09:43.648Z",
+    "emailedAt": "2026-07-11T04:42:47.326Z",
+    "emailSubject": "Tax planning for plumbing contractors in Birmingham"
   },
   {
     "source": "google_places",
@@ -331,12 +334,13 @@
     "phone": "(659) 279-7475",
     "website": "https://www.epicebirmingham.com/",
     "industry": "restaurant",
-    "status": "error",
+    "status": "emailed",
     "email": "info@epicebirmingham.com",
-    "error": "Invalid response body while trying to fetch https://api.anthropic.com/v1/messages: Premature close",
     "id": "ol_1782536763672_j4uj",
     "foundAt": "2026-06-27T05:06:03.674Z",
-    "updatedAt": "2026-06-27T05:06:07.637Z"
+    "updatedAt": "2026-06-27T05:06:07.637Z",
+    "emailedAt": "2026-07-11T04:43:02.934Z",
+    "emailSubject": "Restaurant tax strategy for Epice Birmingham"
   },
   {
     "source": "google_places",
@@ -347,12 +351,13 @@
     "phone": "(205) 502-7546",
     "website": "https://socialbhm.com/",
     "industry": "restaurant",
-    "status": "error",
+    "status": "emailed",
     "email": "info@ndiscovered.com",
-    "error": "Invalid response body while trying to fetch https://api.anthropic.com/v1/messages: Premature close",
     "id": "ol_1782536767639_p4vw",
     "foundAt": "2026-06-27T05:06:07.639Z",
-    "updatedAt": "2026-06-27T05:06:11.316Z"
+    "updatedAt": "2026-06-27T05:06:11.316Z",
+    "emailedAt": "2026-07-11T04:43:18.090Z",
+    "emailSubject": "Restaurant Tax Planning for SOCIAL in Birmingham"
   },
   {
     "source": "google_places",
@@ -3423,7 +3428,7 @@
     "phone": "(714) 559-6525",
     "website": "http://shopmainplacemall.com/",
     "industry": "retail store",
-    "status": "error",
+    "status": "emailed",
     "email": "info@shopmainplacemall.com",
     "id": "ol_1782657352863_i52h",
     "listingUrl": "places_ChIJBVVt3M7Z3IARJ6df5O1VA5c",
@@ -3432,7 +3437,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:43:33.131Z",
+    "emailSubject": "Tax Planning for MainPlace Mall's Retail Operations"
   },
   {
     "source": "google_places",
@@ -3462,7 +3468,7 @@
     "phone": "(714) 547-7211",
     "website": "https://www.macys.com/stores/ca/santaana/mainplace-mall_527.html",
     "industry": "retail store",
-    "status": "error",
+    "status": "emailed",
     "email": "info@macys.com",
     "id": "ol_1782657374028_v3np",
     "listingUrl": "places_ChIJReOKz87Z3IARMKV4W1Nl9WI",
@@ -3471,7 +3477,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:43:48.263Z",
+    "emailSubject": "Tax Planning for Retail Stores in Santa Ana"
   },
   {
     "source": "google_places",
@@ -3640,12 +3647,13 @@
     "website": "http://www.freeformfuture.com/",
     "phone": "(310) 620-6362",
     "email": "__guess__info@freeformfuture.com",
-    "status": "error",
+    "status": "emailed",
     "foundAt": "2026-07-07T04:07:14.259Z",
     "updatedAt": "2026-07-11T00:44:44.540Z",
     "score": 65,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:44:03.167Z",
+    "emailSubject": "Tax Planning for Creative Studios in Garden Grove"
   },
   {
     "source": "google_places_primary",
@@ -3656,7 +3664,7 @@
     "phone": "(909) 822-8334",
     "website": "https://www.alltypesinsurance.com/",
     "industry": "insurance agency",
-    "status": "error",
+    "status": "emailed",
     "email": "info@alltypesinsurance.com",
     "id": "ol_1783659057384_tnpn",
     "listingUrl": "places_ChIJ9fN-j2RMw4AR6ua_2-KYRe4",
@@ -3665,7 +3673,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:44:18.609Z",
+    "emailSubject": "Tax Planning for Insurance Agencies in Fontana"
   },
   {
     "source": "google_places_primary",
@@ -3676,7 +3685,7 @@
     "phone": "(909) 281-7582",
     "website": "https://veronicas.com/",
     "industry": "insurance agency",
-    "status": "error",
+    "status": "emailed",
     "email": "info@veronicas.com",
     "id": "ol_1783659064897_xqkz",
     "listingUrl": "places_ChIJ8cBWz2BMw4ARyBFPxoDHR2Q",
@@ -3685,7 +3694,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:44:34.209Z",
+    "emailSubject": "Financial planning for insurance agencies in Fontana"
   },
   {
     "source": "google_places_primary",
