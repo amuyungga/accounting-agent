@@ -708,18 +708,18 @@ function setKpiPreset(preset, btn) {
     from = null; to = null;
   }
   kpiFrom = from; kpiTo = to;
-  var fmt = function(d) { return d ? d.toISOString().slice(0, 10) : ''; };
-  document.getElementById('kpi-from').value = fmt(from);
-  document.getElementById('kpi-to').value = fmt(to);
+  var fmtLocal = function(d) { if (!d) return ''; return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
+  document.getElementById('kpi-from').value = fmtLocal(from);
+  document.getElementById('kpi-to').value = fmtLocal(to);
   renderKpi();
 }
 
 function kpiLeads() {
-  // Read custom date inputs if they changed directly
+  // Read custom date inputs if they changed directly — parse as LOCAL date (not UTC)
   var fromInput = document.getElementById('kpi-from').value;
   var toInput   = document.getElementById('kpi-to').value;
-  if (fromInput) { kpiFrom = new Date(fromInput); kpiFrom.setHours(0, 0, 0, 0); }
-  if (toInput)   { kpiTo   = new Date(toInput);   kpiTo.setHours(23, 59, 59, 999); }
+  if (fromInput) { var fp = fromInput.split('-'); kpiFrom = new Date(+fp[0], +fp[1]-1, +fp[2], 0, 0, 0, 0); }
+  if (toInput)   { var tp = toInput.split('-');   kpiTo   = new Date(+tp[0], +tp[1]-1, +tp[2], 23, 59, 59, 999); }
 
   return outboundLeads.filter(function(l) {
     var sentAt = l.emailSentAt || l.emailedAt;
@@ -993,12 +993,12 @@ function renderABChart(sA, sB) {
   var now = new Date();
   var from = new Date(now); from.setDate(from.getDate() - 29); from.setHours(0, 0, 0, 0);
   kpiFrom = from; kpiTo = new Date(now); kpiTo.setHours(23, 59, 59, 999);
-  var fmt = function(d) { return d.toISOString().slice(0, 10); };
+  var fmtLocal = function(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
   document.addEventListener('DOMContentLoaded', function() {
     var fi = document.getElementById('kpi-from');
     var ti = document.getElementById('kpi-to');
-    if (fi) fi.value = fmt(from);
-    if (ti) ti.value = fmt(kpiTo);
+    if (fi) fi.value = fmtLocal(from);
+    if (ti) ti.value = fmtLocal(kpiTo);
   });
 })();
 
