@@ -5125,7 +5125,7 @@
     "phone": "(909) 333-0022",
     "website": "https://bdgio-o.github.io/Monroy-s-auto-site/",
     "industry": "auto repair shop",
-    "status": "error",
+    "status": "emailed",
     "email": "info@bdgio-o.github.io",
     "id": "ol_1783710546234_knth",
     "listingUrl": "places_ChIJ8_z4IL5Mw4ARNwYY9Q7ehCY",
@@ -5134,7 +5134,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T05:00:19.353Z",
+    "emailSubject": "Fontana Auto Repair Tax Strategy — Let's Talk, Monroy's"
   },
   {
     "source": "google_places_primary",
@@ -5154,7 +5155,7 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "error": "Resend 429: {\"statusCode\":429,\"message\":\"You have reached your daily email sending quota.\",\"name\":\"daily_quota_exceeded\"}"
   },
   {
     "source": "google_places_primary",
@@ -5174,7 +5175,7 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "error": "Resend 429: {\"statusCode\":429,\"message\":\"You have reached your daily email sending quota.\",\"name\":\"daily_quota_exceeded\"}"
   },
   {
     "source": "google_places_primary",
@@ -5194,7 +5195,7 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "error": "Resend 429: {\"statusCode\":429,\"message\":\"You have reached your daily email sending quota.\",\"name\":\"daily_quota_exceeded\"}"
   },
   {
     "source": "google_places_primary",
@@ -5214,7 +5215,7 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "error": "Resend 429: {\"statusCode\":429,\"message\":\"You have reached your daily email sending quota.\",\"name\":\"daily_quota_exceeded\"}"
   },
   {
     "source": "google_places_primary",
@@ -5234,7 +5235,7 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "error": "Resend 429: {\"statusCode\":429,\"message\":\"You have reached your daily email sending quota.\",\"name\":\"daily_quota_exceeded\"}"
   },
   {
     "source": "google_places_primary",
@@ -5254,7 +5255,7 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "error": "Resend 429: {\"statusCode\":429,\"message\":\"You have reached your daily email sending quota.\",\"name\":\"daily_quota_exceeded\"}"
   },
   {
     "source": "google_places_primary",
@@ -5274,7 +5275,7 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "error": "Resend 429: {\"statusCode\":429,\"message\":\"You have reached your daily email sending quota.\",\"name\":\"daily_quota_exceeded\"}"
   },
   {
     "source": "google_places_primary",
@@ -5294,7 +5295,7 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "error": "Resend 429: {\"statusCode\":429,\"message\":\"You have reached your daily email sending quota.\",\"name\":\"daily_quota_exceeded\"}"
   },
   {
     "source": "google_places_primary",
@@ -5314,7 +5315,7 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "error": "Resend 429: {\"statusCode\":429,\"message\":\"You have reached your daily email sending quota.\",\"name\":\"daily_quota_exceeded\"}"
   },
   {
     "source": "google_places_primary",
