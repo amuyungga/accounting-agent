@@ -78,7 +78,11 @@ function alreadyEmailedAddress(email) {
 }
 
 function alreadyProcessed(listingKey) {
-  return loadLeads().some(l => l.listingUrl === listingKey || l.id === listingKey);
+  // no_website leads get retried — only skip if we already found/emailed/rejected
+  const FINAL = new Set(['emailed', 'no_email', 'email_found', 'follow_up_sent', 'replied', 'error']);
+  return loadLeads().some(l =>
+    (l.listingUrl === listingKey || l.id === listingKey) && FINAL.has(l.status)
+  );
 }
 
 // ── HTTP fetch ─────────────────────────────────────────────────────────────
@@ -451,15 +455,30 @@ async function searchIndeedJobs(stateName) {
 
 // ── DuckDuckGo website search ────────────────────────────────────────────────
 // Used to find a nonprofit's website when we only have their name
+// DDG wraps result URLs as /l/?uddg=ENCODED_URL — must decode uddg parameter
 async function findWebsiteViaDuckDuckGo(orgName, city, stateId) {
-  const query = `${orgName} ${city || ''} ${stateId} nonprofit official site`;
+  const junk = ['duckduckgo', 'google', 'facebook', 'twitter', 'linkedin', 'yelp',
+                'wikipedia', 'propublica', 'guidestar', 'candid', 'charitynavigator',
+                'indeed', 'glassdoor', 'ziprecruiter', 'irs.gov', 'usa.gov',
+                'bbb.org', 'yellowpages', 'mapquest', 'bing.com'];
+
+  const query = `${orgName} ${city || ''} ${stateId} official site`;
   const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
   try {
     const html = await fetchUrl(url);
+
+    // DDG result links look like: href="//duckduckgo.com/l/?uddg=https%3A%2F%2F..."
+    // Extract and decode the uddg parameter
+    const uddgMatches = [...(html.matchAll(/uddg=(https?[^&"'\s]+)/gi))];
+    for (const m of uddgMatches) {
+      try {
+        const decoded = decodeURIComponent(m[1]);
+        if (!junk.some(j => decoded.toLowerCase().includes(j))) return decoded;
+      } catch {}
+    }
+
+    // Fallback: plain https:// hrefs (in case DDG changes format)
     const hrefs = html.match(/href="(https?:\/\/[^"]+)"/g) || [];
-    const junk = ['duckduckgo', 'google', 'facebook', 'twitter', 'linkedin', 'yelp',
-                  'wikipedia', 'propublica', 'guidestar', 'candid', 'charitynavigator',
-                  'indeed', 'glassdoor', 'ziprecruiter', 'irs.gov', 'usa.gov'];
     const site = hrefs
       .map(h => h.replace(/href="/, '').replace(/"$/, ''))
       .find(u => !junk.some(j => u.toLowerCase().includes(j)));
