@@ -8,12 +8,13 @@
     "phone": "(205) 201-5636",
     "website": "https://www.woodencitybirmingham.com/",
     "industry": "restaurant",
-    "status": "error",
+    "status": "emailed",
     "email": "user@domain.com",
-    "error": "Failed to fetch",
     "id": "ol_1782529648663_zwpw",
     "foundAt": "2026-06-27T03:07:28.666Z",
-    "updatedAt": "2026-06-27T03:07:32.446Z"
+    "updatedAt": "2026-06-27T03:07:32.446Z",
+    "emailedAt": "2026-07-11T04:39:36.831Z",
+    "emailSubject": "Restaurant tax strategies for Wooden City Birmingham"
   },
   {
     "source": "google_places",
@@ -24,12 +25,13 @@
     "phone": "(205) 407-5683",
     "website": "https://www.therefinerybhm.com/",
     "industry": "restaurant",
-    "status": "error",
+    "status": "emailed",
     "email": "awrefinery@icloud.com",
-    "error": "Failed to fetch",
     "id": "ol_1782529652448_dmz8",
     "foundAt": "2026-06-27T03:07:32.448Z",
-    "updatedAt": "2026-06-27T03:07:36.347Z"
+    "updatedAt": "2026-06-27T03:07:36.347Z",
+    "emailedAt": "2026-07-11T04:39:51.960Z",
+    "emailSubject": "Tax planning for The Refinery's growth"
   },
   {
     "source": "google_places",
@@ -55,12 +57,13 @@
     "phone": "(205) 573-3782",
     "website": "https://uptickmarketing.com/how-we-work/?utm_source=gmb&utm_medium=organic",
     "industry": "marketing agency",
-    "status": "error",
+    "status": "emailed",
     "email": "sales@uptickmarketing.com",
-    "error": "Failed to fetch",
     "id": "ol_1782529720101_smzk",
     "foundAt": "2026-06-27T03:08:40.101Z",
-    "updatedAt": "2026-06-27T03:08:44.341Z"
+    "updatedAt": "2026-06-27T03:08:44.341Z",
+    "emailedAt": "2026-07-11T04:40:07.288Z",
+    "emailSubject": "Financial planning for marketing agencies in Birmingham"
   },
   {
     "source": "google_places",
@@ -71,12 +74,13 @@
     "phone": "(205) 206-6070",
     "website": "https://fusiononemarketing.com/birmingham-al/",
     "industry": "marketing agency",
-    "status": "error",
+    "status": "emailed",
     "email": "info@fusiononemarketing.com",
-    "error": "Failed to fetch",
     "id": "ol_1782529724342_0g7w",
     "foundAt": "2026-06-27T03:08:44.342Z",
-    "updatedAt": "2026-06-27T03:08:47.969Z"
+    "updatedAt": "2026-06-27T03:08:47.969Z",
+    "emailedAt": "2026-07-11T04:40:22.257Z",
+    "emailSubject": "Quick question about Fusion One Marketing's tax strategy"
   },
   {
     "source": "google_places",
@@ -87,12 +91,13 @@
     "phone": "(205) 298-7655",
     "website": "https://www.dandelionmarketing.com/",
     "industry": "marketing agency",
-    "status": "error",
+    "status": "emailed",
     "email": "alli@dandelionmarketing.com",
-    "error": "Failed to fetch",
     "id": "ol_1782529727971_we56",
     "foundAt": "2026-06-27T03:08:47.971Z",
-    "updatedAt": "2026-06-27T03:08:54.023Z"
+    "updatedAt": "2026-06-27T03:08:54.023Z",
+    "emailedAt": "2026-07-11T04:40:37.923Z",
+    "emailSubject": "Financial planning for marketing agencies in Birmingham"
   },
   {
     "source": "google_places",
@@ -103,12 +108,13 @@
     "phone": "(205) 610-9550",
     "website": "https://nickthemarketer.com/",
     "industry": "marketing agency",
-    "status": "error",
+    "status": "emailed",
     "email": "info@nickthemarketer.com",
-    "error": "Invalid response body while trying to fetch https://api.anthropic.com/v1/messages: Premature close",
     "id": "ol_1782529734025_kmox",
     "foundAt": "2026-06-27T03:08:54.025Z",
-    "updatedAt": "2026-06-27T03:09:00.801Z"
+    "updatedAt": "2026-06-27T03:09:00.801Z",
+    "emailedAt": "2026-07-11T04:40:53.221Z",
+    "emailSubject": "Financial planning for marketing agencies in Birmingham"
   },
   {
     "source": "google_places",
@@ -134,12 +140,13 @@
     "phone": "(205) 858-1096",
     "website": "https://avondaleanimal.com/?utm_source=gmb&utm_medium=organic",
     "industry": "veterinary clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "avondaleanimal@gmail.com",
-    "error": "Invalid response body while trying to fetch https://api.anthropic.com/v1/messages: Premature close",
     "id": "ol_1782529747651_ijpl",
     "foundAt": "2026-06-27T03:09:07.651Z",
-    "updatedAt": "2026-06-27T03:09:11.088Z"
+    "updatedAt": "2026-06-27T03:09:11.088Z",
+    "emailedAt": "2026-07-11T04:41:08.518Z",
+    "emailSubject": "Tax Planning for Avondale Animal Hospital"
   },
   {
     "source": "google_places",
@@ -150,12 +157,13 @@
     "phone": "(205) 406-6710",
     "website": "https://birminghamanimalhospital.com/",
     "industry": "veterinary clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "reception@birminghamanimalhospital.com",
-    "error": "Invalid response body while trying to fetch https://api.anthropic.com/v1/messages: Premature close",
     "id": "ol_1782529751090_prow",
     "foundAt": "2026-06-27T03:09:11.090Z",
-    "updatedAt": "2026-06-27T03:09:14.706Z"
+    "updatedAt": "2026-06-27T03:09:14.706Z",
+    "emailedAt": "2026-07-11T04:41:26.285Z",
+    "emailSubject": "Tax planning strategies for veterinary practices in Birmingham"
   },
   {
     "source": "google_places",
@@ -181,12 +189,13 @@
     "phone": "(205) 991-5416",
     "website": "https://valleydaleanimalclinic.com/?utm_source=gmb&utm_medium=organic",
     "industry": "veterinary clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "clientcare@valleydaleanimalclinic.com",
-    "error": "Invalid response body while trying to fetch https://api.anthropic.com/v1/messages: Premature close",
     "id": "ol_1782529756702_xhk7",
     "foundAt": "2026-06-27T03:09:16.702Z",
-    "updatedAt": "2026-06-27T03:09:20.933Z"
+    "updatedAt": "2026-06-27T03:09:20.933Z",
+    "emailedAt": "2026-07-11T04:41:41.218Z",
+    "emailSubject": "Tax planning for veterinary practices in Birmingham"
   },
   {
     "source": "google_places",
@@ -197,12 +206,13 @@
     "phone": "(205) 991-7986",
     "website": "https://cmacvet.com/?utm_source=gmb&utm_medium=organic",
     "industry": "veterinary clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "receptionist@cmacvet.com",
-    "error": "Invalid response body while trying to fetch https://api.anthropic.com/v1/messages: Premature close",
     "id": "ol_1782529760934_7ktc",
     "foundAt": "2026-06-27T03:09:20.934Z",
-    "updatedAt": "2026-06-27T03:09:24.461Z"
+    "updatedAt": "2026-06-27T03:09:24.461Z",
+    "emailedAt": "2026-07-11T04:41:56.796Z",
+    "emailSubject": "Tax Planning for Veterinary Clinics in Birmingham"
   },
   {
     "source": "google_places",
