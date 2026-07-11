@@ -4883,7 +4883,7 @@
     "phone": "(800) 400-4624",
     "website": "https://www.hoag.org/locations/hoag-health-center-huntington-beach/?utm_medium=local&utm_campaign=Yext&utm_source=google",
     "industry": "medical clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "info@hoag.org",
     "id": "ol_1783684527586_zdx3",
     "listingUrl": "places_ChIJz273OzMh3YARBHSQB_j-rDU",
@@ -4892,7 +4892,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:57:45.504Z",
+    "emailSubject": "Financial Planning for Healthcare Practices in Huntington Beach"
   },
   {
     "source": "google_places_primary",
@@ -4903,7 +4904,7 @@
     "phone": "(714) 968-0068",
     "website": "https://www.optum.com/en/care/facilities/ca/optum-huntington-beach-12021_a2m4x000001HVx4AAG.html",
     "industry": "medical clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "info@optum.com",
     "id": "ol_1783684529794_xi9i",
     "listingUrl": "places_ChIJO5TChckn3YARPD3bnQo715c",
@@ -4912,7 +4913,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:58:00.558Z",
+    "emailSubject": "Tax Planning for Medical Clinics in Huntington Beach"
   },
   {
     "source": "google_places_primary",
@@ -4939,7 +4941,7 @@
     "phone": "(714) 752-4670",
     "website": "https://bclawoffices.com/?UTM_source=GMB_listing&UTM_medium=organic",
     "industry": "law firm",
-    "status": "error",
+    "status": "emailed",
     "email": "bcaldwell@bclawoffices.com",
     "id": "ol_1783684532878_lbb0",
     "listingUrl": "places_ChIJS8pG3jAh3YARibmXn8tMwLE",
@@ -4948,7 +4950,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:58:15.782Z",
+    "emailSubject": "Financial strategies for personal injury law firms in Huntington Beach"
   },
   {
     "source": "google_places_primary",
@@ -4959,7 +4962,7 @@
     "phone": "(949) 431-6371",
     "website": "https://www.salehlawgroup.com/",
     "industry": "law firm",
-    "status": "error",
+    "status": "emailed",
     "email": "rsaleh@salehlawgroup.com",
     "id": "ol_1783684534767_aznd",
     "listingUrl": "places_ChIJZ9T7hKEn3YARO-6d8erH_2I",
@@ -4968,7 +4971,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:58:31.465Z",
+    "emailSubject": "Tax planning for personal injury law firms in Huntington Beach"
   },
   {
     "source": "google_places_primary",
@@ -4979,7 +4983,7 @@
     "phone": "(949) 696-5783",
     "website": "http://www.ktranlaw.com/?utm_source=google&utm_medium=gbp&utm_campaign=huntingtonbeach",
     "industry": "law firm",
-    "status": "error",
+    "status": "emailed",
     "email": "info@ktranlaw.com",
     "id": "ol_1783684541126_s4bh",
     "listingUrl": "places_ChIJSaPKgHIn3YARTsACje8Eo1I",
@@ -4988,7 +4992,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:58:46.959Z",
+    "emailSubject": "Financial Planning for Law Offices in Huntington Beach"
   },
   {
     "source": "google_places_primary",
@@ -4999,7 +5004,7 @@
     "phone": "(714) 501-3783",
     "website": "https://www.westpointproperty.com/",
     "industry": "property management company",
-    "status": "error",
+    "status": "emailed",
     "email": "info@westpointproperty.com",
     "id": "ol_1783684543498_suf2",
     "listingUrl": "places_ChIJf3XXD8gl3YARfZv0y8Y08Mk",
@@ -5008,7 +5013,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:59:01.886Z",
+    "emailSubject": "Tax strategies for property management companies in Huntington Beach"
   },
   {
     "source": "google_places_primary",
@@ -5019,7 +5025,7 @@
     "phone": "(714) 415-2413",
     "website": "https://www.truedoorpm.com/huntington-beach-property-management/",
     "industry": "property management company",
-    "status": "error",
+    "status": "emailed",
     "email": "info@truedoorpm.com",
     "id": "ol_1783684543706_lusu",
     "listingUrl": "places_ChIJM5zXYmkm3YARRsqaJP4VeLg",
@@ -5028,7 +5034,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:59:17.070Z",
+    "emailSubject": "TrueDoor Property Management - Year-end tax planning for HB property managers"
   },
   {
     "source": "google_places_primary",
@@ -5039,7 +5046,7 @@
     "phone": "(714) 868-8951",
     "website": "https://www.sailproperties.com/",
     "industry": "property management company",
-    "status": "error",
+    "status": "emailed",
     "email": "team@sailproperties.com",
     "id": "ol_1783684544430_t5ui",
     "listingUrl": "places_ChIJVV5XDkEh3YARUdXd5klJp_c",
@@ -5048,7 +5055,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:59:32.653Z",
+    "emailSubject": "Property Management Tax Planning for Huntington Beach Operators"
   },
   {
     "source": "google_places_primary",
@@ -5075,7 +5083,7 @@
     "phone": "(909) 553-3775",
     "website": "http://foothillcity.com/",
     "industry": "real estate agency",
-    "status": "error",
+    "status": "emailed",
     "email": "sandro@foothillcity.com",
     "id": "ol_1783710543325_91n1",
     "listingUrl": "places_ChIJM0vGpY1Mw4ARcfTCPW-CXP4",
@@ -5084,7 +5092,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:59:47.822Z",
+    "emailSubject": "Tax planning for Fontana real estate agents—let's talk strategy"
   },
   {
     "source": "google_places_primary",
@@ -5095,7 +5104,7 @@
     "phone": "(909) 519-1585",
     "website": "https://designatedlocalexpert.com/mrsfontana/",
     "industry": "real estate agency",
-    "status": "error",
+    "status": "emailed",
     "email": "monique@teamzacarias.com",
     "id": "ol_1783710544254_8sen",
     "listingUrl": "places_ChIJGY4zM9FCpQcRNaIekrt9XNg",
@@ -5104,7 +5113,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T05:00:02.916Z",
+    "emailSubject": "Tax planning for real estate agencies in Fontana"
   },
   {
     "source": "google_places_primary",
