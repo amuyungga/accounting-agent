@@ -307,7 +307,24 @@ function extractEmails(html, preferDomain) {
   const junk = ['noreply', 'no-reply', 'donotreply', 'example.com', 'sentry.io',
                  'wixpress', 'squarespace', 'wordpress', 'schema.org', 'w3.org',
                  'googleapis', 'gmpg.org', 'jquery', 'cloudflare'];
+  const genericPrefixes = ['info', 'contact', 'support', 'hello', 'hi', 'mail',
+                            'office', 'inquiry', 'inquiries', 'general', 'feedback',
+                            'help', 'team', 'webmaster', 'admin', 'marketing', 'press',
+                            'media', 'privacy', 'legal', 'billing'];
+  const personalPrefixes = ['owner', 'ceo', 'founder', 'president', 'director',
+                             'partner', 'manager', 'principal'];
+
+  // Score emails: personal role addresses (3) > likely-name addresses (2) > generic (1)
+  function scoreEmail(email) {
+    const prefix = email.split('@')[0].toLowerCase().replace(/[._+].*$/, '');
+    if (personalPrefixes.some(p => prefix === p)) return 3;
+    if (genericPrefixes.some(p => prefix === p)) return 1;
+    return 2; // likely a real name
+  }
+
   const clean = all.filter(e => !junk.some(j => e.toLowerCase().includes(j)));
+  clean.sort((a, b) => scoreEmail(b) - scoreEmail(a));
+
   if (preferDomain) {
     const onDomain = clean.filter(e => e.toLowerCase().includes(preferDomain));
     if (onDomain.length) return onDomain.slice(0, 2);
@@ -334,9 +351,8 @@ async function findEmailOnWebsite(websiteUrl) {
       if (emails.length) return emails[0];
     }
 
-    // Last resort: guess info@domain — most small businesses use this as their primary address.
-    // Tag it as guessed so the dashboard can show the difference.
-    return `__guess__info@${domain}`;
+    // No email found on website — return null so lead gets no_email status
+    return null;
   } catch {
     return null;
   }
@@ -1298,11 +1314,42 @@ async function runGooglePlacesLeads(cities) {
         console.log(`   [Places] ${city} / ${industry}: ${places.length} businesses`);
         console.log(`   [Places] Processing up to ${Math.min(places.length, MAX_LEADS_PER_SEARCH)} businesses...`);
 
+        // Large chains / non-SMB brands to skip — not viable cold-email targets
+        const CHAIN_BLOCKLIST = [
+          'mcdonald', 'starbucks', 'subway', 'walmart', 'target', 'costco', 'home depot', 'lowe',
+          'cvs', 'walgreen', 'rite aid', 'dollar tree', 'dollar general', 'family dollar',
+          'best buy', 'ross', 'tj maxx', 'marshalls', 'nordstrom', 'macy', 'sears', 'kohl',
+          'amazon', 'whole foods', 'trader joe', 'safeway', 'kroger', 'publix', 'albertson',
+          'burger king', 'wendy\'s', 'taco bell', 'chick-fil-a', 'dunkin', 'domino', 'pizza hut',
+          'kfc', 'popeyes', 'sonic drive', 'panera', 'chipotle', 'shake shack', 'five guys',
+          'ihop', 'denny\'s', 'applebee', 'olive garden', 'red lobster', 'chili\'s', 'outback',
+          'marriott', 'hilton', 'hyatt', 'sheraton', 'holiday inn', 'hampton inn', 'westin',
+          'holiday inn', 'days inn', 'la quinta', 'super 8', 'motel 6', 'comfort inn',
+          'h&r block', 'jackson hewitt', 'liberty tax', 'ernst & young', 'deloitte', 'kpmg', 'pwc',
+          'bank of america', 'wells fargo', 'chase bank', 'citibank', 'u.s. bank', 'td bank',
+          'state farm', 'allstate', 'geico', 'progressive', 'farmers insurance',
+          'anytime fitness', 'planet fitness', 'gold\'s gym', 'la fitness', '24 hour fitness',
+          'great clips', 'supercuts', 'sport clips', 'fantastic sams',
+          'jiffy lube', 'valvoline', 'firestone', 'pep boys', 'midas', 'meineke',
+          'servpro', 'servicemaster', 'molly maid', 'the maids',
+          'fedex', 'ups store', 'usps', 'kinko',
+          'mall', 'shopping center', 'plaza', 'outlet',
+        ];
+        function isLargeChain(name) {
+          const lower = (name || '').toLowerCase();
+          return CHAIN_BLOCKLIST.some(b => lower.includes(b));
+        }
+
         for (const biz of places.slice(0, MAX_LEADS_PER_SEARCH)) {
           if (isOutOfTime()) break;
           if (isCapReached()) break;
           const listingKey = `places_${biz.placeId}`;
           if (intentAlreadyProcessed(listingKey)) continue;
+
+          if (isLargeChain(biz.name)) {
+            console.log(`   ✗ [Places] ${biz.name} — skipped (large chain)`);
+            continue;
+          }
 
           const lead = {
             ...biz,
@@ -1314,18 +1361,11 @@ async function runGooglePlacesLeads(cities) {
             updatedAt: new Date().toISOString(),
           };
 
-          // Find email on their website (or guess info@domain as fallback)
+          // Find email on their website (scraped only — no guessing)
           let email = null;
-          let emailIsGuessed = false;
           if (biz.website) {
             try {
-              const raw = await withTimeout(findEmailOnWebsite(biz.website), 12000, 'website');
-              if (raw && raw.startsWith('__guess__')) {
-                email = raw.replace('__guess__', '');
-                emailIsGuessed = true;
-              } else {
-                email = raw;
-              }
+              email = await withTimeout(findEmailOnWebsite(biz.website), 12000, 'website');
             } catch (_) {}
           }
 
@@ -1353,7 +1393,6 @@ async function runGooglePlacesLeads(cities) {
           if (alreadyEmailedAddress(email)) continue;
 
           lead.email = email;
-          lead.emailIsGuessed = emailIsGuessed;  // flag so dashboard can show ⚠ guessed
           lead.score = scoreLead(lead);
           lead.emailVariant = Math.random() < 0.5 ? 'A' : 'B';
           found++;
