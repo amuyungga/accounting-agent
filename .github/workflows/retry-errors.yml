@@ -1,0 +1,37 @@
+name: Retry Error Leads
+
+on:
+  workflow_dispatch:   # triggered manually via API or GitHub UI
+
+jobs:
+  retry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run retry script
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: node retry-errors.js 2>&1 | tee /tmp/retry-log.txt; exit ${PIPESTATUS[0]}
+
+      - name: Show output
+        if: always()
+        run: |
+          echo "=== RETRY OUTPUT ==="
+          cat /tmp/retry-log.txt 2>/dev/null || echo "No log"
+          echo "=== END ==="
