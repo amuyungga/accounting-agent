@@ -834,15 +834,14 @@ app.get('/agent-status', async (req, res) => {
   }
 });
 
-// ── Startup: pull latest outbound-leads.json from GitHub ────────────────────
+// ── GitHub leads sync (startup + periodic) ──────────────────────────────────
 // Railway wipes the local filesystem on every redeploy. Without this, the
 // dashboard reverts to whatever stale version was baked into the git repo.
-// This runs once at boot and fetches the authoritative copy from GitHub.
+// Also runs every 5 minutes so agent/retry workflow results show up automatically.
 async function syncLeadsFromGitHub() {
   const token = process.env.GITHUB_TOKEN;
-  if (!token) { console.log('[Startup] No GITHUB_TOKEN — skipping leads sync'); return; }
+  if (!token) { console.log('[Sync] No GITHUB_TOKEN — skipping leads sync'); return; }
   try {
-    const https = require('https');
     const data = await new Promise((resolve, reject) => {
       const req = https.get({
         hostname: 'api.github.com',
@@ -860,23 +859,41 @@ async function syncLeadsFromGitHub() {
       req.on('error', reject);
       req.setTimeout(15000, () => { req.destroy(); reject(new Error('timeout')); });
     });
-    if (!data.content) { console.log('[Startup] GitHub returned no content'); return; }
-    const content = Buffer.from(data.content, 'base64').toString('utf8').replace(/\0/g, '');
-    const leads = JSON.parse(content);
+    if (!data.content) { console.log('[Sync] GitHub returned no content'); return; }
+    const ghLeads = JSON.parse(Buffer.from(data.content, 'base64').toString('utf8').replace(/\0/g, ''));
     const file = path.join(__dirname, 'outbound-leads.json');
-    // Only overwrite if GitHub has MORE leads than the local file (never downgrade)
-    let localCount = 0;
+    // Load local copy to preserve webhook tracking data (opens, clicks, replies)
+    let localLeads = [];
     if (fs.existsSync(file)) {
-      try { localCount = JSON.parse(fs.readFileSync(file, 'utf8')).length; } catch {}
+      try { localLeads = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
     }
-    if (leads.length >= localCount) {
-      fs.writeFileSync(file, JSON.stringify(leads, null, 2));
-      console.log(`[Startup] Synced ${leads.length} leads from GitHub (was ${localCount} locally)`);
-    } else {
-      console.log(`[Startup] Local file has ${localCount} leads, GitHub has ${leads.length} — keeping local`);
+    // Build local lookup by id / email / placeId for fast merge
+    const localMap = {};
+    for (const l of localLeads) {
+      const key = l.id || l.email || l.placeId;
+      if (key) localMap[key] = l;
     }
+    // GitHub is source of truth for lead data; local wins for webhook tracking only
+    const merged = ghLeads.map(lead => {
+      const key = lead.id || lead.email || lead.placeId;
+      const local = key ? localMap[key] : null;
+      if (!local) return lead;
+      return {
+        ...lead,
+        // Preserve railway-side webhook tracking that GitHub doesn't have
+        openCount:  Math.max(local.openCount || 0, lead.openCount || 0),
+        openedAt:   local.openedAt  || lead.openedAt,
+        clickedAt:  local.clickedAt || lead.clickedAt,
+        clicked:    local.clicked   || lead.clicked,
+        repliedAt:  local.repliedAt || lead.repliedAt,
+        replied:    local.replied   || lead.replied,
+      };
+    });
+    fs.writeFileSync(file, JSON.stringify(merged, null, 2));
+    const emailed = merged.filter(l => l.status === 'emailed' || l.status === 'follow_up_sent').length;
+    console.log(`[Sync] ${merged.length} leads from GitHub (${emailed} emailed/followed-up)`);
   } catch (e) {
-    console.log('[Startup] Could not sync leads from GitHub:', e.message);
+    console.log('[Sync] Could not sync leads from GitHub:', e.message);
   }
 }
 
@@ -889,4 +906,6 @@ app.listen(PORT, () => {
   console.log(`   Dashboard     : GET  http://localhost:${PORT}/dashboard.html\n`);
   // Pull latest leads from GitHub so a redeploy never reverts to stale data
   syncLeadsFromGitHub();
+  // Keep syncing every 5 minutes so agent/retry results appear automatically
+  setInterval(syncLeadsFromGitHub, 5 * 60 * 1000);
 });
