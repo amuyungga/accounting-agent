@@ -3964,7 +3964,7 @@
     "phone": "(714) 256-5074",
     "website": "https://cbphysicaltherapy.com/",
     "industry": "physical therapy clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "info@cbphysicaltherapy.com",
     "id": "ol_1783659104272_b6v6",
     "listingUrl": "places_ChIJq8-0DlSp3IARX1CW73aDmYM",
@@ -3973,7 +3973,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:47:25.072Z",
+    "emailSubject": "Tax planning for physical therapy clinics in Moreno Valley"
   },
   {
     "source": "google_places_primary",
@@ -3984,7 +3985,7 @@
     "phone": "(818) 242-3232",
     "website": "https://caleagleinsurance.com/",
     "industry": "insurance agency",
-    "status": "error",
+    "status": "emailed",
     "email": "info@caleagleinsurance.com",
     "id": "ol_1783659110087_ictk",
     "listingUrl": "places_ChIJ2SCGPwHBwoARxh9OJCUK-vA",
@@ -3993,7 +3994,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:47:40.163Z",
+    "emailSubject": "Financial planning strategies for insurance agencies in Glendale"
   },
   {
     "source": "google_places_primary",
@@ -4013,7 +4015,7 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "error": "Resend 422: {\"statusCode\":422,\"name\":\"validation_error\",\"message\":\"Invalid `to` field. The email address needs to follow the `email@example.com` or `Name <email@example.com>` format.\"}"
   },
   {
     "source": "google_places_primary",
@@ -4024,7 +4026,7 @@
     "phone": "(818) 241-4515",
     "website": "https://www.cainsurance.net/",
     "industry": "insurance agency",
-    "status": "error",
+    "status": "emailed",
     "email": "info@cainsurance.net",
     "id": "ol_1783659111883_151u",
     "listingUrl": "places_ChIJx2OO5vDAwoARgkQ_doTbGG0",
@@ -4033,7 +4035,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:48:10.846Z",
+    "emailSubject": "Financial Planning for Insurance Agencies in Glendale"
   },
   {
     "source": "google_places_primary",
@@ -4044,7 +4047,7 @@
     "phone": "(747) 466-5665",
     "website": "https://www.cascadeconstructions.com/",
     "industry": "construction company",
-    "status": "error",
+    "status": "emailed",
     "email": "info@cascadeconstructions.com",
     "id": "ol_1783659118928_o9fi",
     "listingUrl": "places_ChIJP9iiH9XBwoARTQMO6yOcuSM",
@@ -4053,7 +4056,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:48:30.711Z",
+    "emailSubject": "Construction Tax Strategies for Cascade Construction Group"
   },
   {
     "source": "google_places_primary",
@@ -4080,7 +4084,7 @@
     "phone": "(818) 474-4774",
     "website": "https://caconstructiongrp.com/",
     "industry": "construction company",
-    "status": "error",
+    "status": "emailed",
     "email": "Info@CAConstructionGrp.com",
     "id": "ol_1783659145868_p4rk",
     "listingUrl": "places_ChIJk1UvJoVqf2ERhi6ZKEZbD_Y",
@@ -4089,7 +4093,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:48:45.856Z",
+    "emailSubject": "Construction tax strategies for CA Construction Group Inc."
   },
   {
     "source": "google_places_primary",
@@ -4100,7 +4105,7 @@
     "phone": "(818) 244-0468",
     "website": "https://www.selectphysicaltherapy.com/contact/find-a-location/ca/glendale/glendale/?ty=xt",
     "industry": "physical therapy clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "info@selectphysicaltherapy.com",
     "id": "ol_1783659148045_ybbz",
     "listingUrl": "places_ChIJd9rL_EzAwoARtX0M9r8-UBI",
@@ -4109,7 +4114,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:49:01.133Z",
+    "emailSubject": "Tax Planning for Physical Therapy Clinics in Glendale"
   },
   {
     "source": "google_places_primary",
@@ -4120,7 +4126,7 @@
     "phone": "(818) 240-7511",
     "website": "http://www.dynamicptacu.com/",
     "industry": "physical therapy clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "dynamicptglendale@gmail.com",
     "id": "ol_1783659148251_xn94",
     "listingUrl": "places_ChIJQTpO5ufAwoARMRXtb8g0Rfk",
@@ -4129,7 +4135,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:49:16.128Z",
+    "emailSubject": "Tax Planning for Physical Therapy Clinics in Glendale"
   },
   {
     "source": "google_places_primary",
@@ -4140,7 +4147,7 @@
     "phone": "(747) 272-0027",
     "website": "http://www.wellworksrehab.com/",
     "industry": "physical therapy clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "contact@wellworksrehab.com",
     "id": "ol_1783659148395_o9ax",
     "listingUrl": "places_ChIJiWHHgNjBwoAR24C--vAWmxk",
@@ -4149,7 +4156,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:49:30.875Z",
+    "emailSubject": "Tax Planning for Physical Therapy Clinics in Glendale"
   },
   {
     "source": "google_places_primary",
@@ -4160,7 +4168,7 @@
     "phone": "(714) 848-4400",
     "website": "http://www.number1ins.com/",
     "industry": "insurance agency",
-    "status": "error",
+    "status": "emailed",
     "email": "info@number1ins.com",
     "id": "ol_1783659159013_9nbs",
     "listingUrl": "places_ChIJOaef4_Mm3YAR3pxWDpo0ikI",
@@ -4169,7 +4177,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:49:45.792Z",
+    "emailSubject": "Financial Planning for Insurance Agencies in Huntington Beach"
   },
   {
     "source": "google_places_primary",
