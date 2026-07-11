@@ -6258,7 +6258,7 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "error": "Resend 429: {\"statusCode\":429,\"message\":\"You have reached your daily email sending quota.\",\"name\":\"daily_quota_exceeded\"}"
   },
   {
     "source": "google_places_primary",
@@ -6278,7 +6278,7 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "error": "Resend 429: {\"statusCode\":429,\"message\":\"You have reached your daily email sending quota.\",\"name\":\"daily_quota_exceeded\"}"
   },
   {
     "source": "google_places_primary",
@@ -6298,7 +6298,7 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "error": "Resend 429: {\"statusCode\":429,\"message\":\"You have reached your daily email sending quota.\",\"name\":\"daily_quota_exceeded\"}"
   },
   {
     "source": "google_places_primary",
@@ -6318,7 +6318,7 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "error": "Resend 429: {\"statusCode\":429,\"message\":\"You have reached your daily email sending quota.\",\"name\":\"daily_quota_exceeded\"}"
   },
   {
     "source": "google_places_primary",
@@ -6338,7 +6338,7 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "error": "Resend 429: {\"statusCode\":429,\"message\":\"You have reached your daily email sending quota.\",\"name\":\"daily_quota_exceeded\"}"
   },
   {
     "source": "google_places_primary",
@@ -6378,7 +6378,7 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "error": "Resend 429: {\"statusCode\":429,\"message\":\"You have reached your daily email sending quota.\",\"name\":\"daily_quota_exceeded\"}"
   },
   {
     "source": "google_places_primary",
@@ -6398,7 +6398,7 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "error": "Resend 429: {\"statusCode\":429,\"message\":\"You have reached your daily email sending quota.\",\"name\":\"daily_quota_exceeded\"}"
   },
   {
     "source": "google_places_primary",
