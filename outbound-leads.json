@@ -4189,7 +4189,7 @@
     "phone": "(714) 960-4700",
     "website": "https://californiainsurancefinder.com/",
     "industry": "insurance agency",
-    "status": "error",
+    "status": "emailed",
     "email": "Service@CIFmail.com",
     "id": "ol_1783659159720_s6tb",
     "listingUrl": "places_ChIJiwsYkhYh3YARGLOD924FNb0",
@@ -4198,7 +4198,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:50:02.748Z",
+    "emailSubject": "California Insurance Finder | CIF Insurance Agency – Year-End Tax Planning for Insurance Agencies"
   },
   {
     "source": "google_places_primary",
@@ -4209,7 +4210,7 @@
     "phone": "(714) 418-9050",
     "website": "http://www.marknguyenagency.com/",
     "industry": "insurance agency",
-    "status": "error",
+    "status": "emailed",
     "email": "info@marknguyenagency.com",
     "id": "ol_1783659161768_80e6",
     "listingUrl": "places_ChIJo99shKQn3YARnEP_zH4inak",
@@ -4218,7 +4219,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:50:17.711Z",
+    "emailSubject": "Financial planning for insurance agencies in Huntington Beach"
   },
   {
     "source": "google_places_primary",
@@ -4229,7 +4231,7 @@
     "phone": "(949) 826-2140",
     "website": "https://partnerconstructionpro.com/",
     "industry": "construction company",
-    "status": "error",
+    "status": "emailed",
     "email": "office@partnerconstructionpro.com",
     "id": "ol_1783659163721_jo47",
     "listingUrl": "places_ChIJb1G7faOVwoAR5xIDSgw2RBk",
@@ -4238,7 +4240,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:50:33.079Z",
+    "emailSubject": "Tax Planning for Construction Companies in Huntington Beach"
   },
   {
     "source": "google_places_primary",
@@ -4249,7 +4252,7 @@
     "phone": "(714) 384-7529",
     "website": "https://hqremodeling.com/",
     "industry": "construction company",
-    "status": "error",
+    "status": "emailed",
     "email": "info@hqremodeling.com",
     "id": "ol_1783659165412_rbzo",
     "listingUrl": "places_ChIJP_Mja1sh3YARxjsTpKRW75I",
@@ -4258,7 +4261,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:50:48.503Z",
+    "emailSubject": "Tax planning for HQ Remodeling & Design in Huntington Beach"
   },
   {
     "source": "google_places_primary",
@@ -4269,7 +4273,7 @@
     "phone": "(714) 841-6162",
     "website": "http://www.hbpts.com/",
     "industry": "physical therapy clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "info@hbpts.com",
     "id": "ol_1783659168338_bytc",
     "listingUrl": "places_ChIJfcrn58cm3YARJYuOfDcyJOc",
@@ -4278,7 +4282,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:51:03.756Z",
+    "emailSubject": "Tax Planning for Physical Therapy Clinics in Huntington Beach"
   },
   {
     "source": "google_places_primary",
@@ -4289,7 +4294,7 @@
     "phone": "(562) 330-1550",
     "website": "https://www.prnpt.com/locations/391/california-rehabilitation-and-sports-therapy-huntington-beach-beach-blvd/huntington-beach/location-details?utm_source=google&utm_medium=local&utm_campaign=GMB",
     "industry": "physical therapy clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "media@prnpt.com",
     "id": "ol_1783659169939_68m2",
     "listingUrl": "places_ChIJvzeU_w8n3YARg1EYpRuEIL4",
@@ -4298,7 +4303,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:51:18.902Z",
+    "emailSubject": "Tax Planning for Physical Therapy Clinics in Huntington Beach"
   },
   {
     "source": "google_places_primary",
@@ -4309,7 +4315,7 @@
     "phone": "(714) 847-3800",
     "website": "https://www.prnpt.com/locations/248/california-rehabilitation-and-sports-therapy-huntington-beach/huntington-beach/location-details?utm_source=google&utm_medium=local&utm_campaign=GMB",
     "industry": "physical therapy clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "media@prnpt.com",
     "id": "ol_1783659173091_xv68",
     "listingUrl": "places_ChIJ5TlLV_ol3YARaITWJpnsCWE",
@@ -4318,7 +4324,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:51:33.791Z",
+    "emailSubject": "Financial Planning for Physical Therapy Clinics in Huntington Beach"
   },
   {
     "source": "google_places_primary",
@@ -4361,7 +4368,7 @@
     "phone": "(909) 737-1291",
     "website": "https://misaludmc.com/",
     "industry": "medical clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "info@misaludmc.com",
     "id": "ol_1783684452658_ofn0",
     "listingUrl": "places_ChIJhQwx8dBNw4ARkUUSpakZhOg",
@@ -4370,7 +4377,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:51:48.732Z",
+    "emailSubject": "Tax Planning for Medical Clinics in Fontana"
   },
   {
     "source": "google_places_primary",
@@ -4381,7 +4389,7 @@
     "phone": "(909) 587-6336",
     "website": "https://www.gonzaleslawoffices.com/",
     "industry": "law firm",
-    "status": "error",
+    "status": "emailed",
     "email": "ashley@rizeupmedia.com",
     "id": "ol_1783684456728_3xzz",
     "listingUrl": "places_ChIJDXl46yhKw4ARvwG_ssL4Phg",
@@ -4390,7 +4398,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:52:04.096Z",
+    "emailSubject": "Financial strategy for Gonzales Law Offices in Fontana"
   },
   {
     "source": "google_places_primary",
@@ -4401,7 +4410,7 @@
     "phone": "(909) 455-9882",
     "website": "https://dienerlaw.net/",
     "industry": "law firm",
-    "status": "error",
+    "status": "emailed",
     "email": "info@dienerlaw.net",
     "id": "ol_1783684457092_sh78",
     "listingUrl": "places_ChIJD8_dgL9Nw4ARG5uL9KWIY70",
@@ -4410,7 +4419,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:52:19.831Z",
+    "emailSubject": "Tax planning for law firms in Fontana"
   },
   {
     "source": "google_places_primary",
