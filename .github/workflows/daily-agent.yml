@@ -33,6 +33,7 @@ jobs:
           SYNC_SECRET: ${{ secrets.SYNC_SECRET }}
           GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
           VAPI_API_KEY: ${{ secrets.VAPI_API_KEY }}
+          VAPI_PHONE_NUMBER_ID: ${{ secrets.VAPI_PHONE_NUMBER_ID }}
         run: node outbound-agent.js 2>&1 | tee /tmp/agent-log.txt; exit ${PIPESTATUS[0]}
 
       - name: Show agent output summary

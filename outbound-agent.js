@@ -147,6 +147,29 @@ function loadProgress() {
 
 function saveProgress(progress) {
   fs.writeFileSync(PROGRESS_FILE, JSON.stringify(progress, null, 2));
+  // Also push to GitHub API so cityIndex survives even if the git commit step fails
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) return;
+  const content = Buffer.from(JSON.stringify(progress, null, 2)).toString('base64');
+  // Fire-and-forget — get current SHA first, then update
+  const reqOpts = {
+    hostname: 'api.github.com',
+    path: '/repos/amuyungga/accounting-agent/contents/outbound-progress.json',
+    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'User-Agent': 'Spectrum-Agent/1.0' },
+  };
+  https.get(reqOpts, (res) => {
+    let body = '';
+    res.on('data', c => body += c);
+    res.on('end', () => {
+      try {
+        const { sha } = JSON.parse(body);
+        const payload = JSON.stringify({ message: `agent: progress cityIndex=${progress.cityIndex}`, content, sha });
+        const put = https.request({ ...reqOpts, method: 'PUT', headers: { ...reqOpts.headers, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) } }, () => {});
+        put.on('error', () => {});
+        put.write(payload); put.end();
+      } catch {}
+    });
+  }).on('error', () => {});
 }
 
 function getNextSearches(count) {
