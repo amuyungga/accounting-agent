@@ -805,6 +805,67 @@ app.post('/agent-trigger', async (req, res) => {
   }
 });
 
+// ── Nonprofit / FQHC search — manual trigger + status ─────────────────────
+// POST /api/nonprofit-search/trigger — dispatches the workflow_dispatch event
+app.post('/api/nonprofit-search/trigger', async (req, res) => {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) return res.status(503).json({ error: 'GITHUB_TOKEN not configured' });
+
+  const payload = JSON.stringify({ ref: 'main', inputs: { note: 'Triggered from dashboard' } });
+  const result = await new Promise((resolve) => {
+    const r = https.request({
+      hostname: 'api.github.com',
+      path: '/repos/amuyungga/accounting-agent/actions/workflows/nonprofit-search.yml/dispatches',
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'User-Agent': 'accounting-agent',
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload),
+      },
+    }, (s) => {
+      let body = '';
+      s.on('data', c => body += c);
+      s.on('end', () => resolve({ status: s.statusCode, body }));
+    });
+    r.on('error', e => resolve({ status: 0, body: e.message }));
+    r.write(payload);
+    r.end();
+  });
+
+  if (result.status === 204) {
+    res.json({ ok: true, message: 'Nonprofit search started — check dashboard for status in ~30s' });
+  } else {
+    res.status(500).json({ error: `GitHub returned ${result.status}`, detail: result.body });
+  }
+});
+
+// GET /api/nonprofit-search/status — latest workflow run status
+app.get('/api/nonprofit-search/status', async (req, res) => {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) return res.status(503).json({ error: 'GITHUB_TOKEN not configured' });
+
+  await new Promise((resolve) => {
+    https.get({
+      hostname: 'api.github.com',
+      path: '/repos/amuyungga/accounting-agent/actions/workflows/nonprofit-search.yml/runs?per_page=1',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'User-Agent': 'accounting-agent',
+      },
+    }, (r) => {
+      let body = '';
+      r.on('data', c => body += c);
+      r.on('end', () => {
+        try { res.json(JSON.parse(body)); } catch { res.json({}); }
+        resolve();
+      });
+    }).on('error', () => { res.json({}); resolve(); });
+  });
+});
+
 // ── GitHub Actions agent status proxy ──────────────────────────────────────
 app.get('/agent-status', async (req, res) => {
   const token = process.env.GITHUB_TOKEN;

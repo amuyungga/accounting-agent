@@ -209,6 +209,29 @@
   <button class="refresh-btn" onclick="loadData()">↺ Refresh</button>
 </header>
 
+<!-- ── Nonprofit Search Panel ─────────────────────────────────────────── -->
+<div style="margin:20px 28px 0;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;gap:16px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:14px">
+      <span style="font-size:24px">🏥</span>
+      <div>
+        <div style="font-weight:700;font-size:15px">Nonprofit &amp; FQHC Lead Search</div>
+        <div id="np-status-sub" style="font-size:12px;color:var(--muted);margin-top:3px">
+          Targets: ProPublica · HRSA Health Centers · Indeed Jobs &nbsp;·&nbsp; CA, AZ, WA, UT, TX, MO, MT, NM, ND, SD
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <span id="np-status-pill" style="font-size:12px;color:var(--muted)"></span>
+      <button id="np-run-btn" onclick="triggerNonprofitSearch()"
+        style="background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .2s;white-space:nowrap">
+        ▶ Run Nonprofit Search
+      </button>
+    </div>
+  </div>
+  <div id="np-run-detail" style="display:none;padding:0 20px 14px;font-size:12px;color:var(--muted)"></div>
+</div>
+
 <!-- ── Agent Status Banner ────────────────────────────────────────────── -->
 <div class="agent-banner" id="agent-banner">
   <div class="agent-banner-top">
@@ -381,8 +404,91 @@
              error:'❌ Error', send_error:'❌ Send Error' }[s] || s;
   }
   function sourceLabel(s) {
-    return { google_places:'Google Maps', yellow_pages:'Yellow Pages' }[s] || (s || 'Unknown');
+    return {
+      google_places: 'Google Maps', yellow_pages: 'Yellow Pages',
+      propublica: 'ProPublica', hrsa: 'HRSA (FQHC)', indeed_jobs: 'Indeed Jobs',
+      nonprofit_search: 'Nonprofit Search',
+    }[s] || (s || 'Unknown');
   }
+
+  // ── Nonprofit Search ────────────────────────────────────────────────────
+  const NP_STATUS_URL  = 'https://accounting-agent-production-cf69.up.railway.app/api/nonprofit-search/status';
+  const NP_TRIGGER_URL = 'https://accounting-agent-production-cf69.up.railway.app/api/nonprofit-search/trigger';
+  let npPolling = null;
+
+  async function triggerNonprofitSearch() {
+    const btn = document.getElementById('np-run-btn');
+    const pill = document.getElementById('np-status-pill');
+    const detail = document.getElementById('np-run-detail');
+    btn.disabled = true;
+    btn.textContent = '⏳ Starting…';
+    pill.textContent = '';
+    try {
+      const res = await fetch(NP_TRIGGER_URL, { method: 'POST' });
+      const data = await res.json();
+      if (data.ok) {
+        btn.textContent = '🔄 Running…';
+        detail.textContent = 'Search triggered — polling for status…';
+        detail.style.display = 'block';
+        if (npPolling) clearInterval(npPolling);
+        npPolling = setInterval(fetchNpStatus, 20000);
+        setTimeout(fetchNpStatus, 5000);
+      } else {
+        btn.textContent = '▶ Run Nonprofit Search';
+        btn.disabled = false;
+        pill.textContent = '⚠ ' + (data.error || 'Trigger failed');
+        pill.style.color = 'var(--red)';
+      }
+    } catch (e) {
+      btn.textContent = '▶ Run Nonprofit Search';
+      btn.disabled = false;
+      pill.textContent = '⚠ Network error';
+      pill.style.color = 'var(--red)';
+    }
+  }
+
+  async function fetchNpStatus() {
+    const btn    = document.getElementById('np-run-btn');
+    const pill   = document.getElementById('np-status-pill');
+    const detail = document.getElementById('np-run-detail');
+    try {
+      const r = await fetch(NP_STATUS_URL);
+      const data = await r.json();
+      const run = (data.workflow_runs || [])[0];
+      if (!run) return;
+
+      const isRunning = run.status === 'in_progress' || run.status === 'queued';
+      const isSuccess = run.conclusion === 'success';
+      const isFailed  = run.conclusion === 'failure' || run.conclusion === 'cancelled';
+
+      if (isRunning) {
+        btn.textContent = '🔄 Running…';
+        btn.disabled = true;
+        pill.textContent = `● Running  ·  Run #${run.run_number}`;
+        pill.style.color = 'var(--green)';
+        detail.style.display = 'block';
+        detail.textContent = `Started ${fmtDate(run.created_at)}  ·  Search across CA, AZ, WA, UT, TX, MO, MT, NM, ND, SD…`;
+      } else if (isSuccess) {
+        if (npPolling) { clearInterval(npPolling); npPolling = null; }
+        btn.textContent = '▶ Run Nonprofit Search';
+        btn.disabled = false;
+        pill.textContent = `✓ Done  ·  Run #${run.run_number}  ·  ${fmtDate(run.updated_at)}`;
+        pill.style.color = 'var(--green)';
+        detail.style.display = 'none';
+        loadData(); // refresh lead table
+      } else if (isFailed) {
+        if (npPolling) { clearInterval(npPolling); npPolling = null; }
+        btn.textContent = '▶ Run Nonprofit Search';
+        btn.disabled = false;
+        pill.textContent = `✕ Failed  ·  Run #${run.run_number}`;
+        pill.style.color = 'var(--red)';
+        detail.style.display = 'none';
+      }
+    } catch {}
+  }
+
+  // Check initial status on load
+  fetchNpStatus();
 
   // Auto-refresh every 60 seconds
   loadData();

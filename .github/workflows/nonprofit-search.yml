@@ -1,0 +1,55 @@
+name: Nonprofit / FQHC Lead Search
+
+on:
+  workflow_dispatch:
+    inputs:
+      note:
+        description: 'Optional note (e.g. "focus on CA FQHCs")'
+        required: false
+        default: 'Manual run from dashboard'
+
+jobs:
+  nonprofit-search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run nonprofit lead search
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: node nonprofit-agent.js 2>&1 | tee /tmp/np-log.txt; exit ${PIPESTATUS[0]}
+
+      - name: Show output summary
+        if: always()
+        run: |
+          echo "=== NONPROFIT AGENT OUTPUT (last 100 lines) ==="
+          tail -100 /tmp/np-log.txt 2>/dev/null || echo "No log captured"
+          echo "=== END ==="
+
+      - name: Commit progress back to repo
+        if: always()
+        run: |
+          git config user.name "Spectrum Agent"
+          git config user.email "agent@spectrumfinancialsolution.com"
+          git checkout -- outbound-leads.json 2>/dev/null || true
+          git add outbound-progress.json 2>/dev/null || true
+          git diff --staged --quiet || git commit -m "nonprofit-agent: progress $(date +%Y-%m-%d)"
+          git pull --rebase origin main || true
+          git push origin main || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
