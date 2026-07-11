@@ -4431,7 +4431,7 @@
     "phone": "(909) 271-1123",
     "website": "http://www.legalservicecenters.com/",
     "industry": "law firm",
-    "status": "error",
+    "status": "emailed",
     "email": "info@legalservicecenters.com",
     "id": "ol_1783684460947_2g2w",
     "listingUrl": "places_ChIJf2Kie4xMw4ARkVloi_W1a_E",
@@ -4440,7 +4440,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:52:36.198Z",
+    "emailSubject": "Financial planning for growing law firms in Fontana"
   },
   {
     "source": "google_places_primary",
@@ -4451,7 +4452,7 @@
     "phone": "(951) 735-2000",
     "website": "https://www.managementone.com/service-areas/riverside-property-management",
     "industry": "property management company",
-    "status": "error",
+    "status": "emailed",
     "email": "info@managementone.com",
     "id": "ol_1783684463780_d5y0",
     "listingUrl": "places_ChIJz9n1BEyw3IARhWHRNnHFqAA",
@@ -4460,7 +4461,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:52:51.830Z",
+    "emailSubject": "Property Management Tax Planning for Fontana-Based Firms"
   },
   {
     "source": "google_places_primary",
@@ -4471,7 +4473,7 @@
     "phone": "(909) 375-1111",
     "website": "https://utopiamanagement.com/locations/inland-empire-ca",
     "industry": "property management company",
-    "status": "error",
+    "status": "emailed",
     "email": "info@utopiamanagement.com",
     "id": "ol_1783684467794_n5cy",
     "listingUrl": "places_ChIJD2Ebiwk1w4ARrrqdOAwrps8",
@@ -4480,7 +4482,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:53:07.781Z",
+    "emailSubject": "Property Management Tax Strategy for Utopia PM | Fontana"
   },
   {
     "source": "google_places_primary",
@@ -4491,7 +4494,7 @@
     "phone": "(951) 778-9700",
     "website": "http://dreambigpm.com/",
     "industry": "property management company",
-    "status": "error",
+    "status": "emailed",
     "email": "info@dreambigpm.com",
     "id": "ol_1783684468682_vy1z",
     "listingUrl": "places_ChIJX__kezCl3IARv3iDSzGFrJ8",
@@ -4500,7 +4503,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:53:23.524Z",
+    "emailSubject": "Financial strategies for property management companies in Fontana"
   },
   {
     "source": "google_places_primary",
@@ -4511,7 +4515,7 @@
     "phone": "(951) 697-7866",
     "website": "http://morenovalleyclinicamedica.com/",
     "industry": "medical clinic",
-    "status": "error",
+    "status": "emailed",
     "email": "the7@medicine.com",
     "id": "ol_1783684474753_sxkc",
     "listingUrl": "places_ChIJdzOF7gym3IARWpyyhzGF2Zw",
@@ -4520,7 +4524,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:53:38.907Z",
+    "emailSubject": "Medical Clinic Tax Planning for Moreno Valley"
   },
   {
     "source": "google_places_primary",
@@ -4563,7 +4568,7 @@
     "phone": "(951) 363-4949",
     "website": "https://morenovalleyprobatelaw.com/",
     "industry": "law firm",
-    "status": "error",
+    "status": "emailed",
     "email": "info@morenovalleyprobatelaw.com",
     "id": "ol_1783684492124_hm5z",
     "listingUrl": "places_ChIJ4Qw5qHip3IARZwNANDhC1rc",
@@ -4572,7 +4577,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:53:53.938Z",
+    "emailSubject": "Financial planning for probate law firms in Moreno Valley"
   },
   {
     "source": "google_places_primary",
@@ -4583,7 +4589,7 @@
     "phone": "(951) 325-4211",
     "website": "http://www.chesleylawyers.com/",
     "industry": "law firm",
-    "status": "error",
+    "status": "emailed",
     "email": "davidschesley@gmail.com",
     "id": "ol_1783684492311_4wta",
     "listingUrl": "places_ChIJE19zGxSn3IARmSIeS5NNzsU",
@@ -4592,7 +4598,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:54:09.240Z",
+    "emailSubject": "Tax planning strategies for Law Offices of David Chesley"
   },
   {
     "source": "google_places_primary",
@@ -4603,7 +4610,7 @@
     "phone": "(951) 656-5777",
     "website": "http://www.davidakintimoye.net/",
     "industry": "law firm",
-    "status": "error",
+    "status": "emailed",
     "email": "info@davidakintimoye.net",
     "id": "ol_1783684493851_fcgg",
     "listingUrl": "places_ChIJ87XAeGqm3IARnW43cEL1ETM",
@@ -4612,7 +4619,8 @@
     "emailIsGuessed": true,
     "score": 25,
     "emailVariant": "B",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:54:24.067Z",
+    "emailSubject": "Financial planning for family law practices in Moreno Valley"
   },
   {
     "source": "google_places_primary",
@@ -4623,7 +4631,7 @@
     "phone": "(951) 961-6422",
     "website": "https://www.rentwithmagnoliapm.com/",
     "industry": "property management company",
-    "status": "error",
+    "status": "emailed",
     "email": "rentwithmpm@gmail.com",
     "id": "ol_1783684496189_z5mr",
     "listingUrl": "places_ChIJsTzt5Wiv3IARVOv21rlNlfc",
@@ -4632,7 +4640,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:54:38.967Z",
+    "emailSubject": "Property Management Tax Planning for Moreno Valley Businesses"
   },
   {
     "source": "google_places_primary",
@@ -4643,7 +4652,7 @@
     "phone": "(951) 601-1170",
     "website": "https://www.cobaltonline.com/",
     "industry": "property management company",
-    "status": "error",
+    "status": "emailed",
     "email": "Drake@cobaltonline.com",
     "id": "ol_1783684497349_cj7t",
     "listingUrl": "places_ChIJv0PDTa2n3IAR3UUGabmmz_s",
@@ -4652,7 +4661,8 @@
     "emailIsGuessed": false,
     "score": 25,
     "emailVariant": "A",
-    "error": "Invalid character in header content [\"x-api-key\"]"
+    "emailedAt": "2026-07-11T04:54:54.053Z",
+    "emailSubject": "Financial strategies for property management companies in Moreno Valley"
   },
   {
     "source": "google_places_primary",
