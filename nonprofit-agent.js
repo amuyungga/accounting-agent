@@ -688,6 +688,101 @@ async function findWebsiteViaDuckDuckGo(orgName, city, stateId) {
   return guessDomainForOrg(orgName);
 }
 
+// ── Retry previously uncontacted leads ────────────────────────────────────────
+// Runs at the start of every search cycle.
+// Pass 1 — no_website (up to 100): website was never found; try again with Brave/CSE.
+// Pass 2 — no_email  (up to 60 ): website was found but no email; Brave may find the
+//           REAL site now (previous runs used domain-guessing which was often wrong).
+async function retryUncontactedLeads(emailedThisRun) {
+  const leads     = loadLeads();
+  const noWebsite = leads.filter(l => l.status === 'no_website' && l.name);
+  const noEmail   = leads.filter(l => l.status === 'no_email'   && l.name && l.state);
+
+  console.log(`\n🔄 Retry pass — ${noWebsite.length} no_website · ${noEmail.length} no_email uncontacted leads`);
+
+  // Helper: try to email a lead if we found an address
+  async function tryEmail(lead) {
+    if (alreadyEmailedAddress(lead.email)) { lead.status = 'no_email'; saveLead(lead); return; }
+    try {
+      const content = await withTimeout(generateNonprofitEmail(lead), 35000, 'retry-gen');
+      await sendEmail(lead.email, content, lead);
+      lead.status   = 'emailed';
+      lead.emailSent    = true;
+      lead.emailSentAt  = new Date().toISOString();
+      lead.emailContent = content;
+      console.log(`   ✅ [RETRY] ${lead.name.slice(0, 42)} → ${lead.email}`);
+      emailedThisRun++;
+    } catch (err) {
+      lead.status = 'error'; lead.error = err.message;
+      console.log(`   ✗ [RETRY] ${lead.name.slice(0, 42)} — ${err.message.slice(0, 50)}`);
+    }
+    saveLead(lead);
+    if (RESEND_API_KEY) await sleep(EMAIL_DELAY_MS);
+  }
+
+  // ── Pass 1: no_website → re-run website search with improved Brave/CSE ───
+  let p1 = 0;
+  for (const lead of noWebsite) {
+    if (emailedThisRun >= DAILY_EMAIL_CAP || p1 >= 100) break;
+    p1++;
+
+    const website = await withTimeout(
+      findWebsiteViaDuckDuckGo(lead.name, lead.city || '', lead.state || ''),
+      10000, 'retry-web1'
+    ).catch(() => null);
+    await sleep(600);
+
+    if (!website) {
+      console.log(`   ✗ ${lead.name.slice(0, 42)} — still no website`);
+      continue;
+    }
+
+    lead.website = website;
+    const email = await withTimeout(findEmailOnWebsite(website), 12000, 'retry-em1').catch(() => null);
+    await sleep(400);
+
+    if (!email) {
+      lead.status = 'no_email';
+      saveLead(lead);
+      console.log(`   ~ ${lead.name.slice(0, 42)} — website found, no email`);
+      continue;
+    }
+
+    lead.email = email;
+    await tryEmail(lead);
+  }
+
+  // ── Pass 2: no_email → re-run website search (Brave finds real site vs. guess) ─
+  let p2 = 0;
+  for (const lead of noEmail) {
+    if (emailedThisRun >= DAILY_EMAIL_CAP || p2 >= 60) break;
+    p2++;
+
+    const freshWebsite = await withTimeout(
+      findWebsiteViaDuckDuckGo(lead.name, lead.city || '', lead.state || ''),
+      10000, 'retry-web2'
+    ).catch(() => null);
+    await sleep(600);
+
+    // Only proceed if Brave/CSE found a DIFFERENT (likely better) website
+    if (!freshWebsite || freshWebsite === lead.website) continue;
+
+    lead.website = freshWebsite;
+    const email = await withTimeout(findEmailOnWebsite(freshWebsite), 12000, 'retry-em2').catch(() => null);
+    await sleep(400);
+
+    if (!email) continue;
+
+    lead.email = email;
+    await tryEmail(lead);
+  }
+
+  // Persist after retry pass
+  await pushLeadsToGitHub(loadLeads()).catch(e => console.log('[GitHub-retry]', e.message));
+  console.log(`   Retry complete — emails sent this pass: ${emailedThisRun}`);
+  return emailedThisRun;
+}
+
 // ── Main orchestrator ────────────────────────────────────────────────────────
 async function runNonprofitSearch() {
   // ── API key diagnostics ───────────────────────────────────────────────────
@@ -705,6 +800,9 @@ async function runNonprofitSearch() {
   const todayStr = new Date().toISOString().slice(0, 10);
   let emailedThisRun = allLeads.filter(l => (l.emailSentAt || '').startsWith(todayStr)).length;
   let totalFound = 0, totalEmailed = 0;
+
+  // ── Retry uncontacted leads first (no_website + no_email) ─────────────────
+  emailedThisRun = await retryUncontactedLeads(emailedThisRun);
 
   for (const state of TARGET_STATES) {
     if (emailedThisRun >= DAILY_EMAIL_CAP) {
