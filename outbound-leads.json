@@ -41250,5 +41250,22 @@
     "orgType": "nonprofit",
     "foundAt": "2026-07-12T05:04:16.764Z",
     "updatedAt": "2026-07-12T05:04:16.764Z"
+  },
+  {
+    "id": "np_1783874119033_3048",
+    "name": "Healthy Starts Community Developmen T Inc",
+    "city": "Midvale",
+    "state": "UT",
+    "industry": "Nonprofit Organization",
+    "source": "propublica",
+    "listingUrl": "np_UT_healthy_starts_community_devel",
+    "website": null,
+    "phone": null,
+    "email": null,
+    "status": "no_website",
+    "ein": "413024351",
+    "orgType": "nonprofit",
+    "foundAt": "2026-07-12T16:35:19.033Z",
+    "updatedAt": "2026-07-12T16:35:19.033Z"
   }
 ]
