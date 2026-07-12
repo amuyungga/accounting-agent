@@ -576,7 +576,7 @@ async function searchViaGoogleCSE(orgName, city, stateId) {
                 'charitynavigator.org','indeed.com','glassdoor.com','irs.gov',
                 'usa.gov','bbb.org','google.com','bing.com',
                 'spectrumfinancialsolution.com']; // CSE limited to own site — filter it
-  const q = encodeURIComponent(`"${orgName}" ${city || ''} ${stateId || ''}`.trim());
+  const q = encodeURIComponent(`${orgName} ${city || ''} ${stateId || ''} official website`.trim());
   const apiPath = `/customsearch/v1?key=${GOOGLE_CSE_KEY}&cx=${GOOGLE_CSE_CX}&q=${q}&num=5`;
   return new Promise((resolve) => {
     let settled = false;
@@ -614,7 +614,8 @@ async function searchViaBrave(orgName, city, stateId) {
                 'charitynavigator.org','indeed.com','glassdoor.com','irs.gov',
                 'usa.gov','bbb.org','google.com','bing.com',
                 'spectrumfinancialsolution.com'];
-  const q = encodeURIComponent(`"${orgName}" ${city || ''} ${stateId || ''}`.trim());
+  // No quotes — exact-phrase matching returns 0 results for most orgs
+  const q = encodeURIComponent(`${orgName} ${city || ''} ${stateId || ''} official website`.trim());
   const apiPath = `/res/v1/web/search?q=${q}&count=5&search_lang=en&country=us`;
   return new Promise((resolve) => {
     let settled = false;
