@@ -562,14 +562,60 @@ async function searchViaSerper(orgName, city, stateId) {
   });
 }
 
-// ── Combined website finder: Serper (if configured) → domain guessing ────────
+// ── Google Custom Search Engine (100 free queries/day) ───────────────────────
+const GOOGLE_CSE_KEY = process.env.GOOGLE_CSE_KEY;
+const GOOGLE_CSE_CX  = process.env.GOOGLE_CSE_CX;
+
+async function searchViaGoogleCSE(orgName, city, stateId) {
+  if (!GOOGLE_CSE_KEY || !GOOGLE_CSE_CX) return null;
+  const junk = ['facebook.com','twitter.com','linkedin.com','yelp.com',
+                'wikipedia.org','propublica.org','guidestar.org','candid.org',
+                'charitynavigator.org','indeed.com','glassdoor.com','irs.gov',
+                'usa.gov','bbb.org','google.com','bing.com',
+                'spectrumfinancialsolution.com']; // CSE limited to own site — filter it
+  const q = encodeURIComponent(`"${orgName}" ${city || ''} ${stateId || ''}`.trim());
+  const apiPath = `/customsearch/v1?key=${GOOGLE_CSE_KEY}&cx=${GOOGLE_CSE_CX}&q=${q}&num=5`;
+  return new Promise((resolve) => {
+    let settled = false;
+    const timer = setTimeout(() => { if (!settled) { settled = true; resolve(null); } }, 8000);
+    const req = https.request({ hostname: 'www.googleapis.com', path: apiPath, method: 'GET',
+      headers: { 'Accept': 'application/json' } }, (res) => {
+      const chunks = [];
+      res.on('data', c => chunks.push(c));
+      res.on('end', () => {
+        clearTimeout(timer); settled = true;
+        try {
+          const data = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+          if (data.error) { resolve(null); return; }
+          for (const item of (data.items || [])) {
+            const url = item.link || '';
+            if (url && !junk.some(j => url.toLowerCase().includes(j))) {
+              try { const u = new URL(url); resolve(`${u.protocol}//${u.hostname}`); return; }
+              catch { resolve(url); return; }
+            }
+          }
+          resolve(null);
+        } catch { resolve(null); }
+      });
+    });
+    req.on('error', () => { clearTimeout(timer); settled = true; resolve(null); });
+    req.end();
+  });
+}
+
+// ── Combined website finder: Google CSE → Serper → domain guessing ───────────
 async function findWebsiteViaDuckDuckGo(orgName, city, stateId) {
-  // 1. Try Serper first if key is available
+  // 1. Google CSE (falls back gracefully if CSE is misconfigured)
+  if (GOOGLE_CSE_KEY && GOOGLE_CSE_CX) {
+    const cseResult = await searchViaGoogleCSE(orgName, city, stateId);
+    if (cseResult) { console.log(`   [CSE] ✓ ${cseResult}`); return cseResult; }
+  }
+  // 2. Serper fallback (if paid credits available)
   if (SERPER_API_KEY) {
     const serperResult = await searchViaSerper(orgName, city, stateId);
     if (serperResult) return serperResult;
   }
-  // 2. Free fallback: try common domain patterns
+  // 3. Free domain guessing as last resort
   return guessDomainForOrg(orgName);
 }
 
