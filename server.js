@@ -895,37 +895,38 @@ app.get('/agent-status', async (req, res) => {
   }
 });
 
-// POST /api/find-website — Brave Search API lookup for nonprofit websites
-// Brave Search API works from any IP (not blocked like Bing/DDG from cloud IPs).
-// Requires BRAVE_API_KEY env var — free tier: 2,000 queries/month.
+// POST /api/find-website — Serper.dev (Google Search) lookup for nonprofit websites
+// Serper.dev is not IP-restricted (works from any cloud provider).
+// Requires SERPER_API_KEY env var — free: 2,500 queries (no CC) at https://serper.dev
 app.post('/api/find-website', async (req, res) => {
   const { orgName, city, stateId } = req.body || {};
   if (!orgName) return res.status(400).json({ error: 'orgName required' });
 
-  const braveKey = process.env.BRAVE_API_KEY;
-  if (!braveKey) {
-    console.log('[FindWebsite] BRAVE_API_KEY not set');
-    return res.json({ website: null, error: 'BRAVE_API_KEY not configured' });
+  const serperKey = process.env.SERPER_API_KEY;
+  if (!serperKey) {
+    console.log('[FindWebsite] SERPER_API_KEY not set');
+    return res.json({ website: null, error: 'SERPER_API_KEY not configured' });
   }
 
   const junk = ['bing.com', 'duckduckgo.com', 'google.com', 'facebook.com', 'twitter.com',
                  'linkedin.com', 'yelp.com', 'wikipedia.org', 'propublica.org',
                  'guidestar.org', 'candid.org', 'charitynavigator.org',
                  'indeed.com', 'glassdoor.com', 'irs.gov', 'usa.gov', 'bbb.org'];
-  const query = (`"${orgName}" ${city || ''} ${stateId || ''}`).trim();
+  const query = `"${orgName}" ${city || ''} ${stateId || ''}`.trim();
+  const body  = JSON.stringify({ q: query, num: 5 });
 
   try {
     const website = await new Promise((resolve, reject) => {
       let settled = false;
       const timer = setTimeout(() => { if (!settled) { settled = true; reject(new Error('timeout')); } }, 10000);
       const req2 = https.request({
-        hostname: 'api.search.brave.com',
-        path: `/res/v1/web/search?q=${encodeURIComponent(query)}&count=5&safesearch=off`,
-        method: 'GET',
+        hostname: 'google.serper.dev',
+        path: '/search',
+        method: 'POST',
         headers: {
-          'Accept': 'application/json',
-          'Accept-Encoding': 'identity',
-          'X-Subscription-Token': braveKey,
+          'Content-Type': 'application/json',
+          'X-API-KEY': serperKey,
+          'Content-Length': Buffer.byteLength(body),
         },
       }, (r) => {
         const chunks = [];
@@ -934,9 +935,9 @@ app.post('/api/find-website', async (req, res) => {
           clearTimeout(timer); settled = true;
           try {
             const data = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-            const results = data.web?.results || [];
+            const results = data.organic || [];
             for (const result of results) {
-              const u = result.url || '';
+              const u = result.link || '';
               if (u && !junk.some(j => u.toLowerCase().includes(j))) return resolve(u);
             }
             resolve(null);
@@ -944,10 +945,11 @@ app.post('/api/find-website', async (req, res) => {
         });
       });
       req2.on('error', err => { clearTimeout(timer); settled = true; reject(err); });
+      req2.write(body);
       req2.end();
     });
 
-    if (website) console.log(`[FindWebsite] Brave → ${website.slice(0, 60)} for "${orgName}"`);
+    if (website) console.log(`[FindWebsite] Serper → ${website.slice(0, 60)} for "${orgName}"`);
     else console.log(`[FindWebsite] No result for "${orgName}"`);
     res.json({ website });
   } catch (e) {

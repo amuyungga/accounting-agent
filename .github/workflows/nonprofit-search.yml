@@ -8,10 +8,6 @@ on:
         required: false
         default: 'Manual run from dashboard'
 
-concurrency:
-  group: nonprofit-search
-  cancel-in-progress: true
-
 jobs:
   nonprofit-search:
     runs-on: ubuntu-latest

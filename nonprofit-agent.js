@@ -3,7 +3,7 @@
 /**
  * Nonprofit / FQHC Lead Search Agent
  * Targets: FQHCs and nonprofits seeking fractional CFO / accounting services
- * Sources: ProPublica Nonprofit Explorer Â· HRSA Health Center Finder Â· Indeed Jobs
+ * Sources: ProPublica Nonprofit Explorer · HRSA Health Center Finder · Indeed Jobs
  * States:  CA, AZ, WA, UT, TX, MO, MT, NM, ND, SD
  *
  * Run manually : node nonprofit-agent.js
@@ -15,7 +15,7 @@ const http  = require('http');
 const fs    = require('fs');
 const path  = require('path');
 
-// â”€â”€ Config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Config ─────────────────────────────────────────────────────────────────
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const RESEND_API_KEY    = process.env.RESEND_API_KEY || null;
 const GITHUB_TOKEN      = process.env.GITHUB_TOKEN;
@@ -27,7 +27,7 @@ const EMAIL_DELAY_MS    = 3500;
 const DAILY_EMAIL_CAP   = 80; // leave headroom for main agent
 
 if (!ANTHROPIC_API_KEY) { console.error('[Error] ANTHROPIC_API_KEY not set'); process.exit(1); }
-if (!RESEND_API_KEY)    { console.warn('[Warn] RESEND_API_KEY not set â€” emails will be logged only (dry-run mode)'); }
+if (!RESEND_API_KEY)    { console.warn('[Warn] RESEND_API_KEY not set — emails will be logged only (dry-run mode)'); }
 
 const TARGET_STATES = [
   { id: 'CA', name: 'California' },
@@ -46,7 +46,7 @@ const TARGET_STATES = [
 // E = Health General, F = Mental Health, P = Human Services
 const NP_QUERIES = ['health center', 'community health', 'federally qualified health', 'human services nonprofit'];
 
-// â”€â”€ Utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Utilities ───────────────────────────────────────────────────────────────
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 function withTimeout(promise, ms, label) {
@@ -78,14 +78,14 @@ function alreadyEmailedAddress(email) {
 }
 
 function alreadyProcessed(listingKey) {
-  // no_website leads get retried â€” only skip if we already found/emailed/rejected
+  // no_website leads get retried — only skip if we already found/emailed/rejected
   const FINAL = new Set(['emailed', 'no_email', 'email_found', 'follow_up_sent', 'replied', 'error']);
   return loadLeads().some(l =>
     (l.listingUrl === listingKey || l.id === listingKey) && FINAL.has(l.status)
   );
 }
 
-// â”€â”€ HTTP fetch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── HTTP fetch ─────────────────────────────────────────────────────────────
 function fetchUrl(url, extraHeaders = {}, redirectCount = 0) {
   if (redirectCount > 4) return Promise.reject(new Error('Too many redirects'));
   return new Promise((resolve, reject) => {
@@ -123,7 +123,7 @@ function fetchUrl(url, extraHeaders = {}, redirectCount = 0) {
   });
 }
 
-// â”€â”€ Email extraction â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Email extraction ────────────────────────────────────────────────────────
 function extractEmails(html, preferDomain) {
   if (!html) return [];
   const all = [...new Set((html.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g) || []))];
@@ -174,9 +174,9 @@ async function findEmailOnWebsite(websiteUrl) {
   }
 }
 
-// â”€â”€ Push leads to GitHub â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Push leads to GitHub ────────────────────────────────────────────────────
 async function pushLeadsToGitHub(leads) {
-  if (!GITHUB_TOKEN) { console.log('[GitHub] No token â€” skipping push'); return; }
+  if (!GITHUB_TOKEN) { console.log('[GitHub] No token — skipping push'); return; }
   return new Promise((resolve) => {
     const getReq = https.request({
       hostname: 'api.github.com',
@@ -217,32 +217,32 @@ async function pushLeadsToGitHub(leads) {
   });
 }
 
-// â”€â”€ Generate nonprofit / FQHC cold email â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Generate nonprofit / FQHC cold email ───────────────────────────────────
 async function generateNonprofitEmail(org) {
   const isFQHC = org.orgType === 'fqhc';
 
   const prompt = isFQHC
-    ? `Write a brief, warm cold outreach email from ${OWNER_NAME} at ${FIRM_NAME} (a CPA & financial advisory firm) to the CFO or Executive Director of "${org.name}" â€” a Federally Qualified Health Center (FQHC) in ${org.city || org.state || ''}.
+    ? `Write a brief, warm cold outreach email from ${OWNER_NAME} at ${FIRM_NAME} (a CPA & financial advisory firm) to the CFO or Executive Director of "${org.name}" — a Federally Qualified Health Center (FQHC) in ${org.city || org.state || ''}.
 
 FQHCs have specific financial needs that generalist CPAs don't understand: HRSA UDS reporting, Section 330 grant compliance, federal cost reports, sliding fee scale audits, and 990/A-133 audit preparation. Spectrum Financial Solutions specializes in exactly these areas.
 
-Tone: warm, mission-aware, knowledgeable â€” not a generic sales pitch. Show you understand the FQHC world.
+Tone: warm, mission-aware, knowledgeable — not a generic sales pitch. Show you understand the FQHC world.
 
 Rules:
 - First line: Subject: <personalized, mentions their health center name or FQHC mission>
-- 3â€“4 short paragraphs
+- 3–4 short paragraphs
 - Mention specific FQHC pain points: grant compliance, HRSA reporting, audit readiness
 - End with soft CTA: free 30-min call at ${CALENDLY_URL}
 - Do NOT include a sign-off or signature block`
-    : `Write a brief, warm cold outreach email from ${OWNER_NAME} at ${FIRM_NAME} (a CPA & financial advisory firm) to the Executive Director or Finance Director of "${org.name}" â€” a nonprofit organization in ${org.city || org.state || ''}.
+    : `Write a brief, warm cold outreach email from ${OWNER_NAME} at ${FIRM_NAME} (a CPA & financial advisory firm) to the Executive Director or Finance Director of "${org.name}" — a nonprofit organization in ${org.city || org.state || ''}.
 
-Nonprofits in the $1Mâ€“$15M revenue range often struggle with: grant financial management and reporting, 990 preparation, board-ready financial statements, audit readiness, and CFO-level strategic planning â€” but can't afford a full-time CFO.
+Nonprofits in the $1M–$15M revenue range often struggle with: grant financial management and reporting, 990 preparation, board-ready financial statements, audit readiness, and CFO-level strategic planning — but can't afford a full-time CFO.
 
-Tone: warm, mission-aware, practical â€” not a generic sales pitch.
+Tone: warm, mission-aware, practical — not a generic sales pitch.
 
 Rules:
 - First line: Subject: <personalized subject for this specific nonprofit>
-- 3â€“4 short paragraphs
+- 3–4 short paragraphs
 - Mention specific nonprofit pain points: 990 filing, grant compliance, audit prep, board reporting
 - Position fractional CFO/accounting as the smart alternative to a full-time hire
 - End with soft CTA: free 30-min call at ${CALENDLY_URL}
@@ -284,7 +284,7 @@ Rules:
   });
 }
 
-// â”€â”€ Send email via Resend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Send email via Resend ───────────────────────────────────────────────────
 async function sendEmail(toEmail, emailContent, org) {
   const lines = emailContent.split('\n');
   const subjectLine = lines.find(l => /^subject:/i.test(l));
@@ -300,14 +300,14 @@ async function sendEmail(toEmail, emailContent, org) {
   <tr><td style="color:#64748b">Founder and CEO | Spectrum Financial Solutions</td></tr>
   <tr><td style="padding-top:4px"><a href="mailto:asante@spectrumfinancialsolution.com" style="color:#3b82f6;text-decoration:none">asante@spectrumfinancialsolution.com</a></td></tr>
   <tr><td><a href="https://spectrumfinancialsolution.com" style="color:#3b82f6;text-decoration:none">spectrumfinancialsolution.com</a></td></tr>
-  <tr><td style="padding-top:8px"><a href="${CALENDLY_URL}" style="background:#3b82f6;color:#fff;padding:6px 14px;border-radius:4px;text-decoration:none;font-size:12px;display:inline-block">ðŸ“… Schedule a Free Consultation</a></td></tr>
+  <tr><td style="padding-top:8px"><a href="${CALENDLY_URL}" style="background:#3b82f6;color:#fff;padding:6px 14px;border-radius:4px;text-decoration:none;font-size:12px;display:inline-block">📅 Schedule a Free Consultation</a></td></tr>
 </table>`;
 
   const body = rawBody + sigText;
   const html = `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#1e293b;max-width:600px;margin:0 auto"><p>${rawBody.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>${sigHtml}</div>`;
 
   if (!RESEND_API_KEY) {
-    console.log(`   [DRY RUN] Would send to ${toEmail} â€” Subject: ${subject}`);
+    console.log(`   [DRY RUN] Would send to ${toEmail} — Subject: ${subject}`);
     return true;
   }
 
@@ -344,8 +344,8 @@ async function sendEmail(toEmail, emailContent, org) {
   });
 }
 
-// â”€â”€ ProPublica Nonprofit Explorer API 
-// Free, no API key â€” covers all US nonprofits with 990 filings
+// ── ProPublica Nonprofit Explorer API ───────────────────────────────────────
+// Free, no API key — covers all US nonprofits with 990 filings
 async function searchProPublica(stateId, query) {
   const url = `https://projects.propublica.org/nonprofits/api/v2/search.json?q=${encodeURIComponent(query)}&state%5Bid%5D=${stateId}`;
   try {
@@ -378,9 +378,10 @@ async function getProPublicaWebsite(ein) {
   }
 }
 
-// â”€â”€ HRSA Health Center Finder 
-// Public API â€” returns all FQHCs in a state
+// ── HRSA Health Center Finder ────────────────────────────────────────────────
+// Public API — returns all FQHCs in a state
 async function searchHRSA(stateId) {
+  // Try the primary HRSA Find a Health Center API
   const urls = [
     `https://findahealthcenter.hrsa.gov/api/grantees/search?state=${stateId}&pageNumber=1&pageSize=100`,
     `https://bphc.hrsa.gov/find-a-health-center/search?state=${stateId}&format=json`,
@@ -409,7 +410,8 @@ async function searchHRSA(stateId) {
   return [];
 }
 
-// Indeed job scraping
+// ── Indeed job scraping ──────────────────────────────────────────────────────
+// Companies posting CFO/accounting jobs at nonprofits = high buying intent
 async function searchIndeedJobs(stateName) {
   const queries = [
     'fractional CFO nonprofit',
@@ -423,6 +425,7 @@ async function searchIndeedJobs(stateName) {
     const url = `https://www.indeed.com/jobs?q=${encodeURIComponent(q)}&l=${encodeURIComponent(stateName)}&sort=date&fromage=60&limit=25`;
     try {
       const html = await fetchUrl(url);
+      // Extract company names from Indeed's JSON-in-HTML data
       const matches = [
         ...(html.match(/"companyName":"([^"]+)"/g) || []),
         ...(html.match(/"employerName":"([^"]+)"/g) || []),
@@ -445,54 +448,109 @@ async function searchIndeedJobs(stateName) {
     } catch (e) {
       console.log(`   [Indeed] Error for "${q}": ${e.message}`);
     }
-    await sleep(2500);
+    await sleep(2500); // be polite to Indeed
   }
   return results;
 }
 
-// Web search for nonprofit website via Brave Search API
-// Brave Search API works from any IP (GitHub Actions, Railway, etc.) — no IP blocking.
-// Free tier: 2,000 queries/month — sign up at https://api.search.brave.com/app/keys
-// Add BRAVE_API_KEY to Railway env vars AND GitHub Actions secrets.
-const BRAVE_API_KEY = process.env.BRAVE_API_KEY;
+// ── Domain guessing — free, no API key, works from any IP ───────────────────
+// Derives candidate domains from the org name and checks if they resolve.
+// Catches ~30-50% of orgs whose domain is a simple slug of their name.
+const STOP_WORDS = new Set([
+  'community','health','center','foundation','services','service','clinic',
+  'clinics','organization','inc','llc','corp','of','the','and','for','a',
+  'an','at','in','on','care','care','solutions','group','association',
+  'network','alliance','collaborative','partners','partnership','county',
+  'city','regional','rural','urban','valley','mountain','coast','bay',
+  'lake','river','family','families','children','youth','senior','adult',
+  'medical','mental','behavioral','substance','primary','federally',
+  'qualified','fqhc','free','nonprofit','non','profit','charitable',
+]);
 
-async function findWebsiteViaDuckDuckGo(orgName, city, stateId) {
-  if (!BRAVE_API_KEY) {
-    console.warn('   [Search] BRAVE_API_KEY not set — skipping website search');
-    return null;
-  }
+function orgNameToDomainSlug(name) {
+  return name.toLowerCase()
+    .replace(/[''`]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 1 && !STOP_WORDS.has(w))
+    .slice(0, 5)
+    .join('');
+}
 
-  const junk = ['bing.com', 'duckduckgo.com', 'google.com', 'facebook.com', 'twitter.com',
-                 'linkedin.com', 'yelp.com', 'wikipedia.org', 'propublica.org',
-                 'guidestar.org', 'candid.org', 'charitynavigator.org',
-                 'indeed.com', 'glassdoor.com', 'irs.gov', 'usa.gov', 'bbb.org'];
-
-  const query = (`"${orgName}" ${city || ''} ${stateId || ''}`).trim();
-
+function urlIsUp(url) {
   return new Promise((resolve) => {
     let settled = false;
-    const timer = setTimeout(() => { if (!settled) { settled = true; resolve(null); } }, 12000);
+    const timer = setTimeout(() => { if (!settled) { settled = true; resolve(false); } }, 7000);
+    let parsed;
+    try { parsed = new URL(url); } catch { clearTimeout(timer); return resolve(false); }
+    const lib = parsed.protocol === 'https:' ? https : http;
+    const req = lib.request({ hostname: parsed.hostname, path: '/', method: 'HEAD', timeout: 6000,
+      headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
+      clearTimeout(timer); settled = true;
+      resolve(res.statusCode < 500);
+    });
+    req.on('error', () => { clearTimeout(timer); settled = true; resolve(false); });
+    req.on('timeout', () => { req.destroy(); clearTimeout(timer); settled = true; resolve(false); });
+    req.end();
+  });
+}
 
+async function guessDomainForOrg(orgName) {
+  const slug = orgNameToDomainSlug(orgName);
+  if (slug.length < 3) return null;
+
+  // Also try full-name slug (all meaningful words)
+  const fullSlug = orgName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  const candidates = [
+    `https://${slug}.org`,
+    `https://${slug}.com`,
+    `https://www.${slug}.org`,
+    `https://${slug}health.org`,
+    `https://${slug}clinic.org`,
+    `https://${fullSlug}.org`,
+    `https://${fullSlug}.com`,
+  ];
+
+  for (const url of [...new Set(candidates)]) {
+    const up = await urlIsUp(url);
+    if (up) {
+      console.log(`   [DomainGuess] ✓ ${url}`);
+      return url;
+    }
+  }
+  return null;
+}
+
+// ── Serper.dev search (optional — requires paid credits) ─────────────────────
+const SERPER_API_KEY = process.env.SERPER_API_KEY;
+
+async function searchViaSerper(orgName, city, stateId) {
+  if (!SERPER_API_KEY) return null;
+  const junk = ['bing.com','duckduckgo.com','google.com','facebook.com','twitter.com',
+                 'linkedin.com','yelp.com','wikipedia.org','propublica.org',
+                 'guidestar.org','candid.org','charitynavigator.org',
+                 'indeed.com','glassdoor.com','irs.gov','usa.gov','bbb.org'];
+  const query = `"${orgName}" ${city || ''} ${stateId || ''}`.trim();
+  const body  = JSON.stringify({ q: query, num: 5 });
+  return new Promise((resolve) => {
+    let settled = false;
+    const timer = setTimeout(() => { if (!settled) { settled = true; resolve(null); } }, 10000);
     const req = https.request({
-      hostname: 'api.search.brave.com',
-      path: `/res/v1/web/search?q=${encodeURIComponent(query)}&count=5&safesearch=off`,
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Accept-Encoding': 'identity',
-        'X-Subscription-Token': BRAVE_API_KEY,
-      },
+      hostname: 'google.serper.dev', path: '/search', method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-KEY': SERPER_API_KEY,
+                 'Content-Length': Buffer.byteLength(body) },
     }, (res) => {
       const chunks = [];
       res.on('data', c => chunks.push(c));
       res.on('end', () => {
-        clearTimeout(timer);
-        settled = true;
+        clearTimeout(timer); settled = true;
         try {
           const data = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-          const results = data.web?.results || [];
+          if (data.statusCode === 401 || data.error) { resolve(null); return; }
+          const results = data.organic || [];
           for (const r of results) {
-            const url = r.url || '';
+            const url = r.link || '';
             if (url && !junk.some(j => url.toLowerCase().includes(j))) return resolve(url);
           }
           resolve(null);
@@ -500,40 +558,55 @@ async function findWebsiteViaDuckDuckGo(orgName, city, stateId) {
       });
     });
     req.on('error', () => { clearTimeout(timer); settled = true; resolve(null); });
-    req.end();
+    req.write(body); req.end();
   });
 }
 
-// Main orchestrator
+// ── Combined website finder: Serper (if configured) → domain guessing ────────
+async function findWebsiteViaDuckDuckGo(orgName, city, stateId) {
+  // 1. Try Serper first if key is available
+  if (SERPER_API_KEY) {
+    const serperResult = await searchViaSerper(orgName, city, stateId);
+    if (serperResult) return serperResult;
+  }
+  // 2. Free fallback: try common domain patterns
+  return guessDomainForOrg(orgName);
+}
+
+// ── Main orchestrator ────────────────────────────────────────────────────────
 async function runNonprofitSearch() {
-  console.log('\nðŸ¥ Nonprofit / FQHC Lead Search â€” Spectrum Financial Solutions');
-  console.log('   Sources : ProPublica Nonprofit Explorer Â· HRSA Health Centers Â· Indeed Jobs');
+  console.log('\n🏥 Nonprofit / FQHC Lead Search — Spectrum Financial Solutions');
+  console.log('   Sources : ProPublica Nonprofit Explorer · HRSA Health Centers · Indeed Jobs');
   console.log(`   States  : ${TARGET_STATES.map(s => s.id).join(', ')}`);
   console.log(`   Cap     : ${DAILY_EMAIL_CAP} emails max this run\n`);
 
   const allLeads = loadLeads();
+  // Count emails already sent today (reuse today's quota)
   const todayStr = new Date().toISOString().slice(0, 10);
   let emailedThisRun = allLeads.filter(l => (l.emailSentAt || '').startsWith(todayStr)).length;
   let totalFound = 0, totalEmailed = 0;
 
   for (const state of TARGET_STATES) {
     if (emailedThisRun >= DAILY_EMAIL_CAP) {
-      console.log('\nàŸŽ¯ Daily cap reached â€” stopping\n');
+      console.log('\n🎯 Daily cap reached — stopping\n');
       break;
     }
 
-    console.log(`\nâ”€â”€ ${state.name} (${state.id}) ${'â”€'.repeat(40 - state.name.length)}`);
+    console.log(`\n── ${state.name} (${state.id}) ${'─'.repeat(40 - state.name.length)}`);
 
+    // ── 1. HRSA FQHCs ─────────────────────────────────────────────────────
     const fqhcs = await searchHRSA(state.id).catch(() => []);
-    console.log(`   [HRSA]       ${fqhcs.length} FQHCY`);
+    console.log(`   [HRSA]       ${fqhcs.length} FQHCs`);
     await sleep(1000);
 
+    // ── 2. ProPublica nonprofits ──────────────────────────────────────────
     const npOrgs = [];
     for (const q of NP_QUERIES) {
       const orgs = await searchProPublica(state.id, q).catch(() => []);
       npOrgs.push(...orgs);
       await sleep(800);
     }
+    // Deduplicate ProPublica orgs (revenue field is not returned by the search endpoint)
     const seenEin = new Set();
     const filteredNp = npOrgs.filter(o => {
       const key = o.ein || o.name.toLowerCase().slice(0, 30);
@@ -543,14 +616,16 @@ async function runNonprofitSearch() {
     });
     console.log(`   [ProPublica] ${filteredNp.length} nonprofits`);
 
+    // ── 3. Indeed high-intent job postings ────────────────────────────────
     const indeedOrgs = await searchIndeedJobs(state.name).catch(() => []);
     console.log(`   [Indeed]     ${indeedOrgs.length} companies hiring`);
 
+    // ── Combine & deduplicate ─────────────────────────────────────────────
     const seenNames = new Set();
     const allOrgs = [
-      ...fqhcs,
-      ...indeedOrgs,
-      ...filteredNp,
+      ...fqhcs,                               // highest priority — known FQHCs
+      ...indeedOrgs,                          // high intent — actively hiring
+      ...filteredNp,                          // ProPublica nonprofits
     ].filter(o => {
       if (!o.name || o.name.length < 3) return false;
       const key = o.name.toLowerCase().trim();
@@ -558,14 +633,17 @@ async function runNonprofitSearch() {
       seenNames.add(key);
       return true;
     });
+
     console.log(`   [Combined]   ${allOrgs.length} unique orgs to process`);
 
+    // ── Process each org ──────────────────────────────────────────────────
     for (const org of allOrgs.slice(0, 40)) {
       if (emailedThisRun >= DAILY_EMAIL_CAP) break;
 
       const listingKey = `np_${state.id}_${org.name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 30)}`;
       if (alreadyProcessed(listingKey)) continue;
 
+      // Find website
       let website = org.website || null;
       if (!website && org.ein) {
         website = await withTimeout(getProPublicaWebsite(org.ein), 8000, 'propublica-website').catch(() => null);
@@ -576,6 +654,7 @@ async function runNonprofitSearch() {
         await sleep(800);
       }
 
+      // Find email on their website
       let email = null;
       if (website) {
         email = await withTimeout(findEmailOnWebsite(website), 12000, 'email-find').catch(() => null);
@@ -603,59 +682,62 @@ async function runNonprofitSearch() {
       if (!email) {
         lead.status = website ? 'no_email' : 'no_website';
         saveLead(lead);
-        console.log(`   âœ— ${org.name.slice(0, 45)} â€” ${lead.status}`);
+        console.log(`   ✗ ${org.name.slice(0, 45)} — ${lead.status}`);
         continue;
       }
 
       if (alreadyEmailedAddress(email)) {
         saveLead({ ...lead, status: 'no_email', email });
-        console.log(`  âœ— ${org.name.slice(0, 45)} â€” already emailed`);
+        console.log(`   ✗ ${org.name.slice(0, 45)} — already emailed`);
         continue;
       }
 
       lead.email = email;
       totalFound++;
 
+      // Generate tailored nonprofit/FQHC email
       let emailContent;
       try {
         emailContent = await withTimeout(generateNonprofitEmail(lead), 35000, 'generateEmail');
       } catch (err) {
         lead.status = 'error'; lead.error = err.message;
         saveLead(lead);
-        console.log(`  âœ— ${org.name.slice(0, 45)} â€” email gen error: ${err.message}`);
+        console.log(`   ✗ ${org.name.slice(0, 45)} — email gen error: ${err.message}`);
         continue;
       }
 
+      // Send
       try {
         await sendEmail(email, emailContent, lead);
         lead.status = 'emailed';
         lead.emailSent = true;
         lead.emailSentAt = new Date().toISOString();
         lead.emailContent = emailContent;
-        console.log(`   âœ… [${org.orgType.toUpperCase()}] ${org.name.slice(0, 40)} â†’ ${email}`);
+        console.log(`   ✅ [${org.orgType.toUpperCase()}] ${org.name.slice(0, 40)} → ${email}`);
         totalEmailed++;
         emailedThisRun++;
       } catch (err) {
         lead.status = 'send_error'; lead.error = err.message;
-        console.log(`   âœ— ${org.name.slice(0, 45)} â€” send error: ${err.message}`);
+        console.log(`   ✗ ${org.name.slice(0, 45)} — send error: ${err.message}`);
       }
 
       saveLead(lead);
       if (RESEND_API_KEY) await sleep(EMAIL_DELAY_MS);
     }
 
+    // Sync to GitHub after every state
     await pushLeadsToGitHub(loadLeads()).catch(e => console.log('[GitHub]', e.message));
     await sleep(2000);
   }
 
-  console.log(`\n${'â•'.repeat(60)}`);
-  console.log(`âœ… Nonprofit search complete`);
+  console.log(`\n${'═'.repeat(60)}`);
+  console.log(`✅ Nonprofit search complete`);
   console.log(`   Leads found with email : ${totalFound}`);
   console.log(`   Emails sent            : ${totalEmailed}`);
-  console.log(`${'â•'.repeat(60)}\n`);
+  console.log(`${'═'.repeat(60)}\n`);
 }
 
 runNonprofitSearch().catch(err => {
-  console.error('\nâŒ Fatal error:', err.message);
+  console.error('\n❌ Fatal error:', err.message);
   process.exit(1);
 });
