@@ -641,6 +641,9 @@ async function searchViaBrave(orgName, city, stateId) {
           }
           const data = JSON.parse(raw);
           const results = (data.web && data.web.results) || [];
+          if (results.length === 0) {
+            console.log(`   [Brave] 200 OK but 0 results (query too specific?)`);
+          }
           for (const item of results) {
             const url = item.url || '';
             if (url && !junk.some(j => url.toLowerCase().includes(j))) {
@@ -686,6 +689,11 @@ async function findWebsiteViaDuckDuckGo(orgName, city, stateId) {
 
 // ── Main orchestrator ────────────────────────────────────────────────────────
 async function runNonprofitSearch() {
+  // ── API key diagnostics ───────────────────────────────────────────────────
+  console.log(`   [DIAG] BRAVE_SEARCH_KEY : ${BRAVE_SEARCH_KEY ? `SET (${BRAVE_SEARCH_KEY.length} chars)` : 'MISSING'}`);
+  console.log(`   [DIAG] GOOGLE_CSE_KEY   : ${GOOGLE_CSE_KEY  ? 'SET' : 'MISSING'}`);
+  console.log(`   [DIAG] SERPER_API_KEY   : ${SERPER_API_KEY  ? 'SET' : 'MISSING'}`);
+
   console.log('\n🏥 Nonprofit / FQHC Lead Search — Spectrum Financial Solutions');
   console.log('   Sources : ProPublica Nonprofit Explorer · HRSA Health Centers · Indeed Jobs');
   console.log(`   States  : ${TARGET_STATES.map(s => s.id).join(', ')}`);
