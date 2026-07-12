@@ -450,38 +450,56 @@ async function searchIndeedJobs(stateName) {
   return results;
 }
 
-// Web search for nonprofit website
-// Routes through the Railway server (non-Azure IP) because GitHub Actions runs on
-// Azure IPs which Bing and DuckDuckGo block for scraping. Railway is not blocked.
-const RAILWAY_HOST = 'accounting-agent-production-cf69.up.railway.app';
+// Web search for nonprofit website via Brave Search API
+// Brave Search API works from any IP (GitHub Actions, Railway, etc.) — no IP blocking.
+// Free tier: 2,000 queries/month — sign up at https://api.search.brave.com/app/keys
+// Add BRAVE_API_KEY to Railway env vars AND GitHub Actions secrets.
+const BRAVE_API_KEY = process.env.BRAVE_API_KEY;
 
 async function findWebsiteViaDuckDuckGo(orgName, city, stateId) {
+  if (!BRAVE_API_KEY) {
+    console.warn('   [Search] BRAVE_API_KEY not set — skipping website search');
+    return null;
+  }
+
+  const junk = ['bing.com', 'duckduckgo.com', 'google.com', 'facebook.com', 'twitter.com',
+                 'linkedin.com', 'yelp.com', 'wikipedia.org', 'propublica.org',
+                 'guidestar.org', 'candid.org', 'charitynavigator.org',
+                 'indeed.com', 'glassdoor.com', 'irs.gov', 'usa.gov', 'bbb.org'];
+
+  const query = (`"${orgName}" ${city || ''} ${stateId || ''}`).trim();
+
   return new Promise((resolve) => {
-    const body = JSON.stringify({ orgName, city: city || '', stateId: stateId || '' });
     let settled = false;
-    const timer = setTimeout(() => { if (!settled) { settled = true; resolve(null); } }, 18000);
+    const timer = setTimeout(() => { if (!settled) { settled = true; resolve(null); } }, 12000);
 
     const req = https.request({
-      hostname: RAILWAY_HOST,
-      path: '/api/find-website',
-      method: 'POST',
+      hostname: 'api.search.brave.com',
+      path: `/res/v1/web/search?q=${encodeURIComponent(query)}&count=5&safesearch=off`,
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(body),
-        'User-Agent': 'nonprofit-agent',
+        'Accept': 'application/json',
+        'Accept-Encoding': 'identity',
+        'X-Subscription-Token': BRAVE_API_KEY,
       },
     }, (res) => {
-      let data = '';
-      res.on('data', c => data += c);
+      const chunks = [];
+      res.on('data', c => chunks.push(c));
       res.on('end', () => {
         clearTimeout(timer);
         settled = true;
-        try { resolve(JSON.parse(data).website || null); }
-        catch { resolve(null); }
+        try {
+          const data = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+          const results = data.web?.results || [];
+          for (const r of results) {
+            const url = r.url || '';
+            if (url && !junk.some(j => url.toLowerCase().includes(j))) return resolve(url);
+          }
+          resolve(null);
+        } catch { resolve(null); }
       });
     });
     req.on('error', () => { clearTimeout(timer); settled = true; resolve(null); });
-    req.write(body);
     req.end();
   });
 }
