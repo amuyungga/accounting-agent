@@ -41284,5 +41284,39 @@
     "orgType": "nonprofit",
     "foundAt": "2026-07-12T16:35:44.147Z",
     "updatedAt": "2026-07-12T16:35:44.147Z"
+  },
+  {
+    "id": "np_1783874163413_you2",
+    "name": "Jeff Co Comprehensive Health Center",
+    "city": "Saint Louis",
+    "state": "MO",
+    "industry": "Nonprofit Organization",
+    "source": "propublica",
+    "listingUrl": "np_MO_jeff_co_comprehensive_health_c",
+    "website": null,
+    "phone": null,
+    "email": null,
+    "status": "no_website",
+    "ein": "832621287",
+    "orgType": "nonprofit",
+    "foundAt": "2026-07-12T16:36:03.413Z",
+    "updatedAt": "2026-07-12T16:36:03.413Z"
+  },
+  {
+    "id": "np_1783874167065_t5bm",
+    "name": "Community Health Comission Of Missouri",
+    "city": "Saint Louis",
+    "state": "MO",
+    "industry": "Nonprofit Organization",
+    "source": "propublica",
+    "listingUrl": "np_MO_community_health_comission_of_",
+    "website": null,
+    "phone": null,
+    "email": null,
+    "status": "no_website",
+    "ein": "431883638",
+    "orgType": "nonprofit",
+    "foundAt": "2026-07-12T16:36:07.065Z",
+    "updatedAt": "2026-07-12T16:36:07.065Z"
   }
 ]
