@@ -625,8 +625,8 @@ async function searchViaBrave(orgName, city, stateId) {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'Accept-Encoding': 'gzip',
         'X-Subscription-Token': BRAVE_SEARCH_KEY
+        // No Accept-Encoding — avoid gzip so Buffer.concat gives plain UTF-8
       }
     }, (res) => {
       const chunks = [];
@@ -635,6 +635,10 @@ async function searchViaBrave(orgName, city, stateId) {
         clearTimeout(timer); settled = true;
         try {
           const raw = Buffer.concat(chunks).toString('utf8');
+          if (res.statusCode !== 200) {
+            console.log(`   [Brave] HTTP ${res.statusCode}: ${raw.slice(0, 120)}`);
+            resolve(null); return;
+          }
           const data = JSON.parse(raw);
           const results = (data.web && data.web.results) || [];
           for (const item of results) {
@@ -645,10 +649,16 @@ async function searchViaBrave(orgName, city, stateId) {
             }
           }
           resolve(null);
-        } catch { resolve(null); }
+        } catch(e) {
+          console.log(`   [Brave] parse error: ${e.message.slice(0, 100)}`);
+          resolve(null);
+        }
       });
     });
-    req.on('error', () => { clearTimeout(timer); settled = true; resolve(null); });
+    req.on('error', (e) => {
+      console.log(`   [Brave] network error: ${e.message}`);
+      clearTimeout(timer); settled = true; resolve(null);
+    });
     req.end();
   });
 }
