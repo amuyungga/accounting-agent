@@ -41199,5 +41199,22 @@
     "orgType": "nonprofit",
     "foundAt": "2026-07-12T05:03:33.941Z",
     "updatedAt": "2026-07-12T05:03:33.941Z"
+  },
+  {
+    "id": "np_1783832633431_a5la",
+    "name": "Commuinity Health Initiative",
+    "city": "Houston",
+    "state": "TX",
+    "industry": "Nonprofit Organization",
+    "source": "propublica",
+    "listingUrl": "np_TX_commuinity_health_initiative",
+    "website": null,
+    "phone": null,
+    "email": null,
+    "status": "no_website",
+    "ein": "852697304",
+    "orgType": "nonprofit",
+    "foundAt": "2026-07-12T05:03:53.431Z",
+    "updatedAt": "2026-07-12T05:03:53.431Z"
   }
 ]
