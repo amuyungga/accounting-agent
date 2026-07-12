@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fractional CFO & Accounting Services | Spectrum Financial Solutions</title>
   <meta name="description" content="Spectrum Financial Solutions provides expert fractional CFO and accounting services for nonprofits, FQHCs, and small businesses. Get a free consultation today." />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18318832360"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'AW-18318832360');
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -535,6 +543,8 @@
       if (res.ok) {
         formContainer.style.display = 'none';
         successBox.style.display = 'block';
+        // Fire Google Ads conversion
+        gtag('event', 'conversion', { 'send_to': 'AW-18318832360' });
       } else {
         throw new Error('Server error');
       }
