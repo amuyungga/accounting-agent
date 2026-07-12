@@ -344,7 +344,7 @@ async function sendEmail(toEmail, emailContent, org) {
   });
 }
 
-// ── ProPublica Nonprofit Explorer API ───────────────────────────────────────
+// ── ProPublica Nonprofit Explorer API 
 // Free, no API key — covers all US nonprofits with 990 filings
 async function searchProPublica(stateId, query) {
   const url = `https://projects.propublica.org/nonprofits/api/v2/search.json?q=${encodeURIComponent(query)}&state%5Bid%5D=${stateId}`;
@@ -378,10 +378,9 @@ async function getProPublicaWebsite(ein) {
   }
 }
 
-// ── HRSA Health Center Finder ────────────────────────────────────────────────
+// ── HRSA Health Center Finder 
 // Public API — returns all FQHCs in a state
 async function searchHRSA(stateId) {
-  // Try the primary HRSA Find a Health Center API
   const urls = [
     `https://findahealthcenter.hrsa.gov/api/grantees/search?state=${stateId}&pageNumber=1&pageSize=100`,
     `https://bphc.hrsa.gov/find-a-health-center/search?state=${stateId}&format=json`,
@@ -410,8 +409,7 @@ async function searchHRSA(stateId) {
   return [];
 }
 
-// ── Indeed job scraping ──────────────────────────────────────────────────────
-// Companies posting CFO/accounting jobs at nonprofits = high buying intent
+// Indeed job scraping
 async function searchIndeedJobs(stateName) {
   const queries = [
     'fractional CFO nonprofit',
@@ -425,7 +423,6 @@ async function searchIndeedJobs(stateName) {
     const url = `https://www.indeed.com/jobs?q=${encodeURIComponent(q)}&l=${encodeURIComponent(stateName)}&sort=date&fromage=60&limit=25`;
     try {
       const html = await fetchUrl(url);
-      // Extract company names from Indeed's JSON-in-HTML data
       const matches = [
         ...(html.match(/"companyName":"([^"]+)"/g) || []),
         ...(html.match(/"employerName":"([^"]+)"/g) || []),
@@ -448,27 +445,37 @@ async function searchIndeedJobs(stateName) {
     } catch (e) {
       console.log(`   [Indeed] Error for "${q}": ${e.message}`);
     }
-    await sleep(2500); // be polite to Indeed
+    await sleep(2500);
   }
   return results;
 }
 
-// ── DuckDuckGo website search ────────────────────────────────────────────────
-// Used to find a nonprofit's website when we only have their name
-// DDG wraps result URLs as /l/?uddg=ENCODED_URL — must decode uddg parameter
+// Web search for nonprofit website
+// Tries Bing first (works from server/CI IPs), then DuckDuckGo as fallback
 async function findWebsiteViaDuckDuckGo(orgName, city, stateId) {
-  const junk = ['duckduckgo', 'google', 'facebook', 'twitter', 'linkedin', 'yelp',
-                'wikipedia', 'propublica', 'guidestar', 'candid', 'charitynavigator',
+  const junk = ['bing.com', 'duckduckgo', 'google', 'facebook', 'twitter', 'linkedin',
+                'yelp', 'wikipedia', 'propublica', 'guidestar', 'candid', 'charitynavigator',
                 'indeed', 'glassdoor', 'ziprecruiter', 'irs.gov', 'usa.gov',
-                'bbb.org', 'yellowpages', 'mapquest', 'bing.com'];
+                'bbb.org', 'yellowpages', 'mapquest', 'manta.com', 'bizapedia'];
 
-  const query = `${orgName} ${city || ''} ${stateId} official site`;
-  const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+  const query = `"${orgName}" ${city || ''} ${stateId}`;
+
   try {
-    const html = await fetchUrl(url);
+    const bingUrl = `https://www.bing.com/search?q=${encodeURIComponent(query)}&count=10`;
+    const html = await fetchUrl(bingUrl, {
+      'Accept': 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9',
+    });
+    const hrefs = [...(html.matchAll(/href="(https?:\/\/[^"?#]+)/g))];
+    for (const m of hrefs) {
+      const u = m[1];
+      if (!junk.some(j => u.toLowerCase().includes(j))) return u;
+    }
+  } catch {}
 
-    // DDG result links look like: href="//duckduckgo.com/l/?uddg=https%3A%2F%2F..."
-    // Extract and decode the uddg parameter
+  try {
+    const ddgUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+    const html = await fetchUrl(ddgUrl);
     const uddgMatches = [...(html.matchAll(/uddg=(https?[^&"'\s]+)/gi))];
     for (const m of uddgMatches) {
       try {
@@ -476,52 +483,41 @@ async function findWebsiteViaDuckDuckGo(orgName, city, stateId) {
         if (!junk.some(j => decoded.toLowerCase().includes(j))) return decoded;
       } catch {}
     }
+  } catch {}
 
-    // Fallback: plain https:// hrefs (in case DDG changes format)
-    const hrefs = html.match(/href="(https?:\/\/[^"]+)"/g) || [];
-    const site = hrefs
-      .map(h => h.replace(/href="/, '').replace(/"$/, ''))
-      .find(u => !junk.some(j => u.toLowerCase().includes(j)));
-    return site || null;
-  } catch {
-    return null;
-  }
+  return null;
 }
 
-// ── Main orchestrator ────────────────────────────────────────────────────────
-async function runNonprofitSearch() {
+// Main orchestrator
+afync function runNonprofitSearch() {
   console.log('\n🏥 Nonprofit / FQHC Lead Search — Spectrum Financial Solutions');
   console.log('   Sources : ProPublica Nonprofit Explorer · HRSA Health Centers · Indeed Jobs');
   console.log(`   States  : ${TARGET_STATES.map(s => s.id).join(', ')}`);
   console.log(`   Cap     : ${DAILY_EMAIL_CAP} emails max this run\n`);
 
   const allLeads = loadLeads();
-  // Count emails already sent today (reuse today's quota)
   const todayStr = new Date().toISOString().slice(0, 10);
   let emailedThisRun = allLeads.filter(l => (l.emailSentAt || '').startsWith(todayStr)).length;
   let totalFound = 0, totalEmailed = 0;
 
   for (const state of TARGET_STATES) {
     if (emailedThisRun >= DAILY_EMAIL_CAP) {
-      console.log('\n🎯 Daily cap reached — stopping\n');
+      console.log('\n���� Daily cap reached — stopping\n');
       break;
     }
 
     console.log(`\n── ${state.name} (${state.id}) ${'─'.repeat(40 - state.name.length)}`);
 
-    // ── 1. HRSA FQHCs ─────────────────────────────────────────────────────
     const fqhcs = await searchHRSA(state.id).catch(() => []);
-    console.log(`   [HRSA]       ${fqhcs.length} FQHCs`);
+    console.log(`   [HRSA]       ${fqhcs.length} FQHCY`);
     await sleep(1000);
 
-    // ── 2. ProPublica nonprofits ──────────────────────────────────────────
     const npOrgs = [];
     for (const q of NP_QUERIES) {
       const orgs = await searchProPublica(state.id, q).catch(() => []);
       npOrgs.push(...orgs);
       await sleep(800);
     }
-    // Deduplicate ProPublica orgs (revenue field is not returned by the search endpoint)
     const seenEin = new Set();
     const filteredNp = npOrgs.filter(o => {
       const key = o.ein || o.name.toLowerCase().slice(0, 30);
@@ -531,16 +527,14 @@ async function runNonprofitSearch() {
     });
     console.log(`   [ProPublica] ${filteredNp.length} nonprofits`);
 
-    // ── 3. Indeed high-intent job postings ────────────────────────────────
     const indeedOrgs = await searchIndeedJobs(state.name).catch(() => []);
     console.log(`   [Indeed]     ${indeedOrgs.length} companies hiring`);
 
-    // ── Combine & deduplicate ─────────────────────────────────────────────
     const seenNames = new Set();
     const allOrgs = [
-      ...fqhcs,                               // highest priority — known FQHCs
-      ...indeedOrgs,                          // high intent — actively hiring
-      ...filteredNp,                          // ProPublica nonprofits
+      ...fqhcs,
+      ...indeedOrgs,
+      ...filteredNp,
     ].filter(o => {
       if (!o.name || o.name.length < 3) return false;
       const key = o.name.toLowerCase().trim();
@@ -548,17 +542,14 @@ async function runNonprofitSearch() {
       seenNames.add(key);
       return true;
     });
-
     console.log(`   [Combined]   ${allOrgs.length} unique orgs to process`);
 
-    // ── Process each org ──────────────────────────────────────────────────
     for (const org of allOrgs.slice(0, 40)) {
       if (emailedThisRun >= DAILY_EMAIL_CAP) break;
 
       const listingKey = `np_${state.id}_${org.name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 30)}`;
       if (alreadyProcessed(listingKey)) continue;
 
-      // Find website
       let website = org.website || null;
       if (!website && org.ein) {
         website = await withTimeout(getProPublicaWebsite(org.ein), 8000, 'propublica-website').catch(() => null);
@@ -569,7 +560,6 @@ async function runNonprofitSearch() {
         await sleep(800);
       }
 
-      // Find email on their website
       let email = null;
       if (website) {
         email = await withTimeout(findEmailOnWebsite(website), 12000, 'email-find').catch(() => null);
@@ -603,25 +593,23 @@ async function runNonprofitSearch() {
 
       if (alreadyEmailedAddress(email)) {
         saveLead({ ...lead, status: 'no_email', email });
-        console.log(`   ✗ ${org.name.slice(0, 45)} — already emailed`);
+        console.log(`  ✗ ${org.name.slice(0, 45)} — already emailed`);
         continue;
       }
 
       lead.email = email;
       totalFound++;
 
-      // Generate tailored nonprofit/FQHC email
       let emailContent;
       try {
         emailContent = await withTimeout(generateNonprofitEmail(lead), 35000, 'generateEmail');
       } catch (err) {
         lead.status = 'error'; lead.error = err.message;
         saveLead(lead);
-        console.log(`   ✗ ${org.name.slice(0, 45)} — email gen error: ${err.message}`);
+        console.log(`  ✗ ${org.name.slice(0, 45)} — email gen error: ${err.message}`);
         continue;
       }
 
-      // Send
       try {
         await sendEmail(email, emailContent, lead);
         lead.status = 'emailed';
@@ -640,7 +628,6 @@ async function runNonprofitSearch() {
       if (RESEND_API_KEY) await sleep(EMAIL_DELAY_MS);
     }
 
-    // Sync to GitHub after every state
     await pushLeadsToGitHub(loadLeads()).catch(e => console.log('[GitHub]', e.message));
     await sleep(2000);
   }
