@@ -1021,6 +1021,125 @@ async function syncLeadsFromGitHub() {
   }
 }
 
+// ── POST /api/inbound-lead — landing page form submission ───────────────────
+app.post('/api/inbound-lead', async (req, res) => {
+  const { name, org, email, phone, orgType, service, message } = req.body || {};
+  if (!name || !email) return res.status(400).json({ error: 'Name and email required' });
+
+  // Save lead to outbound-leads.json
+  const lead = {
+    id: `inbound_${Date.now()}`,
+    name,
+    company: org || '',
+    email,
+    phone: phone || null,
+    orgType: orgType || 'unknown',
+    service: service || null,
+    message: message || null,
+    source: 'inbound_landing_page',
+    status: 'inbound',
+    industry: orgType === 'fqhc' ? 'FQHC / Community Health Center'
+             : orgType === 'nonprofit' ? 'Nonprofit Organization'
+             : 'Small Business',
+    score: 90, // highest intent — they came to us
+    foundAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  const leadsFile = path.join(__dirname, 'outbound-leads.json');
+  try {
+    let leads = [];
+    if (fs.existsSync(leadsFile)) leads = JSON.parse(fs.readFileSync(leadsFile, 'utf8'));
+    leads.push(lead);
+    fs.writeFileSync(leadsFile, JSON.stringify(leads, null, 2));
+  } catch (e) {
+    console.error('[Inbound] Failed to save lead:', e.message);
+  }
+
+  console.log(`[Inbound] New lead: ${name} <${email}> — ${org} (${orgType})`);
+  res.json({ success: true });
+
+  // ── Auto-response email to prospect ────────────────────────────────────────
+  const resendKey = process.env.RESEND_API_KEY;
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  if (!resendKey || !anthropicKey) return;
+
+  try {
+    // Generate personalized response with Claude
+    const prompt = `You are Asante at Spectrum Financial Solutions, a fractional CFO and accounting firm.
+Write a warm, professional email response to a new inbound inquiry. Keep it concise (4-6 sentences), personal, and genuine.
+
+Lead details:
+- Name: ${name}
+- Organization: ${org || 'their organization'}
+- Type: ${orgType || 'business'}
+- Service interest: ${service || 'general accounting/CFO services'}
+- Their message: ${message || '(no additional message)'}
+
+The email should:
+1. Thank them personally by first name
+2. Mention their organization type specifically (nonprofit/FQHC/small business)
+3. Confirm you'll be in touch within 24 hours
+4. Mention they can also book directly at https://calendly.com/asante-spectrumfinancialsolution/30min
+5. Sign off as Asante, Spectrum Financial Solutions
+
+Return ONLY the email body text (no subject line). Plain text, no markdown.`;
+
+    const claudeRes = await new Promise((resolve, reject) => {
+      const body = JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 400,
+        messages: [{ role: 'user', content: prompt }],
+      });
+      const req2 = https.request({
+        hostname: 'api.anthropic.com',
+        path: '/v1/messages',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': anthropicKey,
+          'anthropic-version': '2023-06-01',
+          'Content-Length': Buffer.byteLength(body),
+        },
+      }, (r) => {
+        let d = '';
+        r.on('data', c => d += c);
+        r.on('end', () => { try { resolve(JSON.parse(d)); } catch(e) { reject(e); } });
+      });
+      req2.on('error', reject);
+      req2.write(body);
+      req2.end();
+    });
+
+    const emailBody = claudeRes?.content?.[0]?.text || `Hi ${name},\n\nThank you for reaching out to Spectrum Financial Solutions! We've received your inquiry and will be in touch within 24 hours.\n\nYou can also book a call directly at https://calendly.com/asante-spectrumfinancialsolution/30min\n\nBest,\nAsante\nSpectrum Financial Solutions`;
+
+    // Send to prospect
+    const sendEmail = (to, subject, text) => new Promise((resolve) => {
+      const payload = JSON.stringify({ from: 'Asante <asante@spectrumfinancialsolution.com>', to, subject, text });
+      const r = https.request({
+        hostname: 'api.resend.com', path: '/emails', method: 'POST',
+        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) },
+      }, () => resolve());
+      r.on('error', () => resolve());
+      r.write(payload); r.end();
+    });
+
+    await sendEmail(email, `Re: Your inquiry to Spectrum Financial Solutions`, emailBody);
+    console.log(`[Inbound] Auto-response sent to ${email}`);
+
+    // Notify Asante
+    const orgLabel = orgType === 'fqhc' ? 'FQHC' : orgType === 'nonprofit' ? 'Nonprofit' : 'Small Business';
+    await sendEmail(
+      'snt.milla@gmail.com',
+      `🔔 New inbound lead: ${name} — ${org || 'unknown org'}`,
+      `New inbound lead from your landing page!\n\nName: ${name}\nOrg: ${org || '—'}\nType: ${orgLabel}\nEmail: ${email}\nPhone: ${phone || '—'}\nService: ${service || '—'}\nMessage: ${message || '—'}\n\nAuto-response has been sent. Lead saved to dashboard.`
+    );
+    console.log(`[Inbound] Notification sent to Asante`);
+  } catch (e) {
+    console.error('[Inbound] Email error:', e.message);
+  }
+});
+
 // ── Start ───────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`\n✅ Accounting Firm AI Agent running on http://localhost:${PORT}`);
