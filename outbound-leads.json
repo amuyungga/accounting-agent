@@ -41539,5 +41539,23 @@
     "orgType": "nonprofit",
     "foundAt": "2026-07-12T17:05:35.302Z",
     "updatedAt": "2026-07-12T17:05:35.302Z"
+  },
+  {
+    "id": "np_1783875955740_prpl",
+    "name": "Commuinity Health Initiative",
+    "city": "Houston",
+    "state": "TX",
+    "industry": "Nonprofit Organization",
+    "source": "propublica",
+    "listingUrl": "np_TX_commuinity_health_initiative",
+    "website": "https://www.dshs.texas.gov",
+    "phone": null,
+    "email": "immtrac2@dshs.texas.gov",
+    "status": "error",
+    "ein": "852697304",
+    "orgType": "nonprofit",
+    "foundAt": "2026-07-12T17:05:55.740Z",
+    "updatedAt": "2026-07-12T17:05:55.740Z",
+    "error": "Invalid character in header content [\"x-api-key\"]"
   }
 ]
