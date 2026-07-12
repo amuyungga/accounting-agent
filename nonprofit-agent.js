@@ -695,8 +695,13 @@ async function findWebsiteViaDuckDuckGo(orgName, city, stateId) {
 //           REAL site now (previous runs used domain-guessing which was often wrong).
 async function retryUncontactedLeads(emailedThisRun) {
   const leads     = loadLeads();
-  const noWebsite = leads.filter(l => l.status === 'no_website' && l.name);
-  const noEmail   = leads.filter(l => l.status === 'no_email'   && l.name && l.state);
+  // Only retry leads that came from this agent (nonprofit/FQHC sources)
+  const isNonprofit = l => l.source === 'nonprofit_search' || l.source === 'hrsa' || l.orgType;
+  // Don't retry leads that were already attempted in the last 7 days
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const notRecentlyRetried = l => !l.lastRetryAt || new Date(l.lastRetryAt).getTime() < sevenDaysAgo;
+  const noWebsite = leads.filter(l => l.status === 'no_website' && l.name && isNonprofit(l) && notRecentlyRetried(l));
+  const noEmail   = leads.filter(l => l.status === 'no_email'   && l.name && l.state && isNonprofit(l) && notRecentlyRetried(l));
 
   console.log(`\n🔄 Retry pass — ${noWebsite.length} no_website · ${noEmail.length} no_email uncontacted leads`);
 
@@ -732,7 +737,9 @@ async function retryUncontactedLeads(emailedThisRun) {
     ).catch(() => null);
     await sleep(600);
 
+    lead.lastRetryAt = new Date().toISOString();
     if (!website) {
+      saveLead(lead); // stamp the retry date so we don't waste quota again soon
       console.log(`   ✗ ${lead.name.slice(0, 42)} — still no website`);
       continue;
     }
@@ -764,8 +771,9 @@ async function retryUncontactedLeads(emailedThisRun) {
     ).catch(() => null);
     await sleep(600);
 
+    lead.lastRetryAt = new Date().toISOString();
     // Only proceed if Brave/CSE found a DIFFERENT (likely better) website
-    if (!freshWebsite || freshWebsite === lead.website) continue;
+    if (!freshWebsite || freshWebsite === lead.website) { saveLead(lead); continue; }
 
     lead.website = freshWebsite;
     const email = await withTimeout(findEmailOnWebsite(freshWebsite), 12000, 'retry-em2').catch(() => null);
