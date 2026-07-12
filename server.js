@@ -895,84 +895,65 @@ app.get('/agent-status', async (req, res) => {
   }
 });
 
-// POST /api/find-website — proxy web search for nonprofit websites
-// GitHub Actions runs on Azure IPs which Bing/DDG block; Railway IPs are not blocked.
-// nonprofit-agent.js calls this endpoint so the search originates from Railway.
+// POST /api/find-website — Brave Search API lookup for nonprofit websites
+// Brave Search API works from any IP (not blocked like Bing/DDG from cloud IPs).
+// Requires BRAVE_API_KEY env var — free tier: 2,000 queries/month.
 app.post('/api/find-website', async (req, res) => {
   const { orgName, city, stateId } = req.body || {};
   if (!orgName) return res.status(400).json({ error: 'orgName required' });
 
-  const junk = ['bing.com', 'duckduckgo', 'google', 'facebook', 'twitter', 'linkedin',
-                 'yelp', 'wikipedia', 'propublica', 'guidestar', 'candid', 'charitynavigator',
-                 'indeed', 'glassdoor', 'ziprecruiter', 'irs.gov', 'usa.gov',
-                 'bbb.org', 'yellowpages', 'mapquest', 'manta.com', 'bizapedia'];
+  const braveKey = process.env.BRAVE_API_KEY;
+  if (!braveKey) {
+    console.log('[FindWebsite] BRAVE_API_KEY not set');
+    return res.json({ website: null, error: 'BRAVE_API_KEY not configured' });
+  }
+
+  const junk = ['bing.com', 'duckduckgo.com', 'google.com', 'facebook.com', 'twitter.com',
+                 'linkedin.com', 'yelp.com', 'wikipedia.org', 'propublica.org',
+                 'guidestar.org', 'candid.org', 'charitynavigator.org',
+                 'indeed.com', 'glassdoor.com', 'irs.gov', 'usa.gov', 'bbb.org'];
   const query = (`"${orgName}" ${city || ''} ${stateId || ''}`).trim();
 
-  const fetchWeb = (url, extraHeaders = {}, _redir = 0) => new Promise((resolve, reject) => {
-    if (_redir > 4) return reject(new Error('too many redirects'));
-    const _https = require('https');
-    const _http  = require('http');
-    const parsed = new URL(url);
-    const lib = parsed.protocol === 'https:' ? _https : _http;
-    let settled = false;
-    const timer = setTimeout(() => { if (!settled) { settled = true; reject(new Error('timeout')); } }, 12000);
-    const r = lib.get({
-      hostname: parsed.hostname,
-      path: parsed.pathname + parsed.search,
-      port: parsed.port || undefined,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,*/*;q=0.9',
-        'Accept-Language': 'en-US,en;q=0.9',
-        ...extraHeaders,
-      },
-    }, (rs) => {
-      if ([301,302,303,307,308].includes(rs.statusCode) && rs.headers.location) {
-        clearTimeout(timer); settled = true;
-        return fetchWeb(new URL(rs.headers.location, url).toString(), extraHeaders, _redir + 1).then(resolve).catch(reject);
-      }
-      let body = '';
-      rs.setEncoding('utf8');
-      rs.on('data', c => { body += c; if (body.length > 300_000) r.destroy(); });
-      rs.on('end', () => { clearTimeout(timer); settled = true; resolve(body); });
+  try {
+    const website = await new Promise((resolve, reject) => {
+      let settled = false;
+      const timer = setTimeout(() => { if (!settled) { settled = true; reject(new Error('timeout')); } }, 10000);
+      const req2 = https.request({
+        hostname: 'api.search.brave.com',
+        path: `/res/v1/web/search?q=${encodeURIComponent(query)}&count=5&safesearch=off`,
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Accept-Encoding': 'identity',
+          'X-Subscription-Token': braveKey,
+        },
+      }, (r) => {
+        const chunks = [];
+        r.on('data', c => chunks.push(c));
+        r.on('end', () => {
+          clearTimeout(timer); settled = true;
+          try {
+            const data = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+            const results = data.web?.results || [];
+            for (const result of results) {
+              const u = result.url || '';
+              if (u && !junk.some(j => u.toLowerCase().includes(j))) return resolve(u);
+            }
+            resolve(null);
+          } catch { resolve(null); }
+        });
+      });
+      req2.on('error', err => { clearTimeout(timer); settled = true; reject(err); });
+      req2.end();
     });
-    r.on('error', err => { clearTimeout(timer); settled = true; reject(err); });
-  });
 
-  // 1. Try Bing
-  try {
-    const html = await fetchWeb(`https://www.bing.com/search?q=${encodeURIComponent(query)}&count=10`);
-    const hrefs = [...(html.matchAll(/href="(https?:\/\/[^"?#]+)/g))];
-    for (const m of hrefs) {
-      const u = m[1];
-      if (!junk.some(j => u.toLowerCase().includes(j))) {
-        console.log(`[FindWebsite] Bing → ${u.slice(0, 60)} for "${orgName}"`);
-        return res.json({ website: u });
-      }
-    }
+    if (website) console.log(`[FindWebsite] Brave → ${website.slice(0, 60)} for "${orgName}"`);
+    else console.log(`[FindWebsite] No result for "${orgName}"`);
+    res.json({ website });
   } catch (e) {
-    console.log(`[FindWebsite] Bing error: ${e.message}`);
+    console.log(`[FindWebsite] Error: ${e.message}`);
+    res.json({ website: null });
   }
-
-  // 2. Try DuckDuckGo HTML
-  try {
-    const html = await fetchWeb(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`);
-    const matches = [...(html.matchAll(/uddg=(https?[^&"'\s]+)/gi))];
-    for (const m of matches) {
-      try {
-        const decoded2 = decodeURIComponent(m[1]);
-        if (!junk.some(j => decoded2.toLowerCase().includes(j))) {
-          console.log(`[FindWebsite] DDG → ${decoded2.slice(0, 60)} for "${orgName}"`);
-          return res.json({ website: decoded2 });
-        }
-      } catch {}
-    }
-  } catch (e) {
-    console.log(`[FindWebsite] DDG error: ${e.message}`);
-  }
-
-  console.log(`[FindWebsite] No website for "${orgName}"`);
-  res.json({ website: null });
 });
 
 // ── GitHub leads sync (startup + periodic) ──────────────────────────────────
