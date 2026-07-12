@@ -451,41 +451,39 @@ async function searchIndeedJobs(stateName) {
 }
 
 // Web search for nonprofit website
-// Tries Bing first (works from server/CI IPs), then DuckDuckGo as fallback
+// Routes through the Railway server (non-Azure IP) because GitHub Actions runs on
+// Azure IPs which Bing and DuckDuckGo block for scraping. Railway is not blocked.
+const RAILWAY_HOST = 'accounting-agent-production-cf69.up.railway.app';
+
 async function findWebsiteViaDuckDuckGo(orgName, city, stateId) {
-  const junk = ['bing.com', 'duckduckgo', 'google', 'facebook', 'twitter', 'linkedin',
-                'yelp', 'wikipedia', 'propublica', 'guidestar', 'candid', 'charitynavigator',
-                'indeed', 'glassdoor', 'ziprecruiter', 'irs.gov', 'usa.gov',
-                'bbb.org', 'yellowpages', 'mapquest', 'manta.com', 'bizapedia'];
+  return new Promise((resolve) => {
+    const body = JSON.stringify({ orgName, city: city || '', stateId: stateId || '' });
+    let settled = false;
+    const timer = setTimeout(() => { if (!settled) { settled = true; resolve(null); } }, 18000);
 
-  const query = `"${orgName}" ${city || ''} ${stateId}`;
-
-  try {
-    const bingUrl = `https://www.bing.com/search?q=${encodeURIComponent(query)}&count=10`;
-    const html = await fetchUrl(bingUrl, {
-      'Accept': 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
-      'Accept-Language': 'en-US,en;q=0.9',
+    const req = https.request({
+      hostname: RAILWAY_HOST,
+      path: '/api/find-website',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body),
+        'User-Agent': 'nonprofit-agent',
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        clearTimeout(timer);
+        settled = true;
+        try { resolve(JSON.parse(data).website || null); }
+        catch { resolve(null); }
+      });
     });
-    const hrefs = [...(html.matchAll(/href="(https?:\/\/[^"?#]+)/g))];
-    for (const m of hrefs) {
-      const u = m[1];
-      if (!junk.some(j => u.toLowerCase().includes(j))) return u;
-    }
-  } catch {}
-
-  try {
-    const ddgUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
-    const html = await fetchUrl(ddgUrl);
-    const uddgMatches = [...(html.matchAll(/uddg=(https?[^&"'\s]+)/gi))];
-    for (const m of uddgMatches) {
-      try {
-        const decoded = decodeURIComponent(m[1]);
-        if (!junk.some(j => decoded.toLowerCase().includes(j))) return decoded;
-      } catch {}
-    }
-  } catch {}
-
-  return null;
+    req.on('error', () => { clearTimeout(timer); settled = true; resolve(null); });
+    req.write(body);
+    req.end();
+  });
 }
 
 // Main orchestrator
