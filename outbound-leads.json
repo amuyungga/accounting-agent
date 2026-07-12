@@ -41557,5 +41557,41 @@
     "foundAt": "2026-07-12T17:05:55.740Z",
     "updatedAt": "2026-07-12T17:05:55.740Z",
     "error": "Invalid character in header content [\"x-api-key\"]"
+  },
+  {
+    "id": "np_1783875976475_0gea",
+    "name": "Jeff Co Comprehensive Health Center",
+    "city": "Saint Louis",
+    "state": "MO",
+    "industry": "Nonprofit Organization",
+    "source": "propublica",
+    "listingUrl": "np_MO_jeff_co_comprehensive_health_c",
+    "website": "https://jeffcohealth.org",
+    "phone": null,
+    "email": "communications@jeffcohealth.org",
+    "status": "error",
+    "ein": "832621287",
+    "orgType": "nonprofit",
+    "foundAt": "2026-07-12T17:06:16.475Z",
+    "updatedAt": "2026-07-12T17:06:16.475Z",
+    "error": "Invalid character in header content [\"x-api-key\"]"
+  },
+  {
+    "id": "np_1783875980572_aoz6",
+    "name": "Community Health Comission Of Missouri",
+    "city": "Saint Louis",
+    "state": "MO",
+    "industry": "Nonprofit Organization",
+    "source": "propublica",
+    "listingUrl": "np_MO_community_health_comission_of_",
+    "website": "https://www.stlrhc.org",
+    "phone": null,
+    "email": "reasley@stlrhc.org",
+    "status": "error",
+    "ein": "431883638",
+    "orgType": "nonprofit",
+    "foundAt": "2026-07-12T17:06:20.572Z",
+    "updatedAt": "2026-07-12T17:06:20.572Z",
+    "error": "Invalid character in header content [\"x-api-key\"]"
   }
 ]
