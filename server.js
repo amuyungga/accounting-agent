@@ -895,6 +895,86 @@ app.get('/agent-status', async (req, res) => {
   }
 });
 
+// POST /api/find-website — proxy web search for nonprofit websites
+// GitHub Actions runs on Azure IPs which Bing/DDG block; Railway IPs are not blocked.
+// nonprofit-agent.js calls this endpoint so the search originates from Railway.
+app.post('/api/find-website', async (req, res) => {
+  const { orgName, city, stateId } = req.body || {};
+  if (!orgName) return res.status(400).json({ error: 'orgName required' });
+
+  const junk = ['bing.com', 'duckduckgo', 'google', 'facebook', 'twitter', 'linkedin',
+                 'yelp', 'wikipedia', 'propublica', 'guidestar', 'candid', 'charitynavigator',
+                 'indeed', 'glassdoor', 'ziprecruiter', 'irs.gov', 'usa.gov',
+                 'bbb.org', 'yellowpages', 'mapquest', 'manta.com', 'bizapedia'];
+  const query = (`"${orgName}" ${city || ''} ${stateId || ''}`).trim();
+
+  const fetchWeb = (url, extraHeaders = {}, _redir = 0) => new Promise((resolve, reject) => {
+    if (_redir > 4) return reject(new Error('too many redirects'));
+    const _https = require('https');
+    const _http  = require('http');
+    const parsed = new URL(url);
+    const lib = parsed.protocol === 'https:' ? _https : _http;
+    let settled = false;
+    const timer = setTimeout(() => { if (!settled) { settled = true; reject(new Error('timeout')); } }, 12000);
+    const r = lib.get({
+      hostname: parsed.hostname,
+      path: parsed.pathname + parsed.search,
+      port: parsed.port || undefined,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,*/*;q=0.9',
+        'Accept-Language': 'en-US,en;q=0.9',
+        ...extraHeaders,
+      },
+    }, (rs) => {
+      if ([301,302,303,307,308].includes(rs.statusCode) && rs.headers.location) {
+        clearTimeout(timer); settled = true;
+        return fetchWeb(new URL(rs.headers.location, url).toString(), extraHeaders, _redir + 1).then(resolve).catch(reject);
+      }
+      let body = '';
+      rs.setEncoding('utf8');
+      rs.on('data', c => { body += c; if (body.length > 300_000) r.destroy(); });
+      rs.on('end', () => { clearTimeout(timer); settled = true; resolve(body); });
+    });
+    r.on('error', err => { clearTimeout(timer); settled = true; reject(err); });
+  });
+
+  // 1. Try Bing
+  try {
+    const html = await fetchWeb(`https://www.bing.com/search?q=${encodeURIComponent(query)}&count=10`);
+    const hrefs = [...(html.matchAll(/href="(https?:\/\/[^"?#]+)/g))];
+    for (const m of hrefs) {
+      const u = m[1];
+      if (!junk.some(j => u.toLowerCase().includes(j))) {
+        console.log(`[FindWebsite] Bing → ${u.slice(0, 60)} for "${orgName}"`);
+        return res.json({ website: u });
+      }
+    }
+  } catch (e) {
+    console.log(`[FindWebsite] Bing error: ${e.message}`);
+  }
+
+  // 2. Try DuckDuckGo HTML
+  try {
+    const html = await fetchWeb(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`);
+    const matches = [...(html.matchAll(/uddg=(https?[^&"'\s]+)/gi))];
+    for (const m of matches) {
+      try {
+        const decoded2 = decodeURIComponent(m[1]);
+        if (!junk.some(j => decoded2.toLowerCase().includes(j))) {
+          console.log(`[FindWebsite] DDG → ${decoded2.slice(0, 60)} for "${orgName}"`);
+          return res.json({ website: decoded2 });
+        }
+      } catch {}
+    }
+  } catch (e) {
+    console.log(`[FindWebsite] DDG error: ${e.message}`);
+  }
+
+  console.log(`[FindWebsite] No website for "${orgName}"`);
+  res.json({ website: null });
+});
+
 // ── GitHub leads sync (startup + periodic) ──────────────────────────────────
 // Railway wipes the local filesystem on every redeploy. Without this, the
 // dashboard reverts to whatever stale version was baked into the git repo.
