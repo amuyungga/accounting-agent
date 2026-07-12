@@ -35,6 +35,7 @@ jobs:
           SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
           GOOGLE_CSE_KEY: ${{ secrets.GOOGLE_CSE_KEY }}
           GOOGLE_CSE_CX: ${{ secrets.GOOGLE_CSE_CX }}
+          BRAVE_SEARCH_KEY: ${{ secrets.BRAVE_SEARCH_KEY }}
         run: node nonprofit-agent.js 2>&1 | tee /tmp/np-log.txt; exit ${PIPESTATUS[0]}
 
       - name: Show output summary

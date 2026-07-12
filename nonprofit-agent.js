@@ -566,6 +566,9 @@ async function searchViaSerper(orgName, city, stateId) {
 const GOOGLE_CSE_KEY = process.env.GOOGLE_CSE_KEY;
 const GOOGLE_CSE_CX  = process.env.GOOGLE_CSE_CX;
 
+// ── Brave Search API (~$5 free credits/month ≈ 2,000 queries) ────────────────
+const BRAVE_SEARCH_KEY = process.env.BRAVE_SEARCH_KEY;
+
 async function searchViaGoogleCSE(orgName, city, stateId) {
   if (!GOOGLE_CSE_KEY || !GOOGLE_CSE_CX) return null;
   const junk = ['facebook.com','twitter.com','linkedin.com','yelp.com',
@@ -603,19 +606,71 @@ async function searchViaGoogleCSE(orgName, city, stateId) {
   });
 }
 
-// ── Combined website finder: Google CSE → Serper → domain guessing ───────────
+// ── Brave Web Search (~$5 free credits/month ≈ 2,000 queries) ────────────────
+async function searchViaBrave(orgName, city, stateId) {
+  if (!BRAVE_SEARCH_KEY) return null;
+  const junk = ['facebook.com','twitter.com','linkedin.com','yelp.com',
+                'wikipedia.org','propublica.org','guidestar.org','candid.org',
+                'charitynavigator.org','indeed.com','glassdoor.com','irs.gov',
+                'usa.gov','bbb.org','google.com','bing.com',
+                'spectrumfinancialsolution.com'];
+  const q = encodeURIComponent(`"${orgName}" ${city || ''} ${stateId || ''}`.trim());
+  const apiPath = `/res/v1/web/search?q=${q}&count=5&search_lang=en&country=us`;
+  return new Promise((resolve) => {
+    let settled = false;
+    const timer = setTimeout(() => { if (!settled) { settled = true; resolve(null); } }, 8000);
+    const req = https.request({
+      hostname: 'api.search.brave.com',
+      path: apiPath,
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Accept-Encoding': 'gzip',
+        'X-Subscription-Token': BRAVE_SEARCH_KEY
+      }
+    }, (res) => {
+      const chunks = [];
+      res.on('data', c => chunks.push(c));
+      res.on('end', () => {
+        clearTimeout(timer); settled = true;
+        try {
+          const raw = Buffer.concat(chunks).toString('utf8');
+          const data = JSON.parse(raw);
+          const results = (data.web && data.web.results) || [];
+          for (const item of results) {
+            const url = item.url || '';
+            if (url && !junk.some(j => url.toLowerCase().includes(j))) {
+              try { const u = new URL(url); resolve(`${u.protocol}//${u.hostname}`); return; }
+              catch { resolve(url); return; }
+            }
+          }
+          resolve(null);
+        } catch { resolve(null); }
+      });
+    });
+    req.on('error', () => { clearTimeout(timer); settled = true; resolve(null); });
+    req.end();
+  });
+}
+
+// ── Combined website finder: Google CSE → Brave → Serper → domain guessing ───
 async function findWebsiteViaDuckDuckGo(orgName, city, stateId) {
   // 1. Google CSE (falls back gracefully if CSE is misconfigured)
   if (GOOGLE_CSE_KEY && GOOGLE_CSE_CX) {
     const cseResult = await searchViaGoogleCSE(orgName, city, stateId);
     if (cseResult) { console.log(`   [CSE] ✓ ${cseResult}`); return cseResult; }
   }
-  // 2. Serper fallback (if paid credits available)
+  // 2. Brave Search (free $5/month ≈ 2,000 queries)
+  if (BRAVE_SEARCH_KEY) {
+    const braveResult = await searchViaBrave(orgName, city, stateId);
+    if (braveResult) { console.log(`   [Brave] ✓ ${braveResult}`); return braveResult; }
+  }
+  // 3. Serper fallback (if paid credits available)
   if (SERPER_API_KEY) {
     const serperResult = await searchViaSerper(orgName, city, stateId);
     if (serperResult) return serperResult;
   }
-  // 3. Free domain guessing as last resort
+  // 4. Free domain guessing as last resort
   return guessDomainForOrg(orgName);
 }
 
