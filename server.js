@@ -1,5 +1,5 @@
 /**
- * AI Marketing & Sales Agent — Backend Server
+ * AI Marketing & Sales Agent â Backend Server
  * Accounting Firm Edition
  *
  * Stack: Node.js + Express + Anthropic SDK
@@ -15,7 +15,7 @@ const path       = require('path');
 const Anthropic  = require('@anthropic-ai/sdk');
 const nodemailer = require('nodemailer');
 
-// ── Config ─────────────────────────────────────────────────────────────────
+// ââ Config âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const PORT         = process.env.PORT || 3000;
 const API_KEY      = process.env.ANTHROPIC_API_KEY;
 const LEADS_FILE   = path.join(__dirname, 'leads.json');
@@ -23,7 +23,7 @@ const CALENDLY_URL = 'https://calendly.com/asante-spectrumfinancialsolution/30mi
 const FIRM_NAME    = 'Spectrum Financial Solutions';
 const NOTIFY_EMAIL = 'snt.milla@gmail.com';
 
-// ── Email setup ────────────────────────────────────────────────────────────
+// ââ Email setup ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const mailer = process.env.GMAIL_APP_PASSWORD ? nodemailer.createTransport({
   service: 'gmail',
   auth: { user: NOTIFY_EMAIL, pass: process.env.GMAIL_APP_PASSWORD },
@@ -35,15 +35,15 @@ async function sendLeadNotification(lead) {
     await mailer.sendMail({
       from: `"${FIRM_NAME} Agent" <${NOTIFY_EMAIL}>`,
       to: NOTIFY_EMAIL,
-      subject: `🔔 New Lead: ${lead.name} — ${lead.service}`,
+      subject: `ð New Lead: ${lead.name} â ${lead.service}`,
       html: `
         <h2>New lead captured on your website</h2>
         <table style="border-collapse:collapse;font-family:sans-serif;font-size:14px;">
           <tr><td style="padding:6px 12px;font-weight:bold;">Name</td><td style="padding:6px 12px;">${lead.name}</td></tr>
           <tr style="background:#f8fafc"><td style="padding:6px 12px;font-weight:bold;">Email</td><td style="padding:6px 12px;"><a href="mailto:${lead.email}">${lead.email}</a></td></tr>
-          <tr><td style="padding:6px 12px;font-weight:bold;">Phone</td><td style="padding:6px 12px;">${lead.phone || '—'}</td></tr>
+          <tr><td style="padding:6px 12px;font-weight:bold;">Phone</td><td style="padding:6px 12px;">${lead.phone || 'â'}</td></tr>
           <tr style="background:#f8fafc"><td style="padding:6px 12px;font-weight:bold;">Service</td><td style="padding:6px 12px;">${lead.service}</td></tr>
-          <tr><td style="padding:6px 12px;font-weight:bold;">Notes</td><td style="padding:6px 12px;">${lead.notes || '—'}</td></tr>
+          <tr><td style="padding:6px 12px;font-weight:bold;">Notes</td><td style="padding:6px 12px;">${lead.notes || 'â'}</td></tr>
         </table>
         <p style="margin-top:16px;font-size:13px;color:#64748b;">Captured at ${new Date().toLocaleString()}</p>
       `,
@@ -54,7 +54,7 @@ async function sendLeadNotification(lead) {
   }
 }
 
-// ── HubSpot helper ─────────────────────────────────────────────────────────
+// ââ HubSpot helper âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const https = require('https');
 
 function hubspotRequest(method, hsPath, body) {
@@ -123,13 +123,13 @@ async function updateHubSpotContact(email, props) {
   }
 }
 
-// ── Anthropic client ───────────────────────────────────────────────────────
+// ââ Anthropic client âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const anthropic = new Anthropic({ apiKey: API_KEY });
 
-// ── In-memory conversation store (keyed by sessionId) ──────────────────────
+// ââ In-memory conversation store (keyed by sessionId) ââââââââââââââââââââââ
 const sessions = {};  // { [sessionId]: { messages: [], lead: {} } }
 
-// ── System prompt ─────────────────────────────────────────────────────────
+// ââ System prompt âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const SYSTEM_PROMPT = `
 You are a friendly, professional AI sales assistant for Spectrum Financial Solutions, a CPA & financial advisory firm.
 Your job is to:
@@ -139,16 +139,16 @@ Your job is to:
 4. Encourage prospects to book a free consultation
 
 ## Services offered
-- **Tax preparation & filing** — personal and business tax returns, tax planning, IRS representation
-- **Bookkeeping** — monthly reconciliation, financial statements, accounts payable/receivable
-- **CFO / Advisory services** — cash flow forecasting, budgeting, strategic financial guidance
-- **Payroll & compliance** — payroll processing, W-2s/1099s, payroll tax filings
+- **Tax preparation & filing** â personal and business tax returns, tax planning, IRS representation
+- **Bookkeeping** â monthly reconciliation, financial statements, accounts payable/receivable
+- **CFO / Advisory services** â cash flow forecasting, budgeting, strategic financial guidance
+- **Payroll & compliance** â payroll processing, W-2s/1099s, payroll tax filings
 
 ## Tone & style
-- Warm, confident, and professional — not salesy or pushy
-- Keep replies concise (2–4 short paragraphs max)
+- Warm, confident, and professional â not salesy or pushy
+- Keep replies concise (2â4 short paragraphs max)
 - Use plain English, avoid jargon
-- If someone asks about pricing, say "pricing depends on your specific needs — our team will give you an exact quote during your free consultation"
+- If someone asks about pricing, say "pricing depends on your specific needs â our team will give you an exact quote during your free consultation"
 
 ## Lead qualification
 Gather this information naturally over the conversation (never ask all at once):
@@ -176,7 +176,7 @@ When it makes sense, end your message with:
 
 QUICK_REPLIES:["option 1","option 2","option 3"]
 
-Keep quick replies to 2–4 short options.
+Keep quick replies to 2â4 short options.
 
 ## Never do
 - Never make up specific pricing numbers
@@ -185,7 +185,7 @@ Keep quick replies to 2–4 short options.
 - Never disparage competitors
 `;
 
-// ── Lead helpers ────────────────────────────────────────────────────────────
+// ââ Lead helpers ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function loadLeads() {
   if (!fs.existsSync(LEADS_FILE)) return [];
   try { return JSON.parse(fs.readFileSync(LEADS_FILE, 'utf8')); }
@@ -208,7 +208,7 @@ function saveLead(lead) {
   return record;
 }
 
-// ── Parse assistant output ─────────────────────────────────────────────────
+// ââ Parse assistant output âââââââââââââââââââââââââââââââââââââââââââââââââ
 function parseAssistantMessage(raw) {
   let reply        = raw;
   let quickReplies = [];
@@ -229,7 +229,7 @@ function parseAssistantMessage(raw) {
     reply = reply.replace(/CALENDLY_TRIGGER:[^\n]+\n?/, '').trim();
     // Also append the booking link as text so it works on all embed versions
     if (calendlyUrl) {
-      reply += `\n\n📅 Book your free 30-minute consultation here:\n${calendlyUrl}`;
+      reply += `\n\nð Book your free 30-minute consultation here:\n${calendlyUrl}`;
     }
   }
 
@@ -243,13 +243,13 @@ function parseAssistantMessage(raw) {
   return { reply, quickReplies, calendlyUrl, leadData };
 }
 
-// ── Express app ────────────────────────────────────────────────────────────
+// ââ Express app ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(__dirname));  // serves dashboard.html
 
-// POST /chat — main chat endpoint
+// POST /chat â main chat endpoint
 app.post('/chat', async (req, res) => {
   const { sessionId, message } = req.body;
 
@@ -296,12 +296,12 @@ app.post('/chat', async (req, res) => {
   }
 });
 
-// GET /leads — return all leads (basic auth recommended for production)
+// GET /leads â return all leads (basic auth recommended for production)
 app.get('/leads', (req, res) => {
   res.json(loadLeads());
 });
 
-// ── Command Queue ──────────────────────────────────────────────────────────
+// ââ Command Queue ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const COMMANDS_FILE = path.join(__dirname, 'command-queue.json');
 function loadCommands() {
   if (!fs.existsSync(COMMANDS_FILE)) return [];
@@ -320,7 +320,7 @@ app.get('/api/commands', (req, res) => {
   res.json(cmds.slice(-50));
 });
 
-// POST /api/commands — queue a new command from the dashboard
+// POST /api/commands â queue a new command from the dashboard
 app.post('/api/commands', (req, res) => {
   const { type, params, label } = req.body || {};
   if (!type) return res.status(400).json({ error: 'type required' });
@@ -336,11 +336,11 @@ app.post('/api/commands', (req, res) => {
   };
   cmds.push(cmd);
   saveCommands(cmds);
-  console.log(`[Commands] Queued: ${cmd.type} — ${cmd.label}`);
+  console.log(`[Commands] Queued: ${cmd.type} â ${cmd.label}`);
   res.json(cmd);
 });
 
-// PATCH /api/commands/:id — agent updates status after execution
+// PATCH /api/commands/:id â agent updates status after execution
 app.patch('/api/commands/:id', (req, res) => {
   const cmds = loadCommands();
   const idx = cmds.findIndex(c => c.id === req.params.id);
@@ -350,7 +350,7 @@ app.patch('/api/commands/:id', (req, res) => {
   res.json(cmds[idx]);
 });
 
-// POST /api/chat-command — AI interprets free-text and answers or queues an action
+// POST /api/chat-command â AI interprets free-text and answers or queues an action
 app.post('/api/chat-command', async (req, res) => {
   const { message } = req.body || {};
   if (!message) return res.status(400).json({ error: 'message required' });
@@ -401,7 +401,7 @@ app.post('/api/chat-command', async (req, res) => {
       const run = (runInfo.workflow_runs || [])[0];
       if (run) {
         const ago = Math.round((Date.now() - new Date(run.updated_at)) / 60000);
-        agentRunStatus = `${run.status === 'in_progress' ? '🟡 RUNNING NOW' : run.conclusion === 'success' ? '✅ Last run succeeded' : '❌ Last run ' + run.conclusion} — ${ago < 60 ? ago + 'm ago' : Math.round(ago/60) + 'h ago'} (${new Date(run.updated_at).toLocaleDateString()})`;
+        agentRunStatus = `${run.status === 'in_progress' ? 'ð¡ RUNNING NOW' : run.conclusion === 'success' ? 'â Last run succeeded' : 'â Last run ' + run.conclusion} â ${ago < 60 ? ago + 'm ago' : Math.round(ago/60) + 'h ago'} (${new Date(run.updated_at).toLocaleDateString()})`;
       }
     }
   } catch (_) {}
@@ -425,14 +425,14 @@ ${summary}
 
 When the user sends a message, respond in ONE of two ways:
 
-1. If it's an ACTION to execute, respond with ONLY raw JSON on a single line — no markdown, no code fences, no explanation:
+1. If it's an ACTION to execute, respond with ONLY raw JSON on a single line â no markdown, no code fences, no explanation:
 {"action":"<type>","params":<object>,"reply":"<short confirmation message>"}
 Valid action types:
 - "search-city": params = {"city":"City, ST","individualsOnly":false}
 - "run-schedule": params = {} (runs full daily search + follow-ups)
 - "send-followups": params = {}
 - "sync-now": params = {}
-- "trigger-github-run": params = {} (triggers cloud agent run on GitHub Actions — use when user says "run now", "trigger a run", "start the agent", "run the agent", "run in the cloud")
+- "trigger-github-run": params = {} (triggers cloud agent run on GitHub Actions â use when user says "run now", "trigger a run", "start the agent", "run the agent", "run in the cloud")
 
 2. If it's a QUESTION or REQUEST FOR ANALYSIS, answer it directly in 2-4 sentences using the data above. Be specific and actionable. No JSON.
 
@@ -454,10 +454,10 @@ Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync
     try {
       const parsed = JSON.parse(cleaned);
       if (parsed.action) {
-        // Handle GitHub Actions trigger directly — no local watcher needed
+        // Handle GitHub Actions trigger directly â no local watcher needed
         if (parsed.action === 'trigger-github-run') {
           const ghToken = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || '';
-          if (!ghToken) return res.json({ type: 'answer', reply: '⚠️ GH_TOKEN not set in Railway variables — cannot trigger GitHub Actions.' });
+          if (!ghToken) return res.json({ type: 'answer', reply: 'â ï¸ GH_TOKEN not set in Railway variables â cannot trigger GitHub Actions.' });
           const result = await new Promise((resolve) => {
             const body = JSON.stringify({ ref: 'main' });
             const req2 = https.request({
@@ -477,15 +477,15 @@ Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync
           });
           if (result.status === 204) {
             console.log('[GitHub Actions] Workflow triggered');
-            return res.json({ type: 'answer', reply: '✅ Agent run triggered on GitHub Actions! It will run in the cloud and sync new leads here in ~30 minutes.' });
+            return res.json({ type: 'answer', reply: 'â Agent run triggered on GitHub Actions! It will run in the cloud and sync new leads here in ~30 minutes.' });
           }
-          return res.json({ type: 'answer', reply: `❌ Could not trigger GitHub Actions (HTTP ${result.status}). Check GH_TOKEN has workflow scope.` });
+          return res.json({ type: 'answer', reply: `â Could not trigger GitHub Actions (HTTP ${result.status}). Check GH_TOKEN has workflow scope.` });
         }
 
-        // Handle sync-now directly — pull GitHub leads and MERGE email status from local
+        // Handle sync-now directly â pull GitHub leads and MERGE email status from local
         if (parsed.action === 'sync-now') {
           const ghToken = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || '';
-          if (!ghToken) return res.json({ type: 'answer', reply: '⚠️ GH_TOKEN not set — cannot sync from GitHub.' });
+          if (!ghToken) return res.json({ type: 'answer', reply: 'â ï¸ GH_TOKEN not set â cannot sync from GitHub.' });
           const syncResult = await new Promise((resolve) => {
             const req2 = https.request({
               hostname: 'api.github.com',
@@ -505,7 +505,7 @@ Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync
             req2.end();
           });
           if (syncResult.status !== 200) {
-            return res.json({ type: 'answer', reply: `❌ Could not fetch leads from GitHub (HTTP ${syncResult.status}).` });
+            return res.json({ type: 'answer', reply: `â Could not fetch leads from GitHub (HTTP ${syncResult.status}).` });
           }
           try {
             const ghData = JSON.parse(syncResult.body);
@@ -541,20 +541,20 @@ Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync
             fs.writeFileSync(leadsFile, JSON.stringify(merged, null, 2));
             const emailed = merged.filter(l => l.emailSent).length;
             console.log(`[Sync] Merged ${merged.length} leads from GitHub (${emailed} emailed)`);
-            return res.json({ type: 'answer', reply: `✅ Synced! Dashboard now has ${merged.length} leads (${emailed} emailed). Refresh the page to see updated numbers.` });
+            return res.json({ type: 'answer', reply: `â Synced! Dashboard now has ${merged.length} leads (${emailed} emailed). Refresh the page to see updated numbers.` });
           } catch (e) {
-            return res.json({ type: 'answer', reply: `❌ Sync failed: ${e.message}` });
+            return res.json({ type: 'answer', reply: `â Sync failed: ${e.message}` });
           }
         }
 
-        // All remaining commands trigger GitHub Actions directly — no local watcher needed
+        // All remaining commands trigger GitHub Actions directly â no local watcher needed
         const ghToken2 = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || '';
-        if (!ghToken2) return res.json({ type: 'answer', reply: '⚠️ GH_TOKEN not set in Railway variables — cannot trigger GitHub Actions.' });
+        if (!ghToken2) return res.json({ type: 'answer', reply: 'â ï¸ GH_TOKEN not set in Railway variables â cannot trigger GitHub Actions.' });
 
         // Build a friendly reply based on command type
-        let actionReply = '✅ Agent started on GitHub Actions! Results will appear here in ~60 min — click Sync Now when done.';
-        if (parsed.action === 'send-followups') actionReply = '✅ Follow-up run triggered on GitHub Actions! Follow-up emails will be sent in ~15 min.';
-        if (parsed.action === 'search-city') actionReply = `✅ City search triggered on GitHub Actions! Searching ${(parsed.params && parsed.params.city) || 'the requested city'} now — click Sync Now in ~30 min.`;
+        let actionReply = 'â Agent started on GitHub Actions! Results will appear here in ~60 min â click Sync Now when done.';
+        if (parsed.action === 'send-followups') actionReply = 'â Follow-up run triggered on GitHub Actions! Follow-up emails will be sent in ~15 min.';
+        if (parsed.action === 'search-city') actionReply = `â City search triggered on GitHub Actions! Searching ${(parsed.params && parsed.params.city) || 'the requested city'} now â click Sync Now in ~30 min.`;
 
         const ghResult2 = await new Promise((resolve) => {
           const body2 = JSON.stringify({ ref: 'main' });
@@ -578,7 +578,7 @@ Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync
           console.log(`[GitHub Actions] Triggered for command: ${parsed.action}`);
           return res.json({ type: 'answer', reply: actionReply });
         }
-        return res.json({ type: 'answer', reply: `❌ Could not trigger GitHub Actions (HTTP ${ghResult2.status}). Check GH_TOKEN in Railway variables.` });
+        return res.json({ type: 'answer', reply: `â Could not trigger GitHub Actions (HTTP ${ghResult2.status}). Check GH_TOKEN in Railway variables.` });
       }
     } catch {}
 
@@ -591,7 +591,7 @@ Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync
   }
 });
 
-// GET /outbound-leads — return all outbound (proactively found) leads
+// GET /outbound-leads â return all outbound (proactively found) leads
 app.get('/outbound-leads', (req, res) => {
   const file = path.join(__dirname, 'outbound-leads.json');
   if (!fs.existsSync(file)) return res.json([]);
@@ -599,7 +599,7 @@ app.get('/outbound-leads', (req, res) => {
   catch { res.json([]); }
 });
 
-// POST /outbound-leads/sync — receive leads from local agent run and merge into server store
+// POST /outbound-leads/sync â receive leads from local agent run and merge into server store
 app.post('/outbound-leads/sync', (req, res) => {
   const syncKey = process.env.SYNC_SECRET || 'spectrum-sync';
   if (req.headers['x-sync-key'] !== syncKey) return res.status(401).json({ error: 'Unauthorized' });
@@ -633,7 +633,7 @@ app.post('/outbound-leads/sync', (req, res) => {
   res.json({ merged, total: leads.length });
 });
 
-// GET /calls — proxy Vapi call logs
+// GET /calls â proxy Vapi call logs
 app.get('/calls', async (req, res) => {
   const vapiKey = process.env.VAPI_API_KEY;
   if (!vapiKey) return res.status(500).json({ error: 'VAPI_API_KEY not set' });
@@ -662,7 +662,7 @@ app.get('/calls', async (req, res) => {
   }
 });
 
-// PATCH /outbound-leads/:id/reply — mark a lead as replied
+// PATCH /outbound-leads/:id/reply â mark a lead as replied
 app.patch('/outbound-leads/:id/reply', (req, res) => {
   const file = path.join(__dirname, 'outbound-leads.json');
   if (!fs.existsSync(file)) return res.status(404).json({ error: 'No leads file' });
@@ -680,7 +680,7 @@ app.patch('/outbound-leads/:id/reply', (req, res) => {
   }
 });
 
-// PATCH /outbound-leads/:id/unreply — undo a replied marking
+// PATCH /outbound-leads/:id/unreply â undo a replied marking
 app.patch('/outbound-leads/:id/unreply', (req, res) => {
   const file = path.join(__dirname, 'outbound-leads.json');
   if (!fs.existsSync(file)) return res.status(404).json({ error: 'No leads file' });
@@ -698,7 +698,7 @@ app.patch('/outbound-leads/:id/unreply', (req, res) => {
   }
 });
 
-// POST /webhook/resend — email open/click tracking from Resend
+// POST /webhook/resend â email open/click tracking from Resend
 app.post('/webhook/resend', express.raw({ type: '*/*' }), (req, res) => {
   res.json({ ok: true }); // always ACK immediately
   try {
@@ -725,13 +725,13 @@ app.post('/webhook/resend', express.raw({ type: '*/*' }), (req, res) => {
     }
     leads[idx].updatedAt = new Date().toISOString();
     fs.writeFileSync(file, JSON.stringify(leads, null, 2));
-    console.log(`[Webhook] ${type} — lead ${leadId} (opens: ${leads[idx].openCount || 0})`);
+    console.log(`[Webhook] ${type} â lead ${leadId} (opens: ${leads[idx].openCount || 0})`);
   } catch (e) {
     console.error('[Webhook] Error:', e.message);
   }
 });
 
-// GET /hubspot-contacts — fetch contacts + deals from HubSpot
+// GET /hubspot-contacts â fetch contacts + deals from HubSpot
 app.get('/hubspot-contacts', async (req, res) => {
   if (!process.env.HUBSPOT_API_KEY) return res.json({ contacts: [], deals: [], _debug: 'no_api_key' });
   try {
@@ -760,7 +760,7 @@ app.get('/hubspot-contacts', async (req, res) => {
   }
 });
 
-// GET /leads/export.csv — CSV export
+// GET /leads/export.csv â CSV export
 app.get('/leads/export.csv', (req, res) => {
   const leads = loadLeads();
   const headers = ['id','name','email','phone','service','notes','capturedAt','updatedAt'];
@@ -771,7 +771,7 @@ app.get('/leads/export.csv', (req, res) => {
   res.send(csv);
 });
 
-// ── GitHub Actions trigger ──────────────────────────────────────────────────
+// ââ GitHub Actions trigger ââââââââââââââââââââââââââââââââââââââââââââââââââ
 app.post('/agent-trigger', async (req, res) => {
   const token = process.env.GITHUB_TOKEN;
   const repo  = 'amuyungga/accounting-agent';
@@ -805,8 +805,8 @@ app.post('/agent-trigger', async (req, res) => {
   }
 });
 
-// ── Nonprofit / FQHC search — manual trigger + status ─────────────────────
-// POST /api/nonprofit-search/trigger — dispatches the workflow_dispatch event
+// ââ Nonprofit / FQHC search â manual trigger + status âââââââââââââââââââââ
+// POST /api/nonprofit-search/trigger â dispatches the workflow_dispatch event
 app.post('/api/nonprofit-search/trigger', async (req, res) => {
   const token = process.env.GITHUB_TOKEN;
   if (!token) return res.status(503).json({ error: 'GITHUB_TOKEN not configured' });
@@ -835,13 +835,13 @@ app.post('/api/nonprofit-search/trigger', async (req, res) => {
   });
 
   if (result.status === 204) {
-    res.json({ ok: true, message: 'Nonprofit search started — check dashboard for status in ~30s' });
+    res.json({ ok: true, message: 'Nonprofit search started â check dashboard for status in ~30s' });
   } else {
     res.status(500).json({ error: `GitHub returned ${result.status}`, detail: result.body });
   }
 });
 
-// GET /api/nonprofit-search/status — latest workflow run status
+// GET /api/nonprofit-search/status â latest workflow run status
 app.get('/api/nonprofit-search/status', async (req, res) => {
   const token = process.env.GITHUB_TOKEN;
   if (!token) return res.status(503).json({ error: 'GITHUB_TOKEN not configured' });
@@ -866,7 +866,7 @@ app.get('/api/nonprofit-search/status', async (req, res) => {
   });
 });
 
-// ── GitHub Actions agent status proxy ──────────────────────────────────────
+// ââ GitHub Actions agent status proxy ââââââââââââââââââââââââââââââââââââââ
 app.get('/agent-status', async (req, res) => {
   const token = process.env.GITHUB_TOKEN;
   const repo  = 'amuyungga/accounting-agent';
@@ -895,9 +895,9 @@ app.get('/agent-status', async (req, res) => {
   }
 });
 
-// POST /api/find-website — Serper.dev (Google Search) lookup for nonprofit websites
+// POST /api/find-website â Serper.dev (Google Search) lookup for nonprofit websites
 // Serper.dev is not IP-restricted (works from any cloud provider).
-// Requires SERPER_API_KEY env var — free: 2,500 queries (no CC) at https://serper.dev
+// Requires SERPER_API_KEY env var â free: 2,500 queries (no CC) at https://serper.dev
 app.post('/api/find-website', async (req, res) => {
   const { orgName, city, stateId } = req.body || {};
   if (!orgName) return res.status(400).json({ error: 'orgName required' });
@@ -949,7 +949,7 @@ app.post('/api/find-website', async (req, res) => {
       req2.end();
     });
 
-    if (website) console.log(`[FindWebsite] Serper → ${website.slice(0, 60)} for "${orgName}"`);
+    if (website) console.log(`[FindWebsite] Serper â ${website.slice(0, 60)} for "${orgName}"`);
     else console.log(`[FindWebsite] No result for "${orgName}"`);
     res.json({ website });
   } catch (e) {
@@ -958,13 +958,13 @@ app.post('/api/find-website', async (req, res) => {
   }
 });
 
-// ── GitHub leads sync (startup + periodic) ──────────────────────────────────
+// ââ GitHub leads sync (startup + periodic) ââââââââââââââââââââââââââââââââââ
 // Railway wipes the local filesystem on every redeploy. Without this, the
 // dashboard reverts to whatever stale version was baked into the git repo.
 // Also runs every 5 minutes so agent/retry workflow results show up automatically.
 async function syncLeadsFromGitHub() {
   const token = process.env.GITHUB_TOKEN;
-  if (!token) { console.log('[Sync] No GITHUB_TOKEN — skipping leads sync'); return; }
+  if (!token) { console.log('[Sync] No GITHUB_TOKEN â skipping leads sync'); return; }
   try {
     const data = await new Promise((resolve, reject) => {
       const req = https.get({
@@ -1021,7 +1021,7 @@ async function syncLeadsFromGitHub() {
   }
 }
 
-// ── POST /api/inbound-lead — landing page form submission ───────────────────
+// ââ POST /api/inbound-lead â landing page form submission âââââââââââââââââââ
 app.post('/api/inbound-lead', async (req, res) => {
   const { name, org, email, phone, orgType, service, message } = req.body || {};
   if (!name || !email) return res.status(400).json({ error: 'Name and email required' });
@@ -1041,7 +1041,7 @@ app.post('/api/inbound-lead', async (req, res) => {
     industry: orgType === 'fqhc' ? 'FQHC / Community Health Center'
              : orgType === 'nonprofit' ? 'Nonprofit Organization'
              : 'Small Business',
-    score: 90, // highest intent — they came to us
+    score: 90, // highest intent â they came to us
     foundAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -1056,10 +1056,10 @@ app.post('/api/inbound-lead', async (req, res) => {
     console.error('[Inbound] Failed to save lead:', e.message);
   }
 
-  console.log(`[Inbound] New lead: ${name} <${email}> — ${org} (${orgType})`);
+  console.log(`[Inbound] New lead: ${name} <${email}> â ${org} (${orgType})`);
   res.json({ success: true });
 
-  // ── Auto-response email to prospect ────────────────────────────────────────
+  // ââ Auto-response email to prospect ââââââââââââââââââââââââââââââââââââââââ
   const resendKey = process.env.RESEND_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
   if (!resendKey || !anthropicKey) return;
@@ -1131,8 +1131,8 @@ Return ONLY the email body text (no subject line). Plain text, no markdown.`;
     const orgLabel = orgType === 'fqhc' ? 'FQHC' : orgType === 'nonprofit' ? 'Nonprofit' : 'Small Business';
     await sendEmail(
       'snt.milla@gmail.com',
-      `🔔 New inbound lead: ${name} — ${org || 'unknown org'}`,
-      `New inbound lead from your landing page!\n\nName: ${name}\nOrg: ${org || '—'}\nType: ${orgLabel}\nEmail: ${email}\nPhone: ${phone || '—'}\nService: ${service || '—'}\nMessage: ${message || '—'}\n\nAuto-response has been sent. Lead saved to dashboard.`
+      `ð New inbound lead: ${name} â ${org || 'unknown org'}`,
+      `New inbound lead from your landing page!\n\nName: ${name}\nOrg: ${org || 'â'}\nType: ${orgLabel}\nEmail: ${email}\nPhone: ${phone || 'â'}\nService: ${service || 'â'}\nMessage: ${message || 'â'}\n\nAuto-response has been sent. Lead saved to dashboard.`
     );
     console.log(`[Inbound] Notification sent to Asante`);
   } catch (e) {
@@ -1140,7 +1140,7 @@ Return ONLY the email body text (no subject line). Plain text, no markdown.`;
   }
 });
 
-// ── Google Ads API ─────────────────────────────────────────────────────────
+// ââ Google Ads API âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 let gadsCache = { data: null, ts: 0, days: null };
 
 app.get('/api/google-ads', async (req, res) => {
@@ -1190,7 +1190,7 @@ app.get('/api/google-ads', async (req, res) => {
       'developer-token': devToken,
       'Content-Type':    'application/json',
     };
-    const gadsBase = `https://googleads.googleapis.com/v17/customers/${customerId}/googleAds:search`;
+    const gadsBase = `https://googleads.googleapis.com/v20/customers/${customerId}/googleAds:search`;
 
     const [campRes, dailyRes] = await Promise.all([
       fetch(gadsBase, {
@@ -1264,9 +1264,9 @@ app.get('/api/google-ads', async (req, res) => {
   }
 });
 
-// ── Start ───────────────────────────────────────────────────────────────────
+// ââ Start âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 app.listen(PORT, () => {
-  console.log(`\n✅ Accounting Firm AI Agent running on http://localhost:${PORT}`);
+  console.log(`\nâ Accounting Firm AI Agent running on http://localhost:${PORT}`);
   console.log(`   Chat endpoint : POST http://localhost:${PORT}/chat`);
   console.log(`   Leads JSON    : GET  http://localhost:${PORT}/leads`);
   console.log(`   Leads CSV     : GET  http://localhost:${PORT}/leads/export.csv`);
