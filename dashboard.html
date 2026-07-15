@@ -526,6 +526,7 @@ a:hover{text-decoration:underline}
   <button class="tab-btn" onclick="switchTab(this,'crm')">🏢 CRM</button>
   <button class="tab-btn" onclick="switchTab(this,'kpi');renderKpi()">📈 KPIs</button>
   <button class="tab-btn" onclick="switchTab(this,'agent');fetchAgentStatus()">🤖 Agent</button>
+  <button class="tab-btn" onclick="switchTab(this,'google-ads');loadGoogleAds()">📺 Google Ads</button>
 </div>
 
 <!-- OVERVIEW -->
@@ -893,6 +894,113 @@ a:hover{text-decoration:underline}
     </table>
   </div>
 </div>
+
+<!-- GOOGLE ADS TAB -->
+<div id="s-google-ads" class="section">
+
+  <!-- Loading -->
+  <div id="ga-loading" style="text-align:center;padding:80px 32px;color:var(--muted)">
+    <div style="width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 14px"></div>
+    <div style="font-size:14px">Loading Google Ads data…</div>
+  </div>
+
+  <!-- Not configured -->
+  <div id="ga-setup" style="display:none;padding:48px 32px">
+    <div style="max-width:600px;margin:0 auto;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center">
+      <div style="font-size:48px">📊</div>
+      <h2 style="margin:16px 0 8px;font-size:20px">Connect Google Ads</h2>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:24px">Add 5 environment variables to your Railway project and live campaign data appears here automatically.</p>
+      <div id="ga-missing-tags" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:28px"></div>
+      <ol style="list-style:none;text-align:left;counter-reset:s">
+        <li style="counter-increment:s;display:flex;gap:14px;padding:14px 16px;margin-bottom:10px;background:var(--surface);border-radius:10px;font-size:13px;line-height:1.6">
+          <span style="min-width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">1</span>
+          <div><strong style="display:block;margin-bottom:3px">Get your Developer Token</strong><span style="color:var(--muted)">Google Ads → Tools &amp; Settings → API Center → Apply for basic access (approved instantly)</span></div>
+        </li>
+        <li style="counter-increment:s;display:flex;gap:14px;padding:14px 16px;margin-bottom:10px;background:var(--surface);border-radius:10px;font-size:13px;line-height:1.6">
+          <span style="min-width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">2</span>
+          <div><strong style="display:block;margin-bottom:3px">Create OAuth2 Credentials</strong><span style="color:var(--muted)">console.cloud.google.com → APIs &amp; Services → Credentials → Create OAuth 2.0 Client (Web app). Add <code style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px;color:var(--green)">https://developers.google.com/oauthplayground</code> as a redirect URI.</span></div>
+        </li>
+        <li style="counter-increment:s;display:flex;gap:14px;padding:14px 16px;margin-bottom:10px;background:var(--surface);border-radius:10px;font-size:13px;line-height:1.6">
+          <span style="min-width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">3</span>
+          <div><strong style="display:block;margin-bottom:3px">Get a Refresh Token</strong><span style="color:var(--muted)">Go to developers.google.com/oauthplayground → ⚙ → Use your credentials → scope: <code style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px;color:var(--green)">https://www.googleapis.com/auth/adwords</code> → Authorize → Exchange for tokens.</span></div>
+        </li>
+        <li style="counter-increment:s;display:flex;gap:14px;padding:14px 16px;background:var(--surface);border-radius:10px;font-size:13px;line-height:1.6">
+          <span style="min-width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">4</span>
+          <div><strong style="display:block;margin-bottom:3px">Add to Railway Variables</strong><span style="color:var(--muted)">Add: <code style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px;color:var(--green)">GOOGLE_ADS_DEVELOPER_TOKEN</code>, <code style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px;color:var(--green)">GOOGLE_ADS_CLIENT_ID</code>, <code style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px;color:var(--green)">GOOGLE_ADS_CLIENT_SECRET</code>, <code style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px;color:var(--green)">GOOGLE_ADS_REFRESH_TOKEN</code>, <code style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px;color:var(--green)">GOOGLE_ADS_CUSTOMER_ID</code> (10-digit ID, no dashes)</span></div>
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div id="ga-error" style="display:none;text-align:center;padding:80px 32px;color:var(--red)">
+    <div style="font-size:36px">⚠️</div>
+    <p id="ga-error-msg" style="margin-top:12px;font-size:14px;max-width:480px;margin-left:auto;margin-right:auto"></p>
+    <button onclick="loadGoogleAds(gaCurrentDays,true)" style="margin-top:18px;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 20px;cursor:pointer;font-size:13px;font-weight:600">↺ Retry</button>
+  </div>
+
+  <!-- Data -->
+  <div id="ga-data" style="display:none">
+
+    <!-- Toolbar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 32px 0;flex-wrap:wrap;gap:12px">
+      <div>
+        <h2 style="font-size:17px;font-weight:700">Google Ads Performance</h2>
+        <div id="ga-fetch-time" style="font-size:11px;color:var(--muted);margin-top:3px"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="filter-btn" id="ga-r7"  onclick="loadGoogleAds(7)">7 days</button>
+        <button class="filter-btn active" id="ga-r14" onclick="loadGoogleAds(14)">14 days</button>
+        <button class="filter-btn" id="ga-r30" onclick="loadGoogleAds(30)">30 days</button>
+        <button onclick="loadGoogleAds(gaCurrentDays,true)" class="filter-btn">↺ Refresh</button>
+      </div>
+    </div>
+
+    <!-- Metric cards -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))">
+      <div class="kpi-card blue">  <div class="kv" id="ga-impressions">—</div><div class="kl">Impressions</div></div>
+      <div class="kpi-card blue">  <div class="kv" id="ga-clicks">—</div>     <div class="kl">Clicks</div></div>
+      <div class="kpi-card amber">  <div class="kv" id="ga-ctr">—</div>       <div class="kl">CTR</div></div>
+      <div class="kpi-card green"> <div class="kv" id="ga-spend">—</div>      <div class="kl">Spend</div></div>
+      <div class="kpi-card purple"><div class="kv" id="ga-conversions">—</div><div class="kl">Conversions</div></div>
+      <div class="kpi-card amber">  <div class="kv" id="ga-cpc">—</div>       <div class="kl">Avg CPC</div></div>
+      <div class="kpi-card green"> <div class="kv" id="ga-convrate">—</div>   <div class="kl">Conv. Rate</div></div>
+    </div>
+
+    <!-- Trend chart -->
+    <div style="padding:4px 32px 16px">
+      <div class="chart-card">
+        <div class="chart-title">📈 Daily Trend — Impressions · Clicks · Spend</div>
+        <div style="position:relative;height:220px"><canvas id="ga-chart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Campaign table -->
+    <div style="padding:0 32px 40px">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+        <div style="padding:14px 20px;font-size:12px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border)">Campaigns</div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:10px 16px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Campaign</th>
+                <th style="text-align:left;padding:10px 16px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Status</th>
+                <th style="text-align:right;padding:10px 16px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Impressions</th>
+                <th style="text-align:right;padding:10px 16px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Clicks</th>
+                <th style="text-align:right;padding:10px 16px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">CTR</th>
+                <th style="text-align:right;padding:10px 16px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Spend</th>
+                <th style="text-align:right;padding:10px 16px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Conv.</th>
+                <th style="text-align:right;padding:10px 16px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Avg CPC</th>
+              </tr>
+            </thead>
+            <tbody id="ga-campaigns"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /ga-data -->
+</div><!-- /s-google-ads -->
 
 <!-- CALL MODAL -->
 <div class="modal-overlay" id="call-modal">

@@ -1411,3 +1411,149 @@ setInterval(function() {
   })
   .catch(function() {});
 }, 10000);
+
+// ══════════════════════════════════════════════════════════════════════════════
+// GOOGLE ADS
+// ══════════════════════════════════════════════════════════════════════════════
+var gaChart = null;
+var gaCurrentDays = 14;
+var gaLoaded = false;
+
+function loadGoogleAds(days, force) {
+  days = days || gaCurrentDays;
+  force = force || false;
+  gaCurrentDays = days;
+
+  ['7','14','30'].forEach(function(d) {
+    var b = document.getElementById('ga-r' + d);
+    if (b) b.classList.toggle('active', String(days) === d);
+  });
+
+  gaShow('loading');
+
+  fetch(BASE + '/api/google-ads?days=' + days + (force ? '&refresh=1' : ''))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.configured) { gaShowSetup(data.missing || []); return; }
+      if (data.error)       { gaShowError(data.error); return; }
+      gaRender(data);
+      gaLoaded = true;
+    })
+    .catch(function(e) { gaShowError('Network error: ' + e.message); });
+}
+
+function gaShow(which) {
+  ['loading','setup','error','data'].forEach(function(id) {
+    var el = document.getElementById('ga-' + id);
+    if (el) el.style.display = id === which ? '' : 'none';
+  });
+}
+
+function gaShowSetup(missing) {
+  gaShow('setup');
+  var el = document.getElementById('ga-missing-tags');
+  if (el) el.innerHTML = missing.map(function(m) {
+    return '<span style="background:rgba(248,81,73,.1);color:#f85149;border:1px solid rgba(248,81,73,.2);border-radius:6px;padding:3px 10px;font-size:12px;font-family:monospace">' + m + '</span>';
+  }).join('');
+}
+
+function gaShowError(msg) {
+  gaShow('error');
+  var el = document.getElementById('ga-error-msg');
+  if (el) el.textContent = msg;
+}
+
+function gaRender(data) {
+  gaShow('data');
+  var t = data.totals || {};
+
+  function setEl(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; }
+  setEl('ga-impressions', gaFmtN(t.impressions));
+  setEl('ga-clicks',      gaFmtN(t.clicks));
+  setEl('ga-ctr',         gaFmtP(t.ctr));
+  setEl('ga-spend',       gaFmt$(t.cost));
+  setEl('ga-conversions', gaFmtD(t.conversions));
+  setEl('ga-cpc',         gaFmt$(t.avgCpc));
+  setEl('ga-convrate',    gaFmtP(t.convRate));
+
+  var ft = document.getElementById('ga-fetch-time');
+  if (ft) ft.textContent = 'Data as of ' + new Date(data.fetchedAt || Date.now()).toLocaleString() + (data.cached ? ' · cached' : '');
+
+  gaRenderChart(data.daily || []);
+  gaRenderCampaigns(data.campaigns || []);
+}
+
+function gaRenderChart(daily) {
+  var ctx = document.getElementById('ga-chart');
+  if (!ctx) return;
+  if (gaChart) { gaChart.destroy(); gaChart = null; }
+
+  var labels = daily.map(function(d) {
+    var dt = new Date(d.date + 'T00:00:00');
+    return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  });
+
+  gaChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'Impressions', data: daily.map(function(d){return d.impressions;}),
+          borderColor: '#58a6ff', backgroundColor: 'rgba(88,166,255,0.08)',
+          yAxisID: 'y', tension: 0.35, fill: true, pointRadius: 3 },
+        { label: 'Clicks', data: daily.map(function(d){return d.clicks;}),
+          borderColor: '#3fb950', backgroundColor: 'rgba(63,185,80,0.08)',
+          yAxisID: 'y', tension: 0.35, fill: true, pointRadius: 3 },
+        { label: 'Spend ($)', data: daily.map(function(d){return +d.cost.toFixed(2);}),
+          borderColor: '#e3b341', backgroundColor: 'rgba(227,179,65,0.06)',
+          yAxisID: 'y2', tension: 0.35, fill: false, pointRadius: 3, borderDash: [4,3] },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#8b949e', boxWidth: 12, font: { size: 12 } } },
+        tooltip: { backgroundColor: '#1c2333', titleColor: '#e6edf3', bodyColor: '#8b949e',
+          borderColor: '#30363d', borderWidth: 1 }
+      },
+      scales: {
+        x:  { ticks: { color: '#8b949e', font: { size: 11 } }, grid: { color: 'rgba(48,54,61,0.6)' } },
+        y:  { position: 'left',  ticks: { color: '#8b949e', font: { size: 11 }, callback: function(v){return v.toLocaleString();} },
+              grid: { color: 'rgba(48,54,61,0.6)' } },
+        y2: { position: 'right', ticks: { color: '#e3b341', font: { size: 11 }, callback: function(v){return '$'+v.toFixed(2);} },
+              grid: { display: false } }
+      }
+    }
+  });
+}
+
+function gaRenderCampaigns(campaigns) {
+  var tb = document.getElementById('ga-campaigns');
+  if (!tb) return;
+  if (!campaigns.length) {
+    tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted)">No campaign data</td></tr>';
+    return;
+  }
+  tb.innerHTML = campaigns.map(function(c) {
+    var st = (c.status || '').toLowerCase();
+    var badge = st === 'enabled'
+      ? '<span style="background:rgba(63,185,80,.12);color:#3fb950;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:600">● ' + c.status + '</span>'
+      : '<span style="background:rgba(139,148,158,.1);color:#8b949e;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:600">○ ' + c.status + '</span>';
+    return '<tr>' +
+      '<td style="padding:12px 16px;font-weight:600;border-bottom:1px solid var(--border)">' + (c.name || '—') + '</td>' +
+      '<td style="padding:12px 16px;border-bottom:1px solid var(--border)">' + badge + '</td>' +
+      '<td style="padding:12px 16px;text-align:right;border-bottom:1px solid var(--border)">' + gaFmtN(c.impressions) + '</td>' +
+      '<td style="padding:12px 16px;text-align:right;border-bottom:1px solid var(--border)">' + gaFmtN(c.clicks) + '</td>' +
+      '<td style="padding:12px 16px;text-align:right;border-bottom:1px solid var(--border)">' + gaFmtP(c.ctr) + '</td>' +
+      '<td style="padding:12px 16px;text-align:right;border-bottom:1px solid var(--border)">' + gaFmt$(c.cost) + '</td>' +
+      '<td style="padding:12px 16px;text-align:right;border-bottom:1px solid var(--border)">' + gaFmtD(c.conversions) + '</td>' +
+      '<td style="padding:12px 16px;text-align:right;border-bottom:1px solid var(--border)">' + gaFmt$(c.avgCpc) + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function gaFmtN(n) { return (n||0).toLocaleString(); }
+function gaFmt$(n) { return '$'+(+(n||0)).toFixed(2); }
+function gaFmtP(n) { return ((n||0)*100).toFixed(2)+'%'; }
+function gaFmtD(n) { return parseFloat(n||0).toFixed(1); }
