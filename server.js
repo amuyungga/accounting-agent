@@ -1140,6 +1140,130 @@ Return ONLY the email body text (no subject line). Plain text, no markdown.`;
   }
 });
 
+// ── Google Ads API ─────────────────────────────────────────────────────────
+let gadsCache = { data: null, ts: 0, days: null };
+
+app.get('/api/google-ads', async (req, res) => {
+  const days       = parseInt(req.query.days) || 14;
+  const force      = req.query.refresh === '1';
+  const devToken   = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
+  const clientId   = process.env.GOOGLE_ADS_CLIENT_ID;
+  const clientSec  = process.env.GOOGLE_ADS_CLIENT_SECRET;
+  const refreshTok = process.env.GOOGLE_ADS_REFRESH_TOKEN;
+  const customerId = (process.env.GOOGLE_ADS_CUSTOMER_ID || '').replace(/-/g, '');
+
+  const missing = [
+    !devToken   && 'GOOGLE_ADS_DEVELOPER_TOKEN',
+    !clientId   && 'GOOGLE_ADS_CLIENT_ID',
+    !clientSec  && 'GOOGLE_ADS_CLIENT_SECRET',
+    !refreshTok && 'GOOGLE_ADS_REFRESH_TOKEN',
+    !customerId && 'GOOGLE_ADS_CUSTOMER_ID',
+  ].filter(Boolean);
+
+  if (missing.length) return res.json({ configured: false, missing });
+
+  // 30-minute cache per day range
+  if (!force && gadsCache.data && gadsCache.days === days &&
+      (Date.now() - gadsCache.ts) < 30 * 60 * 1000) {
+    return res.json({ configured: true, ...gadsCache.data, cached: true });
+  }
+
+  const dateRange = days === 7 ? 'LAST_7_DAYS' : days === 30 ? 'LAST_30_DAYS' : 'LAST_14_DAYS';
+
+  try {
+    // Get OAuth access token
+    const tokRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id:     clientId,
+        client_secret: clientSec,
+        refresh_token: refreshTok,
+        grant_type:    'refresh_token',
+      }),
+    });
+    const tokData = await tokRes.json();
+    if (!tokData.access_token) throw new Error('OAuth failed: ' + (tokData.error_description || JSON.stringify(tokData)));
+
+    const headers = {
+      'Authorization':   `Bearer ${tokData.access_token}`,
+      'developer-token': devToken,
+      'Content-Type':    'application/json',
+    };
+    const gadsBase = `https://googleads.googleapis.com/v17/customers/${customerId}/googleAds:search`;
+
+    const [campRes, dailyRes] = await Promise.all([
+      fetch(gadsBase, {
+        method: 'POST', headers,
+        body: JSON.stringify({ query: `
+          SELECT campaign.id, campaign.name, campaign.status,
+            metrics.impressions, metrics.clicks, metrics.cost_micros,
+            metrics.conversions, metrics.ctr, metrics.average_cpc
+          FROM campaign
+          WHERE segments.date DURING ${dateRange}
+            AND campaign.status != 'REMOVED'
+          ORDER BY metrics.cost_micros DESC LIMIT 20
+        `}),
+      }),
+      fetch(gadsBase, {
+        method: 'POST', headers,
+        body: JSON.stringify({ query: `
+          SELECT segments.date,
+            metrics.impressions, metrics.clicks,
+            metrics.cost_micros, metrics.conversions
+          FROM customer
+          WHERE segments.date DURING ${dateRange}
+          ORDER BY segments.date ASC
+        `}),
+      }),
+    ]);
+
+    const campData  = await campRes.json();
+    const dailyData = await dailyRes.json();
+    if (campData.error)  throw new Error(campData.error.message);
+    if (dailyData.error) throw new Error(dailyData.error.message);
+
+    const campaigns = (campData.results || []).map(r => ({
+      id:          r.campaign?.id,
+      name:        r.campaign?.name || 'Unknown',
+      status:      r.campaign?.status || 'UNKNOWN',
+      impressions: Number(r.metrics?.impressions || 0),
+      clicks:      Number(r.metrics?.clicks      || 0),
+      cost:        Number(r.metrics?.costMicros  || 0) / 1e6,
+      conversions: parseFloat(r.metrics?.conversions || 0),
+      ctr:         parseFloat(r.metrics?.ctr        || 0),
+      avgCpc:      Number(r.metrics?.averageCpc     || 0) / 1e6,
+    }));
+
+    const daily = (dailyData.results || []).map(r => ({
+      date:        r.segments?.date,
+      impressions: Number(r.metrics?.impressions || 0),
+      clicks:      Number(r.metrics?.clicks      || 0),
+      cost:        Number(r.metrics?.costMicros  || 0) / 1e6,
+      conversions: parseFloat(r.metrics?.conversions || 0),
+    }));
+
+    const totals = campaigns.reduce((acc, c) => ({
+      impressions: acc.impressions + c.impressions,
+      clicks:      acc.clicks      + c.clicks,
+      cost:        acc.cost        + c.cost,
+      conversions: acc.conversions + c.conversions,
+    }), { impressions:0, clicks:0, cost:0, conversions:0 });
+
+    totals.ctr      = totals.impressions ? totals.clicks      / totals.impressions : 0;
+    totals.avgCpc   = totals.clicks      ? totals.cost        / totals.clicks      : 0;
+    totals.convRate = totals.clicks      ? totals.conversions / totals.clicks      : 0;
+
+    const payload = { campaigns, daily, totals, days, fetchedAt: new Date().toISOString() };
+    gadsCache = { data: payload, ts: Date.now(), days };
+    res.json({ configured: true, ...payload });
+
+  } catch (err) {
+    console.error('[Google Ads]', err.message);
+    res.status(500).json({ configured: true, error: err.message });
+  }
+});
+
 // ── Start ───────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`\n✅ Accounting Firm AI Agent running on http://localhost:${PORT}`);

@@ -197,7 +197,109 @@
     .status-pill.success { background: rgba(34,197,94,.1);  color: var(--green); }
     .status-pill.idle    { background: rgba(148,163,184,.1);color: var(--muted); }
     .status-pill.failed  { background: rgba(239,68,68,.12); color: var(--red); }
+
+    /* ── Tabs ────────────────────────────────────────────────────────────── */
+    .tab-nav {
+      display: flex; gap: 2px; padding: 0 28px;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      background: none; border: none; color: var(--muted); font-size: 14px;
+      font-weight: 600; padding: 14px 20px; cursor: pointer;
+      border-bottom: 3px solid transparent; margin-bottom: -1px;
+      transition: all .15s; display: flex; align-items: center; gap: 8px;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Google Ads ──────────────────────────────────────────────────────── */
+    .gads-wrap { padding: 24px 28px 40px; }
+    .gads-metrics {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+      gap: 14px; margin-bottom: 24px;
+    }
+    .gads-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px 18px;
+    }
+    .gads-card-val { font-size: 26px; font-weight: 800; line-height: 1.1; }
+    .gads-card-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase;
+      letter-spacing: .06em; margin-top: 5px; }
+    .gads-chart-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px 20px 14px; margin-bottom: 24px;
+    }
+    .gads-chart-title { font-size: 12px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 16px; }
+    .gads-chart-wrap canvas { max-height: 240px; }
+    .gads-table-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+    }
+    .gads-table-head {
+      padding: 14px 20px; font-size: 12px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border);
+    }
+    .gads-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .gads-table th {
+      text-align: left; padding: 10px 14px; color: var(--muted); font-size: 11px;
+      text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border);
+    }
+    .gads-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    .gads-table tr:last-child td { border-bottom: none; }
+    .gads-table tr:hover td { background: var(--surface2); }
+    .gads-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600;
+    }
+    .gads-badge.enabled { background: #14532d; color: var(--green); }
+    .gads-badge.paused  { background: #1e293b; color: var(--muted); border: 1px solid var(--border); }
+    .gads-loading { text-align: center; padding: 80px 28px; color: var(--muted); }
+    .gads-error   { text-align: center; padding: 60px 28px; color: var(--red); }
+    .gads-setup-box {
+      max-width: 620px; margin: 48px auto; text-align: center;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 40px 36px;
+    }
+    .gads-setup-box h2 { font-size: 22px; margin: 14px 0 8px; }
+    .gads-setup-box p  { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+    .gads-steps { list-style: none; text-align: left; counter-reset: s; }
+    .gads-steps li {
+      counter-increment: s; display: flex; gap: 14px;
+      padding: 14px 16px; margin-bottom: 10px;
+      background: var(--surface2); border-radius: 10px; font-size: 13px; line-height: 1.6;
+    }
+    .gads-steps li::before {
+      content: counter(s); min-width: 26px; height: 26px; border-radius: 50%;
+      background: var(--primary); color: #fff; font-weight: 700; font-size: 12px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+    }
+    .gads-steps li strong { display: block; color: var(--text); margin-bottom: 3px; }
+    .gads-steps li span { color: var(--muted); }
+    .gads-steps code {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+      padding: 1px 6px; font-size: 11px; font-family: monospace; color: var(--green);
+    }
+    .gads-missing { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 24px; }
+    .gads-missing span {
+      background: rgba(239,68,68,.1); color: var(--red);
+      border: 1px solid rgba(239,68,68,.2); border-radius: 6px;
+      padding: 3px 10px; font-size: 12px; font-family: monospace;
+    }
+    .gads-range { display: flex; gap: 6px; }
+    .gads-range-btn {
+      background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+      border-radius: 8px; padding: 5px 12px; font-size: 12px; cursor: pointer; transition: all .15s;
+    }
+    .gads-range-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .gads-header-row {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px; margin-bottom: 22px;
+    }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -208,6 +310,13 @@
   </div>
   <button class="refresh-btn" onclick="loadData()">↺ Refresh</button>
 </header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('leads',this)">📊 Leads</button>
+  <button class="tab-btn" onclick="switchTab('google-ads',this)">📈 Google Ads</button>
+</nav>
+
+<div id="tab-leads" class="tab-content active">
 
 <!-- ── Nonprofit Search Panel ─────────────────────────────────────────── -->
 <div style="margin:20px 28px 0;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden">
@@ -300,6 +409,149 @@
     </tbody>
   </table>
 </div>
+
+</div><!-- /tab-leads -->
+
+<!-- ══ GOOGLE ADS TAB ════════════════════════════════════════════════════ -->
+<div id="tab-google-ads" class="tab-content">
+  <div class="gads-wrap">
+
+    <!-- Loading -->
+    <div id="gads-loading" class="gads-loading">
+      <div class="spinner"></div>
+      <p style="margin-top:14px;font-size:14px">Loading Google Ads data…</p>
+    </div>
+
+    <!-- Not configured -->
+    <div id="gads-setup" style="display:none">
+      <div class="gads-setup-box">
+        <div style="font-size:48px">📊</div>
+        <h2>Connect Google Ads</h2>
+        <p>Add 5 environment variables to Railway and live campaign data will appear here automatically.</p>
+        <div id="gads-missing" class="gads-missing"></div>
+        <ol class="gads-steps">
+          <li>
+            <div>
+              <strong>Get your Developer Token</strong>
+              <span>In Google Ads → Tools &amp; Settings → API Center → Apply for basic access. Approved instantly for test accounts.</span>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>Create OAuth2 credentials</strong>
+              <span>Go to console.cloud.google.com → APIs &amp; Services → Credentials → Create OAuth 2.0 Client ID (Web app). Add <code>https://developers.google.com/oauthplayground</code> as a redirect URI.</span>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>Get a Refresh Token</strong>
+              <span>Go to <code>developers.google.com/oauthplayground</code> → ⚙ Settings → Use your own credentials → Scope: <code>https://www.googleapis.com/auth/adwords</code> → Authorize → Exchange for tokens. Copy the Refresh Token.</span>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>Add to Railway Variables</strong>
+              <span>In your Railway project → Variables, add: <code>GOOGLE_ADS_DEVELOPER_TOKEN</code>, <code>GOOGLE_ADS_CLIENT_ID</code>, <code>GOOGLE_ADS_CLIENT_SECRET</code>, <code>GOOGLE_ADS_REFRESH_TOKEN</code>, <code>GOOGLE_ADS_CUSTOMER_ID</code> (your 10-digit ID, no dashes).</span>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div id="gads-error" style="display:none" class="gads-error">
+      <div style="font-size:36px">⚠️</div>
+      <p id="gads-error-msg" style="margin-top:12px;font-size:14px;max-width:500px;margin-left:auto;margin-right:auto"></p>
+      <button onclick="loadGoogleAds(currentGadsDays,true)"
+        style="margin-top:18px;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:9px 20px;cursor:pointer;font-size:13px;font-weight:600">
+        ↺ Retry
+      </button>
+    </div>
+
+    <!-- Connected data -->
+    <div id="gads-data" style="display:none">
+
+      <div class="gads-header-row">
+        <div>
+          <h2 style="font-size:18px;font-weight:700">Google Ads Performance</h2>
+          <div id="gads-fetch-time" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="gads-range">
+            <button class="gads-range-btn" id="gr7"  onclick="loadGoogleAds(7)">7 days</button>
+            <button class="gads-range-btn active" id="gr14" onclick="loadGoogleAds(14)">14 days</button>
+            <button class="gads-range-btn" id="gr30" onclick="loadGoogleAds(30)">30 days</button>
+          </div>
+          <button onclick="loadGoogleAds(currentGadsDays,true)"
+            style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 13px;font-size:12px;cursor:pointer">
+            ↺ Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Metric cards -->
+      <div class="gads-metrics">
+        <div class="gads-card">
+          <div class="gads-card-val" id="gm-impressions">—</div>
+          <div class="gads-card-lbl">Impressions</div>
+        </div>
+        <div class="gads-card">
+          <div class="gads-card-val" style="color:var(--primary)" id="gm-clicks">—</div>
+          <div class="gads-card-lbl">Clicks</div>
+        </div>
+        <div class="gads-card">
+          <div class="gads-card-val" style="color:var(--yellow)" id="gm-ctr">—</div>
+          <div class="gads-card-lbl">CTR</div>
+        </div>
+        <div class="gads-card">
+          <div class="gads-card-val" style="color:var(--green)" id="gm-spend">—</div>
+          <div class="gads-card-lbl">Spend</div>
+        </div>
+        <div class="gads-card">
+          <div class="gads-card-val" style="color:var(--purple)" id="gm-conversions">—</div>
+          <div class="gads-card-lbl">Conversions</div>
+        </div>
+        <div class="gads-card">
+          <div class="gads-card-val" style="color:var(--orange)" id="gm-cpc">—</div>
+          <div class="gads-card-lbl">Avg CPC</div>
+        </div>
+        <div class="gads-card">
+          <div class="gads-card-val" style="color:var(--green)" id="gm-convrate">—</div>
+          <div class="gads-card-lbl">Conv. Rate</div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="gads-chart-wrap">
+        <div class="gads-chart-title">📈 Daily Trend</div>
+        <canvas id="gads-chart"></canvas>
+      </div>
+
+      <!-- Campaign table -->
+      <div class="gads-table-box">
+        <div class="gads-table-head">Campaigns</div>
+        <div style="overflow-x:auto">
+          <table class="gads-table">
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Status</th>
+                <th style="text-align:right">Impressions</th>
+                <th style="text-align:right">Clicks</th>
+                <th style="text-align:right">CTR</th>
+                <th style="text-align:right">Spend</th>
+                <th style="text-align:right">Conv.</th>
+                <th style="text-align:right">Avg CPC</th>
+              </tr>
+            </thead>
+            <tbody id="gads-campaigns"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /gads-data -->
+  </div><!-- /gads-wrap -->
+</div><!-- /tab-google-ads -->
 
 <script>
   // ── Config ─────────────────────────────────────────────────────────────
@@ -596,6 +848,145 @@
   // Poll GitHub every 30 seconds
   fetchAgentStatus();
   setInterval(fetchAgentStatus, 30000);
+
+  // ══ Tab switcher ══════════════════════════════════════════════════════════
+  function switchTab(id, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b  => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    if (btn) btn.classList.add('active');
+    if (id === 'google-ads' && !gadsLoaded) loadGoogleAds(currentGadsDays);
+  }
+
+  // ══ Google Ads ════════════════════════════════════════════════════════════
+  const GADS_URL   = 'https://accounting-agent-production-cf69.up.railway.app/api/google-ads';
+  let gadsChart    = null;
+  let gadsLoaded   = false;
+  let currentGadsDays = 14;
+
+  async function loadGoogleAds(days = currentGadsDays, force = false) {
+    currentGadsDays = days;
+    ['7','14','30'].forEach(d => {
+      const b = document.getElementById('gr' + d);
+      if (b) b.classList.toggle('active', String(days) === d);
+    });
+    gadsShow('loading');
+    try {
+      const res  = await fetch(`${GADS_URL}?days=${days}${force ? '&refresh=1' : ''}`);
+      const data = await res.json();
+      if (!data.configured) { showGadsSetup(data.missing || []); return; }
+      if (data.error)        { showGadsError(data.error); return; }
+      renderGads(data);
+      gadsLoaded = true;
+    } catch(e) {
+      showGadsError('Network error: ' + e.message);
+    }
+  }
+
+  function gadsShow(which) {
+    ['loading','setup','error','data'].forEach(id => {
+      const el = document.getElementById('gads-' + id);
+      if (el) el.style.display = id === which ? '' : 'none';
+    });
+  }
+
+  function showGadsSetup(missing) {
+    gadsShow('setup');
+    const el = document.getElementById('gads-missing');
+    if (el) el.innerHTML = missing.map(m => `<span>${m}</span>`).join('');
+  }
+
+  function showGadsError(msg) {
+    gadsShow('error');
+    const el = document.getElementById('gads-error-msg');
+    if (el) el.textContent = msg;
+  }
+
+  function renderGads(data) {
+    gadsShow('data');
+    const t = data.totals || {};
+    document.getElementById('gm-impressions').textContent = gFmtN(t.impressions);
+    document.getElementById('gm-clicks').textContent      = gFmtN(t.clicks);
+    document.getElementById('gm-ctr').textContent         = gFmtP(t.ctr);
+    document.getElementById('gm-spend').textContent       = gFmt$(t.cost);
+    document.getElementById('gm-conversions').textContent = gFmtD(t.conversions);
+    document.getElementById('gm-cpc').textContent         = gFmt$(t.avgCpc);
+    document.getElementById('gm-convrate').textContent    = gFmtP(t.convRate);
+    const ft = document.getElementById('gads-fetch-time');
+    if (ft) ft.textContent = `Data as of ${new Date(data.fetchedAt || Date.now()).toLocaleString()}${data.cached ? ' · cached' : ''}`;
+    renderGadsChart(data.daily || []);
+    renderGadsCampaigns(data.campaigns || []);
+  }
+
+  function renderGadsChart(daily) {
+    const ctx = document.getElementById('gads-chart');
+    if (!ctx) return;
+    if (gadsChart) { gadsChart.destroy(); gadsChart = null; }
+    const labels = daily.map(d => {
+      const dt = new Date(d.date + 'T00:00:00');
+      return dt.toLocaleDateString(undefined, { month:'short', day:'numeric' });
+    });
+    gadsChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label:'Impressions', data: daily.map(d=>d.impressions), borderColor:'#3b82f6',
+            backgroundColor:'rgba(59,130,246,0.08)', yAxisID:'y', tension:0.35, fill:true, pointRadius:3 },
+          { label:'Clicks',      data: daily.map(d=>d.clicks),      borderColor:'#22c55e',
+            backgroundColor:'rgba(34,197,94,0.08)',  yAxisID:'y', tension:0.35, fill:true, pointRadius:3 },
+          { label:'Spend ($)',   data: daily.map(d=>+d.cost.toFixed(2)), borderColor:'#f97316',
+            backgroundColor:'rgba(249,115,22,0.06)', yAxisID:'y2',tension:0.35, fill:false,
+            pointRadius:3, borderDash:[4,3] },
+        ],
+      },
+      options: {
+        responsive:true, maintainAspectRatio:true,
+        interaction:{ mode:'index', intersect:false },
+        plugins:{
+          legend:{ labels:{ color:'#94a3b8', boxWidth:12, font:{ size:12 } } },
+          tooltip:{ backgroundColor:'#1e293b', titleColor:'#e2e8f0', bodyColor:'#94a3b8',
+            borderColor:'#334155', borderWidth:1 },
+        },
+        scales:{
+          x:{ ticks:{ color:'#94a3b8', font:{ size:11 } }, grid:{ color:'rgba(51,65,85,0.4)' } },
+          y:{ position:'left',  ticks:{ color:'#94a3b8', font:{size:11}, callback:v=>v.toLocaleString() },
+              grid:{ color:'rgba(51,65,85,0.4)' } },
+          y2:{ position:'right', ticks:{ color:'#f97316', font:{size:11}, callback:v=>'$'+v.toFixed(2) },
+               grid:{ display:false } },
+        },
+      },
+    });
+  }
+
+  function renderGadsCampaigns(campaigns) {
+    const tb = document.getElementById('gads-campaigns');
+    if (!tb) return;
+    if (!campaigns.length) {
+      tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted)">No campaign data</td></tr>';
+      return;
+    }
+    tb.innerHTML = campaigns.map(c => {
+      const st = (c.status || '').toLowerCase();
+      const cls = st === 'enabled' ? 'enabled' : 'paused';
+      const dot = st === 'enabled' ? '●' : '○';
+      return `<tr>
+        <td style="font-weight:600">${esc(c.name)}</td>
+        <td><span class="gads-badge ${cls}">${dot} ${c.status}</span></td>
+        <td style="text-align:right">${gFmtN(c.impressions)}</td>
+        <td style="text-align:right">${gFmtN(c.clicks)}</td>
+        <td style="text-align:right">${gFmtP(c.ctr)}</td>
+        <td style="text-align:right">${gFmt$(c.cost)}</td>
+        <td style="text-align:right">${gFmtD(c.conversions)}</td>
+        <td style="text-align:right">${gFmt$(c.avgCpc)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function gFmtN(n) { return (n||0).toLocaleString(); }
+  function gFmt$(n) { return '$'+(+(n||0)).toFixed(2); }
+  function gFmtP(n) { return ((n||0)*100).toFixed(2)+'%'; }
+  function gFmtD(n) { return parseFloat(n||0).toFixed(1); }
 </script>
 </body>
 </html>
