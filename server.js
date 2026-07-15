@@ -1,5 +1,5 @@
 /**
- * AI Marketing & Sales Agent Ã¢ÂÂ Backend Server
+ * AI Marketing & Sales Agent ÃÂ¢ÃÂÃÂ Backend Server
  * Accounting Firm Edition
  *
  * Stack: Node.js + Express + Anthropic SDK
@@ -15,7 +15,7 @@ const path       = require('path');
 const Anthropic  = require('@anthropic-ai/sdk');
 const nodemailer = require('nodemailer');
 
-// Ã¢ÂÂÃ¢ÂÂ Config Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Config ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 const PORT         = process.env.PORT || 3000;
 const API_KEY      = process.env.ANTHROPIC_API_KEY;
 const LEADS_FILE   = path.join(__dirname, 'leads.json');
@@ -23,7 +23,7 @@ const CALENDLY_URL = 'https://calendly.com/asante-spectrumfinancialsolution/30mi
 const FIRM_NAME    = 'Spectrum Financial Solutions';
 const NOTIFY_EMAIL = 'snt.milla@gmail.com';
 
-// Ã¢ÂÂÃ¢ÂÂ Email setup Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Email setup ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 const mailer = process.env.GMAIL_APP_PASSWORD ? nodemailer.createTransport({
   service: 'gmail',
   auth: { user: NOTIFY_EMAIL, pass: process.env.GMAIL_APP_PASSWORD },
@@ -35,15 +35,15 @@ async function sendLeadNotification(lead) {
     await mailer.sendMail({
       from: `"${FIRM_NAME} Agent" <${NOTIFY_EMAIL}>`,
       to: NOTIFY_EMAIL,
-      subject: `Ã°ÂÂÂ New Lead: ${lead.name} Ã¢ÂÂ ${lead.service}`,
+      subject: `ÃÂ°ÃÂÃÂÃÂ New Lead: ${lead.name} ÃÂ¢ÃÂÃÂ ${lead.service}`,
       html: `
         <h2>New lead captured on your website</h2>
         <table style="border-collapse:collapse;font-family:sans-serif;font-size:14px;">
           <tr><td style="padding:6px 12px;font-weight:bold;">Name</td><td style="padding:6px 12px;">${lead.name}</td></tr>
           <tr style="background:#f8fafc"><td style="padding:6px 12px;font-weight:bold;">Email</td><td style="padding:6px 12px;"><a href="mailto:${lead.email}">${lead.email}</a></td></tr>
-          <tr><td style="padding:6px 12px;font-weight:bold;">Phone</td><td style="padding:6px 12px;">${lead.phone || 'Ã¢ÂÂ'}</td></tr>
+          <tr><td style="padding:6px 12px;font-weight:bold;">Phone</td><td style="padding:6px 12px;">${lead.phone || 'ÃÂ¢ÃÂÃÂ'}</td></tr>
           <tr style="background:#f8fafc"><td style="padding:6px 12px;font-weight:bold;">Service</td><td style="padding:6px 12px;">${lead.service}</td></tr>
-          <tr><td style="padding:6px 12px;font-weight:bold;">Notes</td><td style="padding:6px 12px;">${lead.notes || 'Ã¢ÂÂ'}</td></tr>
+          <tr><td style="padding:6px 12px;font-weight:bold;">Notes</td><td style="padding:6px 12px;">${lead.notes || 'ÃÂ¢ÃÂÃÂ'}</td></tr>
         </table>
         <p style="margin-top:16px;font-size:13px;color:#64748b;">Captured at ${new Date().toLocaleString()}</p>
       `,
@@ -54,7 +54,7 @@ async function sendLeadNotification(lead) {
   }
 }
 
-// Ã¢ÂÂÃ¢ÂÂ HubSpot helper Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ HubSpot helper ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 const https = require('https');
 
 function hubspotRequest(method, hsPath, body) {
@@ -123,13 +123,13 @@ async function updateHubSpotContact(email, props) {
   }
 }
 
-// Ã¢ÂÂÃ¢ÂÂ Anthropic client Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Anthropic client ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 const anthropic = new Anthropic({ apiKey: API_KEY });
 
-// Ã¢ÂÂÃ¢ÂÂ In-memory conversation store (keyed by sessionId) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ In-memory conversation store (keyed by sessionId) ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 const sessions = {};  // { [sessionId]: { messages: [], lead: {} } }
 
-// Ã¢ÂÂÃ¢ÂÂ System prompt Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ System prompt ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 const SYSTEM_PROMPT = `
 You are a friendly, professional AI sales assistant for Spectrum Financial Solutions, a CPA & financial advisory firm.
 Your job is to:
@@ -139,16 +139,16 @@ Your job is to:
 4. Encourage prospects to book a free consultation
 
 ## Services offered
-- **Tax preparation & filing** Ã¢ÂÂ personal and business tax returns, tax planning, IRS representation
-- **Bookkeeping** Ã¢ÂÂ monthly reconciliation, financial statements, accounts payable/receivable
-- **CFO / Advisory services** Ã¢ÂÂ cash flow forecasting, budgeting, strategic financial guidance
-- **Payroll & compliance** Ã¢ÂÂ payroll processing, W-2s/1099s, payroll tax filings
+- **Tax preparation & filing** ÃÂ¢ÃÂÃÂ personal and business tax returns, tax planning, IRS representation
+- **Bookkeeping** ÃÂ¢ÃÂÃÂ monthly reconciliation, financial statements, accounts payable/receivable
+- **CFO / Advisory services** ÃÂ¢ÃÂÃÂ cash flow forecasting, budgeting, strategic financial guidance
+- **Payroll & compliance** ÃÂ¢ÃÂÃÂ payroll processing, W-2s/1099s, payroll tax filings
 
 ## Tone & style
-- Warm, confident, and professional Ã¢ÂÂ not salesy or pushy
-- Keep replies concise (2Ã¢ÂÂ4 short paragraphs max)
+- Warm, confident, and professional ÃÂ¢ÃÂÃÂ not salesy or pushy
+- Keep replies concise (2ÃÂ¢ÃÂÃÂ4 short paragraphs max)
 - Use plain English, avoid jargon
-- If someone asks about pricing, say "pricing depends on your specific needs Ã¢ÂÂ our team will give you an exact quote during your free consultation"
+- If someone asks about pricing, say "pricing depends on your specific needs ÃÂ¢ÃÂÃÂ our team will give you an exact quote during your free consultation"
 
 ## Lead qualification
 Gather this information naturally over the conversation (never ask all at once):
@@ -176,7 +176,7 @@ When it makes sense, end your message with:
 
 QUICK_REPLIES:["option 1","option 2","option 3"]
 
-Keep quick replies to 2Ã¢ÂÂ4 short options.
+Keep quick replies to 2ÃÂ¢ÃÂÃÂ4 short options.
 
 ## Never do
 - Never make up specific pricing numbers
@@ -185,7 +185,7 @@ Keep quick replies to 2Ã¢ÂÂ4 short options.
 - Never disparage competitors
 `;
 
-// Ã¢ÂÂÃ¢ÂÂ Lead helpers Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Lead helpers ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 function loadLeads() {
   if (!fs.existsSync(LEADS_FILE)) return [];
   try { return JSON.parse(fs.readFileSync(LEADS_FILE, 'utf8')); }
@@ -208,7 +208,7 @@ function saveLead(lead) {
   return record;
 }
 
-// Ã¢ÂÂÃ¢ÂÂ Parse assistant output Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Parse assistant output ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 function parseAssistantMessage(raw) {
   let reply        = raw;
   let quickReplies = [];
@@ -229,7 +229,7 @@ function parseAssistantMessage(raw) {
     reply = reply.replace(/CALENDLY_TRIGGER:[^\n]+\n?/, '').trim();
     // Also append the booking link as text so it works on all embed versions
     if (calendlyUrl) {
-      reply += `\n\nÃ°ÂÂÂ Book your free 30-minute consultation here:\n${calendlyUrl}`;
+      reply += `\n\nÃÂ°ÃÂÃÂÃÂ Book your free 30-minute consultation here:\n${calendlyUrl}`;
     }
   }
 
@@ -243,13 +243,13 @@ function parseAssistantMessage(raw) {
   return { reply, quickReplies, calendlyUrl, leadData };
 }
 
-// Ã¢ÂÂÃ¢ÂÂ Express app Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Express app ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(__dirname));  // serves dashboard.html
 
-// POST /chat Ã¢ÂÂ main chat endpoint
+// POST /chat ÃÂ¢ÃÂÃÂ main chat endpoint
 app.post('/chat', async (req, res) => {
   const { sessionId, message } = req.body;
 
@@ -296,12 +296,12 @@ app.post('/chat', async (req, res) => {
   }
 });
 
-// GET /leads Ã¢ÂÂ return all leads (basic auth recommended for production)
+// GET /leads ÃÂ¢ÃÂÃÂ return all leads (basic auth recommended for production)
 app.get('/leads', (req, res) => {
   res.json(loadLeads());
 });
 
-// Ã¢ÂÂÃ¢ÂÂ Command Queue Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Command Queue ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 const COMMANDS_FILE = path.join(__dirname, 'command-queue.json');
 function loadCommands() {
   if (!fs.existsSync(COMMANDS_FILE)) return [];
@@ -320,7 +320,7 @@ app.get('/api/commands', (req, res) => {
   res.json(cmds.slice(-50));
 });
 
-// POST /api/commands Ã¢ÂÂ queue a new command from the dashboard
+// POST /api/commands ÃÂ¢ÃÂÃÂ queue a new command from the dashboard
 app.post('/api/commands', (req, res) => {
   const { type, params, label } = req.body || {};
   if (!type) return res.status(400).json({ error: 'type required' });
@@ -336,11 +336,11 @@ app.post('/api/commands', (req, res) => {
   };
   cmds.push(cmd);
   saveCommands(cmds);
-  console.log(`[Commands] Queued: ${cmd.type} Ã¢ÂÂ ${cmd.label}`);
+  console.log(`[Commands] Queued: ${cmd.type} ÃÂ¢ÃÂÃÂ ${cmd.label}`);
   res.json(cmd);
 });
 
-// PATCH /api/commands/:id Ã¢ÂÂ agent updates status after execution
+// PATCH /api/commands/:id ÃÂ¢ÃÂÃÂ agent updates status after execution
 app.patch('/api/commands/:id', (req, res) => {
   const cmds = loadCommands();
   const idx = cmds.findIndex(c => c.id === req.params.id);
@@ -350,7 +350,7 @@ app.patch('/api/commands/:id', (req, res) => {
   res.json(cmds[idx]);
 });
 
-// POST /api/chat-command Ã¢ÂÂ AI interprets free-text and answers or queues an action
+// POST /api/chat-command ÃÂ¢ÃÂÃÂ AI interprets free-text and answers or queues an action
 app.post('/api/chat-command', async (req, res) => {
   const { message } = req.body || {};
   if (!message) return res.status(400).json({ error: 'message required' });
@@ -401,7 +401,7 @@ app.post('/api/chat-command', async (req, res) => {
       const run = (runInfo.workflow_runs || [])[0];
       if (run) {
         const ago = Math.round((Date.now() - new Date(run.updated_at)) / 60000);
-        agentRunStatus = `${run.status === 'in_progress' ? 'Ã°ÂÂÂ¡ RUNNING NOW' : run.conclusion === 'success' ? 'Ã¢ÂÂ Last run succeeded' : 'Ã¢ÂÂ Last run ' + run.conclusion} Ã¢ÂÂ ${ago < 60 ? ago + 'm ago' : Math.round(ago/60) + 'h ago'} (${new Date(run.updated_at).toLocaleDateString()})`;
+        agentRunStatus = `${run.status === 'in_progress' ? 'ÃÂ°ÃÂÃÂÃÂ¡ RUNNING NOW' : run.conclusion === 'success' ? 'ÃÂ¢ÃÂÃÂ Last run succeeded' : 'ÃÂ¢ÃÂÃÂ Last run ' + run.conclusion} ÃÂ¢ÃÂÃÂ ${ago < 60 ? ago + 'm ago' : Math.round(ago/60) + 'h ago'} (${new Date(run.updated_at).toLocaleDateString()})`;
       }
     }
   } catch (_) {}
@@ -425,14 +425,14 @@ ${summary}
 
 When the user sends a message, respond in ONE of two ways:
 
-1. If it's an ACTION to execute, respond with ONLY raw JSON on a single line Ã¢ÂÂ no markdown, no code fences, no explanation:
+1. If it's an ACTION to execute, respond with ONLY raw JSON on a single line ÃÂ¢ÃÂÃÂ no markdown, no code fences, no explanation:
 {"action":"<type>","params":<object>,"reply":"<short confirmation message>"}
 Valid action types:
 - "search-city": params = {"city":"City, ST","individualsOnly":false}
 - "run-schedule": params = {} (runs full daily search + follow-ups)
 - "send-followups": params = {}
 - "sync-now": params = {}
-- "trigger-github-run": params = {} (triggers cloud agent run on GitHub Actions Ã¢ÂÂ use when user says "run now", "trigger a run", "start the agent", "run the agent", "run in the cloud")
+- "trigger-github-run": params = {} (triggers cloud agent run on GitHub Actions ÃÂ¢ÃÂÃÂ use when user says "run now", "trigger a run", "start the agent", "run the agent", "run in the cloud")
 
 2. If it's a QUESTION or REQUEST FOR ANALYSIS, answer it directly in 2-4 sentences using the data above. Be specific and actionable. No JSON.
 
@@ -454,10 +454,10 @@ Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync
     try {
       const parsed = JSON.parse(cleaned);
       if (parsed.action) {
-        // Handle GitHub Actions trigger directly Ã¢ÂÂ no local watcher needed
+        // Handle GitHub Actions trigger directly ÃÂ¢ÃÂÃÂ no local watcher needed
         if (parsed.action === 'trigger-github-run') {
           const ghToken = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || '';
-          if (!ghToken) return res.json({ type: 'answer', reply: 'Ã¢ÂÂ Ã¯Â¸Â GH_TOKEN not set in Railway variables Ã¢ÂÂ cannot trigger GitHub Actions.' });
+          if (!ghToken) return res.json({ type: 'answer', reply: 'ÃÂ¢ÃÂÃÂ ÃÂ¯ÃÂ¸ÃÂ GH_TOKEN not set in Railway variables ÃÂ¢ÃÂÃÂ cannot trigger GitHub Actions.' });
           const result = await new Promise((resolve) => {
             const body = JSON.stringify({ ref: 'main' });
             const req2 = https.request({
@@ -477,15 +477,15 @@ Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync
           });
           if (result.status === 204) {
             console.log('[GitHub Actions] Workflow triggered');
-            return res.json({ type: 'answer', reply: 'Ã¢ÂÂ Agent run triggered on GitHub Actions! It will run in the cloud and sync new leads here in ~30 minutes.' });
+            return res.json({ type: 'answer', reply: 'ÃÂ¢ÃÂÃÂ Agent run triggered on GitHub Actions! It will run in the cloud and sync new leads here in ~30 minutes.' });
           }
-          return res.json({ type: 'answer', reply: `Ã¢ÂÂ Could not trigger GitHub Actions (HTTP ${result.status}). Check GH_TOKEN has workflow scope.` });
+          return res.json({ type: 'answer', reply: `ÃÂ¢ÃÂÃÂ Could not trigger GitHub Actions (HTTP ${result.status}). Check GH_TOKEN has workflow scope.` });
         }
 
-        // Handle sync-now directly Ã¢ÂÂ pull GitHub leads and MERGE email status from local
+        // Handle sync-now directly ÃÂ¢ÃÂÃÂ pull GitHub leads and MERGE email status from local
         if (parsed.action === 'sync-now') {
           const ghToken = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || '';
-          if (!ghToken) return res.json({ type: 'answer', reply: 'Ã¢ÂÂ Ã¯Â¸Â GH_TOKEN not set Ã¢ÂÂ cannot sync from GitHub.' });
+          if (!ghToken) return res.json({ type: 'answer', reply: 'ÃÂ¢ÃÂÃÂ ÃÂ¯ÃÂ¸ÃÂ GH_TOKEN not set ÃÂ¢ÃÂÃÂ cannot sync from GitHub.' });
           const syncResult = await new Promise((resolve) => {
             const req2 = https.request({
               hostname: 'api.github.com',
@@ -505,7 +505,7 @@ Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync
             req2.end();
           });
           if (syncResult.status !== 200) {
-            return res.json({ type: 'answer', reply: `Ã¢ÂÂ Could not fetch leads from GitHub (HTTP ${syncResult.status}).` });
+            return res.json({ type: 'answer', reply: `ÃÂ¢ÃÂÃÂ Could not fetch leads from GitHub (HTTP ${syncResult.status}).` });
           }
           try {
             const ghData = JSON.parse(syncResult.body);
@@ -541,20 +541,20 @@ Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync
             fs.writeFileSync(leadsFile, JSON.stringify(merged, null, 2));
             const emailed = merged.filter(l => l.emailSent).length;
             console.log(`[Sync] Merged ${merged.length} leads from GitHub (${emailed} emailed)`);
-            return res.json({ type: 'answer', reply: `Ã¢ÂÂ Synced! Dashboard now has ${merged.length} leads (${emailed} emailed). Refresh the page to see updated numbers.` });
+            return res.json({ type: 'answer', reply: `ÃÂ¢ÃÂÃÂ Synced! Dashboard now has ${merged.length} leads (${emailed} emailed). Refresh the page to see updated numbers.` });
           } catch (e) {
-            return res.json({ type: 'answer', reply: `Ã¢ÂÂ Sync failed: ${e.message}` });
+            return res.json({ type: 'answer', reply: `ÃÂ¢ÃÂÃÂ Sync failed: ${e.message}` });
           }
         }
 
-        // All remaining commands trigger GitHub Actions directly Ã¢ÂÂ no local watcher needed
+        // All remaining commands trigger GitHub Actions directly ÃÂ¢ÃÂÃÂ no local watcher needed
         const ghToken2 = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || '';
-        if (!ghToken2) return res.json({ type: 'answer', reply: 'Ã¢ÂÂ Ã¯Â¸Â GH_TOKEN not set in Railway variables Ã¢ÂÂ cannot trigger GitHub Actions.' });
+        if (!ghToken2) return res.json({ type: 'answer', reply: 'ÃÂ¢ÃÂÃÂ ÃÂ¯ÃÂ¸ÃÂ GH_TOKEN not set in Railway variables ÃÂ¢ÃÂÃÂ cannot trigger GitHub Actions.' });
 
         // Build a friendly reply based on command type
-        let actionReply = 'Ã¢ÂÂ Agent started on GitHub Actions! Results will appear here in ~60 min Ã¢ÂÂ click Sync Now when done.';
-        if (parsed.action === 'send-followups') actionReply = 'Ã¢ÂÂ Follow-up run triggered on GitHub Actions! Follow-up emails will be sent in ~15 min.';
-        if (parsed.action === 'search-city') actionReply = `Ã¢ÂÂ City search triggered on GitHub Actions! Searching ${(parsed.params && parsed.params.city) || 'the requested city'} now Ã¢ÂÂ click Sync Now in ~30 min.`;
+        let actionReply = 'ÃÂ¢ÃÂÃÂ Agent started on GitHub Actions! Results will appear here in ~60 min ÃÂ¢ÃÂÃÂ click Sync Now when done.';
+        if (parsed.action === 'send-followups') actionReply = 'ÃÂ¢ÃÂÃÂ Follow-up run triggered on GitHub Actions! Follow-up emails will be sent in ~15 min.';
+        if (parsed.action === 'search-city') actionReply = `ÃÂ¢ÃÂÃÂ City search triggered on GitHub Actions! Searching ${(parsed.params && parsed.params.city) || 'the requested city'} now ÃÂ¢ÃÂÃÂ click Sync Now in ~30 min.`;
 
         const ghResult2 = await new Promise((resolve) => {
           const body2 = JSON.stringify({ ref: 'main' });
@@ -578,7 +578,7 @@ Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync
           console.log(`[GitHub Actions] Triggered for command: ${parsed.action}`);
           return res.json({ type: 'answer', reply: actionReply });
         }
-        return res.json({ type: 'answer', reply: `Ã¢ÂÂ Could not trigger GitHub Actions (HTTP ${ghResult2.status}). Check GH_TOKEN in Railway variables.` });
+        return res.json({ type: 'answer', reply: `ÃÂ¢ÃÂÃÂ Could not trigger GitHub Actions (HTTP ${ghResult2.status}). Check GH_TOKEN in Railway variables.` });
       }
     } catch {}
 
@@ -591,7 +591,7 @@ Examples of actions: "search Oakland", "run the agent", "send follow-ups", "sync
   }
 });
 
-// GET /outbound-leads Ã¢ÂÂ return all outbound (proactively found) leads
+// GET /outbound-leads ÃÂ¢ÃÂÃÂ return all outbound (proactively found) leads
 app.get('/outbound-leads', (req, res) => {
   const file = path.join(__dirname, 'outbound-leads.json');
   if (!fs.existsSync(file)) return res.json([]);
@@ -599,7 +599,7 @@ app.get('/outbound-leads', (req, res) => {
   catch { res.json([]); }
 });
 
-// POST /outbound-leads/sync Ã¢ÂÂ receive leads from local agent run and merge into server store
+// POST /outbound-leads/sync ÃÂ¢ÃÂÃÂ receive leads from local agent run and merge into server store
 app.post('/outbound-leads/sync', (req, res) => {
   const syncKey = process.env.SYNC_SECRET || 'spectrum-sync';
   if (req.headers['x-sync-key'] !== syncKey) return res.status(401).json({ error: 'Unauthorized' });
@@ -633,7 +633,7 @@ app.post('/outbound-leads/sync', (req, res) => {
   res.json({ merged, total: leads.length });
 });
 
-// GET /calls Ã¢ÂÂ proxy Vapi call logs
+// GET /calls ÃÂ¢ÃÂÃÂ proxy Vapi call logs
 app.get('/calls', async (req, res) => {
   const vapiKey = process.env.VAPI_API_KEY;
   if (!vapiKey) return res.status(500).json({ error: 'VAPI_API_KEY not set' });
@@ -662,7 +662,7 @@ app.get('/calls', async (req, res) => {
   }
 });
 
-// PATCH /outbound-leads/:id/reply Ã¢ÂÂ mark a lead as replied
+// PATCH /outbound-leads/:id/reply ÃÂ¢ÃÂÃÂ mark a lead as replied
 app.patch('/outbound-leads/:id/reply', (req, res) => {
   const file = path.join(__dirname, 'outbound-leads.json');
   if (!fs.existsSync(file)) return res.status(404).json({ error: 'No leads file' });
@@ -680,7 +680,7 @@ app.patch('/outbound-leads/:id/reply', (req, res) => {
   }
 });
 
-// PATCH /outbound-leads/:id/unreply Ã¢ÂÂ undo a replied marking
+// PATCH /outbound-leads/:id/unreply ÃÂ¢ÃÂÃÂ undo a replied marking
 app.patch('/outbound-leads/:id/unreply', (req, res) => {
   const file = path.join(__dirname, 'outbound-leads.json');
   if (!fs.existsSync(file)) return res.status(404).json({ error: 'No leads file' });
@@ -698,7 +698,7 @@ app.patch('/outbound-leads/:id/unreply', (req, res) => {
   }
 });
 
-// POST /webhook/resend Ã¢ÂÂ email open/click tracking from Resend
+// POST /webhook/resend ÃÂ¢ÃÂÃÂ email open/click tracking from Resend
 app.post('/webhook/resend', express.raw({ type: '*/*' }), (req, res) => {
   res.json({ ok: true }); // always ACK immediately
   try {
@@ -725,13 +725,13 @@ app.post('/webhook/resend', express.raw({ type: '*/*' }), (req, res) => {
     }
     leads[idx].updatedAt = new Date().toISOString();
     fs.writeFileSync(file, JSON.stringify(leads, null, 2));
-    console.log(`[Webhook] ${type} Ã¢ÂÂ lead ${leadId} (opens: ${leads[idx].openCount || 0})`);
+    console.log(`[Webhook] ${type} ÃÂ¢ÃÂÃÂ lead ${leadId} (opens: ${leads[idx].openCount || 0})`);
   } catch (e) {
     console.error('[Webhook] Error:', e.message);
   }
 });
 
-// GET /hubspot-contacts Ã¢ÂÂ fetch contacts + deals from HubSpot
+// GET /hubspot-contacts ÃÂ¢ÃÂÃÂ fetch contacts + deals from HubSpot
 app.get('/hubspot-contacts', async (req, res) => {
   if (!process.env.HUBSPOT_API_KEY) return res.json({ contacts: [], deals: [], _debug: 'no_api_key' });
   try {
@@ -760,7 +760,7 @@ app.get('/hubspot-contacts', async (req, res) => {
   }
 });
 
-// GET /leads/export.csv Ã¢ÂÂ CSV export
+// GET /leads/export.csv ÃÂ¢ÃÂÃÂ CSV export
 app.get('/leads/export.csv', (req, res) => {
   const leads = loadLeads();
   const headers = ['id','name','email','phone','service','notes','capturedAt','updatedAt'];
@@ -771,7 +771,7 @@ app.get('/leads/export.csv', (req, res) => {
   res.send(csv);
 });
 
-// Ã¢ÂÂÃ¢ÂÂ GitHub Actions trigger Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ GitHub Actions trigger ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 app.post('/agent-trigger', async (req, res) => {
   const token = process.env.GITHUB_TOKEN;
   const repo  = 'amuyungga/accounting-agent';
@@ -805,8 +805,8 @@ app.post('/agent-trigger', async (req, res) => {
   }
 });
 
-// Ã¢ÂÂÃ¢ÂÂ Nonprofit / FQHC search Ã¢ÂÂ manual trigger + status Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
-// POST /api/nonprofit-search/trigger Ã¢ÂÂ dispatches the workflow_dispatch event
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Nonprofit / FQHC search ÃÂ¢ÃÂÃÂ manual trigger + status ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+// POST /api/nonprofit-search/trigger ÃÂ¢ÃÂÃÂ dispatches the workflow_dispatch event
 app.post('/api/nonprofit-search/trigger', async (req, res) => {
   const token = process.env.GITHUB_TOKEN;
   if (!token) return res.status(503).json({ error: 'GITHUB_TOKEN not configured' });
@@ -835,13 +835,13 @@ app.post('/api/nonprofit-search/trigger', async (req, res) => {
   });
 
   if (result.status === 204) {
-    res.json({ ok: true, message: 'Nonprofit search started Ã¢ÂÂ check dashboard for status in ~30s' });
+    res.json({ ok: true, message: 'Nonprofit search started ÃÂ¢ÃÂÃÂ check dashboard for status in ~30s' });
   } else {
     res.status(500).json({ error: `GitHub returned ${result.status}`, detail: result.body });
   }
 });
 
-// GET /api/nonprofit-search/status Ã¢ÂÂ latest workflow run status
+// GET /api/nonprofit-search/status ÃÂ¢ÃÂÃÂ latest workflow run status
 app.get('/api/nonprofit-search/status', async (req, res) => {
   const token = process.env.GITHUB_TOKEN;
   if (!token) return res.status(503).json({ error: 'GITHUB_TOKEN not configured' });
@@ -866,7 +866,7 @@ app.get('/api/nonprofit-search/status', async (req, res) => {
   });
 });
 
-// Ã¢ÂÂÃ¢ÂÂ GitHub Actions agent status proxy Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ GitHub Actions agent status proxy ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 app.get('/agent-status', async (req, res) => {
   const token = process.env.GITHUB_TOKEN;
   const repo  = 'amuyungga/accounting-agent';
@@ -895,9 +895,9 @@ app.get('/agent-status', async (req, res) => {
   }
 });
 
-// POST /api/find-website Ã¢ÂÂ Serper.dev (Google Search) lookup for nonprofit websites
+// POST /api/find-website ÃÂ¢ÃÂÃÂ Serper.dev (Google Search) lookup for nonprofit websites
 // Serper.dev is not IP-restricted (works from any cloud provider).
-// Requires SERPER_API_KEY env var Ã¢ÂÂ free: 2,500 queries (no CC) at https://serper.dev
+// Requires SERPER_API_KEY env var ÃÂ¢ÃÂÃÂ free: 2,500 queries (no CC) at https://serper.dev
 app.post('/api/find-website', async (req, res) => {
   const { orgName, city, stateId } = req.body || {};
   if (!orgName) return res.status(400).json({ error: 'orgName required' });
@@ -949,7 +949,7 @@ app.post('/api/find-website', async (req, res) => {
       req2.end();
     });
 
-    if (website) console.log(`[FindWebsite] Serper Ã¢ÂÂ ${website.slice(0, 60)} for "${orgName}"`);
+    if (website) console.log(`[FindWebsite] Serper ÃÂ¢ÃÂÃÂ ${website.slice(0, 60)} for "${orgName}"`);
     else console.log(`[FindWebsite] No result for "${orgName}"`);
     res.json({ website });
   } catch (e) {
@@ -958,13 +958,13 @@ app.post('/api/find-website', async (req, res) => {
   }
 });
 
-// Ã¢ÂÂÃ¢ÂÂ GitHub leads sync (startup + periodic) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ GitHub leads sync (startup + periodic) ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 // Railway wipes the local filesystem on every redeploy. Without this, the
 // dashboard reverts to whatever stale version was baked into the git repo.
 // Also runs every 5 minutes so agent/retry workflow results show up automatically.
 async function syncLeadsFromGitHub() {
   const token = process.env.GITHUB_TOKEN;
-  if (!token) { console.log('[Sync] No GITHUB_TOKEN Ã¢ÂÂ skipping leads sync'); return; }
+  if (!token) { console.log('[Sync] No GITHUB_TOKEN ÃÂ¢ÃÂÃÂ skipping leads sync'); return; }
   try {
     const data = await new Promise((resolve, reject) => {
       const req = https.get({
@@ -1021,7 +1021,7 @@ async function syncLeadsFromGitHub() {
   }
 }
 
-// Ã¢ÂÂÃ¢ÂÂ POST /api/inbound-lead Ã¢ÂÂ landing page form submission Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ POST /api/inbound-lead ÃÂ¢ÃÂÃÂ landing page form submission ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 app.post('/api/inbound-lead', async (req, res) => {
   const { name, org, email, phone, orgType, service, message } = req.body || {};
   if (!name || !email) return res.status(400).json({ error: 'Name and email required' });
@@ -1041,7 +1041,7 @@ app.post('/api/inbound-lead', async (req, res) => {
     industry: orgType === 'fqhc' ? 'FQHC / Community Health Center'
              : orgType === 'nonprofit' ? 'Nonprofit Organization'
              : 'Small Business',
-    score: 90, // highest intent Ã¢ÂÂ they came to us
+    score: 90, // highest intent ÃÂ¢ÃÂÃÂ they came to us
     foundAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -1056,10 +1056,10 @@ app.post('/api/inbound-lead', async (req, res) => {
     console.error('[Inbound] Failed to save lead:', e.message);
   }
 
-  console.log(`[Inbound] New lead: ${name} <${email}> Ã¢ÂÂ ${org} (${orgType})`);
+  console.log(`[Inbound] New lead: ${name} <${email}> ÃÂ¢ÃÂÃÂ ${org} (${orgType})`);
   res.json({ success: true });
 
-  // Ã¢ÂÂÃ¢ÂÂ Auto-response email to prospect Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Auto-response email to prospect ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
   const resendKey = process.env.RESEND_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
   if (!resendKey || !anthropicKey) return;
@@ -1131,8 +1131,8 @@ Return ONLY the email body text (no subject line). Plain text, no markdown.`;
     const orgLabel = orgType === 'fqhc' ? 'FQHC' : orgType === 'nonprofit' ? 'Nonprofit' : 'Small Business';
     await sendEmail(
       'snt.milla@gmail.com',
-      `Ã°ÂÂÂ New inbound lead: ${name} Ã¢ÂÂ ${org || 'unknown org'}`,
-      `New inbound lead from your landing page!\n\nName: ${name}\nOrg: ${org || 'Ã¢ÂÂ'}\nType: ${orgLabel}\nEmail: ${email}\nPhone: ${phone || 'Ã¢ÂÂ'}\nService: ${service || 'Ã¢ÂÂ'}\nMessage: ${message || 'Ã¢ÂÂ'}\n\nAuto-response has been sent. Lead saved to dashboard.`
+      `ÃÂ°ÃÂÃÂÃÂ New inbound lead: ${name} ÃÂ¢ÃÂÃÂ ${org || 'unknown org'}`,
+      `New inbound lead from your landing page!\n\nName: ${name}\nOrg: ${org || 'ÃÂ¢ÃÂÃÂ'}\nType: ${orgLabel}\nEmail: ${email}\nPhone: ${phone || 'ÃÂ¢ÃÂÃÂ'}\nService: ${service || 'ÃÂ¢ÃÂÃÂ'}\nMessage: ${message || 'ÃÂ¢ÃÂÃÂ'}\n\nAuto-response has been sent. Lead saved to dashboard.`
     );
     console.log(`[Inbound] Notification sent to Asante`);
   } catch (e) {
@@ -1140,7 +1140,7 @@ Return ONLY the email body text (no subject line). Plain text, no markdown.`;
   }
 });
 
-// Ã¢ÂÂÃ¢ÂÂ Google Ads API Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Google Ads API ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 let gadsCache = { data: null, ts: 0, days: null };
 
 app.get('/api/google-ads', async (req, res) => {
@@ -1193,7 +1193,7 @@ app.get('/api/google-ads', async (req, res) => {
       ...(mccId ? { 'login-customer-id': mccId } : {}),
     };
 
-    const gadsBase = `https://googleads.googleapis.com/v20/customers/${customerId}/googleAds:search`;
+    const gadsBase = `https://googleads.googleapis.com/v24/customers/${customerId}/googleAds:search`;
 
     const [campRes, dailyRes] = await Promise.all([
       fetch(gadsBase, {
@@ -1267,9 +1267,9 @@ app.get('/api/google-ads', async (req, res) => {
   }
 });
 
-// Ã¢ÂÂÃ¢ÂÂ Start Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Start ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 app.listen(PORT, () => {
-  console.log(`\nÃ¢ÂÂ Accounting Firm AI Agent running on http://localhost:${PORT}`);
+  console.log(`\nÃÂ¢ÃÂÃÂ Accounting Firm AI Agent running on http://localhost:${PORT}`);
   console.log(`   Chat endpoint : POST http://localhost:${PORT}/chat`);
   console.log(`   Leads JSON    : GET  http://localhost:${PORT}/leads`);
   console.log(`   Leads CSV     : GET  http://localhost:${PORT}/leads/export.csv`);
