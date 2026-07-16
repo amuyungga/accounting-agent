@@ -6,7 +6,7 @@
  * Run:   node server.js
  */
 
-require('dotenv').config();          // loads .env file when running locally
+require('dotenv').config();          // loads .env file whhen running locally
 
 const express    = require('express');
 const cors       = require('cors');
@@ -1020,6 +1020,30 @@ async function syncLeadsFromGitHub() {
     console.log('[Sync] Could not sync leads from GitHub:', e.message);
   }
 }
+
+// POST /api/contact -- GoDaddy Airo contact page form submission
+app.post('/api/contact', async (req, res) => {
+    const { name, company, email, phone, service, callTime, message } = req.body || {};
+    if (!name || !email) return res.status(400).json({ error: 'Name and email required' });
+    console.log(`[Contact] New inquiry: ${name} <${email}>`);
+    res.json({ success: true });
+    const resendKey = process.env.RESEND_API_KEY;
+    if (!resendKey) return;
+    const notify = (to, subject, text) => new Promise((resolve) => {
+          const payload = JSON.stringify({ from: 'Asante <asante@spectrumfinancialsolution.com>', to, subject, text });
+          const r = https.request({ hostname: 'api.resend.com', path: '/emails', method: 'POST',
+                                         headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) },
+                                  }, (resp) => { let d=''; resp.on('data', c=>d+=c); resp.on('end', () => resolve()); });
+          r.on('error', () => resolve()); r.write(payload); r.end();
+    });
+    try {
+          await notify('snt.milla@gmail.com',
+                             `New contact form: ${name} -- ${company || 'unknown'}`,
+                             `Name: ${name}\nCompany: ${company || '-'}\nEmail: ${email}\nPhone: ${phone || '-'}\nService: ${service || '-'}\nCall time: ${callTime || '-'}\nMessage: ${message || '-'}`
+                           );
+          console.log('[Contact] Notification sent');
+    } catch(e) { console.error('[Contact] Email error:', e.message); }
+});
 
 // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ POST /api/inbound-lead ÃÂ¢ÃÂÃÂ landing page form submission ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 app.post('/api/inbound-lead', async (req, res) => {
