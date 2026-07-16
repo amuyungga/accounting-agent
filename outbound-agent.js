@@ -1913,12 +1913,14 @@ async function run() {
   // Send follow-ups to leads from 3-5 days ago
   await runFollowUps();
 
-  // PRIMARY: Google Places — real small businesses (emails + VAPI calls)
-  const { found: gpFound, emailed: gpEmailed, called: gpCalled } = await runGooglePlacesLeads(todayCities);
-  totalFound += gpFound;
-  totalEmailed += gpEmailed;
+  // INTENT-ONLY MODE: Skip Google Places to stay under Resend 100/day limit
+  // To re-enable Google Places, uncomment the block below:
+  // const { found: gpFound, emailed: gpEmailed, called: gpCalled } = await runGooglePlacesLeads(todayCities);
+  // totalFound += gpFound;
+  // totalEmailed += gpEmailed;
+  const gpCalled = 0; // no VAPI calls in intent-only mode
 
-  // SECONDARY: Intent searches — job boards, Craigslist, Reddit etc.
+  // Intent searches — job boards, Craigslist, Reddit etc. (high-intent leads only)
   const { intentFound, intentEmailed } = await runIntentSearches(todayCities);
   totalFound += intentFound;
   totalEmailed += intentEmailed;
