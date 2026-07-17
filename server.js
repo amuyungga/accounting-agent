@@ -249,11 +249,6 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(__dirname));  // serves dashboard.html
 
-// GET /contact — landing page for Google Ads (PMax Asset Group Final URL)
-app.get('/contact', (req, res) => {
-  res.sendFile(path.join(__dirname, 'landing.html'));
-});
-
 // POST /chat — main chat endpoint
 app.post('/chat', async (req, res) => {
   const { sessionId, message } = req.body;
