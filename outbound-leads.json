@@ -45980,5 +45980,23 @@
     "foundAt": "2026-07-27T19:44:56.995Z",
     "updatedAt": "2026-07-27T19:44:56.995Z",
     "error": "Invalid character in header content [\"x-api-key\"]"
+  },
+  {
+    "id": "np_1785181549538_zqsu",
+    "name": "Good Samaritan Hospital Association",
+    "city": "Rugby",
+    "state": "ND",
+    "industry": "Nonprofit Organization",
+    "source": "propublica",
+    "listingUrl": "np_ND_good_samaritan_hospital_associ",
+    "website": "https://www.hamc.com",
+    "phone": null,
+    "email": "mhaman@hamc.com",
+    "status": "error",
+    "ein": "450226419",
+    "orgType": "nonprofit",
+    "foundAt": "2026-07-27T19:45:49.538Z",
+    "updatedAt": "2026-07-27T19:45:49.538Z",
+    "error": "Invalid character in header content [\"x-api-key\"]"
   }
 ]
