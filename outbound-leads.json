@@ -45962,5 +45962,23 @@
     "foundAt": "2026-07-27T19:43:33.225Z",
     "updatedAt": "2026-07-27T19:43:33.225Z",
     "error": "Invalid character in header content [\"x-api-key\"]"
+  },
+  {
+    "id": "np_1785181496995_sbig",
+    "name": "Ssm St Clare Health Center Foundation",
+    "city": "St Louis",
+    "state": "MO",
+    "industry": "Nonprofit Organization",
+    "source": "propublica",
+    "listingUrl": "np_MO_ssm_st_clare_health_center_fou",
+    "website": "https://www.givetossmhealth.org",
+    "phone": null,
+    "email": "sandy.koller@ssmhealth.com",
+    "status": "error",
+    "ein": "431273310",
+    "orgType": "nonprofit",
+    "foundAt": "2026-07-27T19:44:56.995Z",
+    "updatedAt": "2026-07-27T19:44:56.995Z",
+    "error": "Invalid character in header content [\"x-api-key\"]"
   }
 ]
