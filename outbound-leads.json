@@ -45927,5 +45927,40 @@
     "emailSent": true,
     "emailSentAt": "2026-07-16T18:10:17.838Z",
     "emailContent": "**Subject: Most Miami realtors are leaving $12K-$18K on the table annually**\n\nSebastian, here's what we see across real estate teams in Miami: most agents and brokers aren't properly tracking commission splits, expense deductions, or entity structure optimization. You could be overpaying taxes by thousands every year without realizing it—especially if you're operating as a sole proprietor or haven't reviewed your structure in 12+ months.\n\nWe work with realtors to clean up their bookkeeping, identify missed deductions (vehicle expenses, home office, marketing), and ensure you're taxed efficiently. A quick 30-minute call could reveal exactly what you're missing. Ready to see where your money's actually going?\n\n**[Book your free consultation here](https://calendly.com/asante-spectrumfinancialsolution/30min)**"
+  },
+  {
+    "id": "np_1785181409518_u203",
+    "name": "4you Health Center",
+    "city": "Brea",
+    "state": "CA",
+    "industry": "Nonprofit Organization",
+    "source": "propublica",
+    "listingUrl": "np_CA_4you_health_center",
+    "website": "https://www.pledge.to",
+    "phone": null,
+    "email": null,
+    "status": "no_email",
+    "ein": "833175563",
+    "orgType": "nonprofit",
+    "foundAt": "2026-07-27T19:43:29.518Z",
+    "updatedAt": "2026-07-27T19:43:29.518Z"
+  },
+  {
+    "id": "np_1785181413225_7goq",
+    "name": "Community Integrative Health",
+    "city": "San Diego",
+    "state": "CA",
+    "industry": "Nonprofit Organization",
+    "source": "propublica",
+    "listingUrl": "np_CA_community_integrative_health",
+    "website": "https://cih.ucsd.edu",
+    "phone": null,
+    "email": "cihweb@health.ucsd.edu",
+    "status": "error",
+    "ein": "921235990",
+    "orgType": "nonprofit",
+    "foundAt": "2026-07-27T19:43:33.225Z",
+    "updatedAt": "2026-07-27T19:43:33.225Z",
+    "error": "Invalid character in header content [\"x-api-key\"]"
   }
 ]
