@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Spectrum Financial — Command Center</title>
+<title>Spectrum Financial â Command Center</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -84,7 +84,7 @@ header p{font-size:11px;color:var(--muted);margin-top:2px}
   transition:transform .2s,box-shadow .2s;
 }
 .stat-card[onclick]:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.5)}
-.stat-card[onclick]:hover .sub::after{content:' →';opacity:.7}
+.stat-card[onclick]:hover .sub::after{content:' â';opacity:.7}
 .stat-card:hover{transform:translateY(-2px);box-shadow:0 10px 40px rgba(0,0,0,.4)}
 .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
 .stat-card.blue::before{background:linear-gradient(90deg,#1d4ed8,#60a5fa)}
@@ -197,7 +197,7 @@ a:hover{text-decoration:underline}
 /* Funnel */
 .funnel-row{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
 .funnel-step{flex:1;min-width:100px;padding:18px 16px;position:relative;text-align:center}
-.funnel-step+.funnel-step::before{content:'›';position:absolute;left:-2px;top:50%;transform:translateY(-50%);color:var(--border);font-size:20px;font-weight:300}
+.funnel-step+.funnel-step::before{content:'âº';position:absolute;left:-2px;top:50%;transform:translateY(-50%);color:var(--border);font-size:20px;font-weight:300}
 .funnel-step .fs-val{font-size:1.8rem;font-weight:800;line-height:1}
 .funnel-step .fs-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-top:4px}
 .funnel-step .fs-pct{font-size:11px;margin-top:5px;font-weight:600;opacity:.75}
@@ -347,7 +347,7 @@ a:hover{text-decoration:underline}
 .ab-stat .al{font-size:10px;color:var(--muted)}
 .winner{box-shadow:0 0 0 2px var(--green)}
 
-/* ── Command Center ──────────────────────────────────────────────────── */
+/* ââ Command Center ââââââââââââââââââââââââââââââââââââââââââââââââââââ */
 #cmd-fab{
   position:fixed;bottom:28px;right:28px;z-index:200;
   background:linear-gradient(135deg,#3b82f6,#8b5cf6);
@@ -453,7 +453,7 @@ a:hover{text-decoration:underline}
 }
 .cp-send:hover{opacity:.85}
 
-/* ── Agent Tab ─────────────────────────────────────────────────────────── */
+/* ââ Agent Tab âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
 .agent-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:24px 32px 8px}
 .agent-status-card{
   background:var(--card);border:1px solid var(--border);border-radius:14px;
@@ -506,77 +506,64 @@ a:hover{text-decoration:underline}
 
 <header>
   <div class="header-left">
-    <div class="logo-mark">💼</div>
+    <div class="logo-mark">ð¼</div>
     <div>
       <h1>Spectrum Financial Solutions</h1>
       <p>AI Marketing &amp; Sales Command Center</p>
     </div>
   </div>
   <div class="header-right">
-    <span id="last-updated">Loading…</span>
+    <span id="last-updated">Loadingâ¦</span>
     <div class="live-badge"><div class="live-dot"></div>LIVE</div>
   </div>
 </header>
 
 <div class="tabs">
-  <button class="tab-btn active" onclick="switchTab(this,'overview')">📊 Overview</button>
-  <button class="tab-btn" onclick="switchTab(this,'chat')">💬 Chat Leads</button>
-  <button class="tab-btn" onclick="switchTab(this,'outbound')">📧 Outbound</button>
-  <button class="tab-btn" onclick="switchTab(this,'calls')">📞 Calls</button>
-  <button class="tab-btn" onclick="switchTab(this,'crm')">🏢 CRM</button>
-  <button class="tab-btn" onclick="switchTab(this,'kpi');renderKpi()">📈 KPIs</button>
-  <button class="tab-btn" onclick="switchTab(this,'agent');fetchAgentStatus()">🤖 Agent</button>
-  <button class="tab-btn" onclick="switchTab(this,'google-ads');loadGoogleAds()">📺 Google Ads</button>
+  <button class="tab-btn active" onclick="switchTab(this,'overview')">ð Overview</button>
+  <button class="tab-btn" onclick="switchTab(this,'chat')">ð¬ Chat Leads</button>
+  <button class="tab-btn" onclick="switchTab(this,'outbound')">ð§ Outbound</button>
+  <button class="tab-btn" onclick="switchTab(this,'calls')">ð Calls</button>
+  <button class="tab-btn" onclick="switchTab(this,'crm')">ð¢ CRM</button>
+  <button class="tab-btn" onclick="switchTab(this,'kpi');renderKpi()">ð KPIs</button>
+  <button class="tab-btn" onclick="switchTab(this,'agent');fetchAgentStatus()">ð¤ Agent</button>
+  <button class="tab-btn" onclick="switchTab(this,'google-ads');loadGoogleAds()">ðº Google Ads</button>
 </div>
 
 <!-- OVERVIEW -->
 <div id="s-overview" class="section active">
   <div class="stats-row">
     <div class="stat-card blue" onclick="goToTab('chat')" style="cursor:pointer">
-      <div class="stat-icon">💬</div>
+      <div class="stat-icon">ð¬</div>
       <div class="lbl">Chat Leads</div>
-      <div class="val" id="ov-chat">—</div>
+      <div class="val" id="ov-chat">â</div>
       <div class="sub">From website widget</div>
     </div>
     <div class="stat-card green" onclick="goToTab('outbound')" style="cursor:pointer">
-      <div class="stat-icon">📧</div>
+      <div class="stat-icon">ð§</div>
       <div class="lbl">Outbound Emailed</div>
-      <div class="val" id="ov-emailed">—</div>
+      <div class="val" id="ov-emailed">â</div>
       <div class="sub">Cold emails sent</div>
     </div>
     <div class="stat-card purple" onclick="goToTab('calls')" style="cursor:pointer">
-      <div class="stat-icon">📞</div>
+      <div class="stat-icon">ð</div>
       <div class="lbl">Calls Received</div>
-      <div class="val" id="ov-calls">—</div>
+      <div class="val" id="ov-calls">â</div>
       <div class="sub">Via Vapi receptionist</div>
     </div>
     <div class="stat-card amber" onclick="goToTab('crm')" style="cursor:pointer">
-      <div class="stat-icon">🏢</div>
+      <div class="stat-icon">ð¢</div>
       <div class="lbl">CRM Contacts</div>
-      <div class="val" id="ov-crm">—</div>
+      <div class="val" id="ov-crm">â</div>
       <div class="sub">In HubSpot</div>
     </div>
     <div class="stat-card purple" onclick="goToTab('kpi')" style="cursor:pointer">
-      <div class="stat-icon">⚡</div>
+      <div class="stat-icon">â¡</div>
       <div class="lbl">Total Touches</div>
-      <div class="val" id="ov-total">—</div>
+      <div class="val" id="ov-total">â</div>
       <div class="sub">All channels combined</div>
     </div>
   </div>
-  <!-- Inbound Landing Page Banner -->
-  <div style="margin:0 32px 20px;background:linear-gradient(135deg,#10b981 0%,#3b82f6 100%);border-radius:14px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-    <div style="display:flex;align-items:center;gap:14px">
-      <div style="font-size:2rem">🌐</div>
-      <div>
-        <div style="font-weight:700;font-size:15px;color:#fff">Inbound Landing Page — Live</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.8);margin-top:3px">Google Ads destination · Form submissions auto-email prospects &amp; notify you</div>
-      </div>
-    </div>
-    <a href="/landing.html" target="_blank"
-      style="background:#fff;color:#10b981;font-weight:700;font-size:13px;padding:9px 20px;border-radius:8px;text-decoration:none;white-space:nowrap;flex-shrink:0">
-      View Landing Page →
-    </a>
-  </div>
+
 
   <!-- Email Funnel -->
   <div class="sec-heading">Email Funnel</div>
@@ -584,7 +571,7 @@ a:hover{text-decoration:underline}
   <!-- 14-Day Activity Chart -->
   <div style="padding:0 32px 20px">
     <div class="chart-card">
-      <div class="chart-title">📊 Last 14 Days — Email Activity</div>
+      <div class="chart-title">ð Last 14 Days â Email Activity</div>
       <div style="position:relative;height:200px"><canvas id="ov-chart"></canvas></div>
     </div>
   </div>
@@ -592,7 +579,7 @@ a:hover{text-decoration:underline}
   <div class="tw">
     <table>
       <thead><tr><th>Type</th><th>Name</th><th>Contact</th><th>Detail</th><th>Date</th></tr></thead>
-      <tbody id="ov-tbody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+      <tbody id="ov-tbody"><tr><td colspan="5" class="empty">Loadingâ¦</td></tr></tbody>
     </table>
   </div>
 </div>
@@ -600,10 +587,10 @@ a:hover{text-decoration:underline}
 <!-- CHAT -->
 <div id="s-chat" class="section">
   <div class="stats-row">
-    <div class="stat-card blue"><div class="stat-icon">👥</div><div class="lbl">Total</div><div class="val" id="ch-total">—</div></div>
-    <div class="stat-card green"><div class="stat-icon">📅</div><div class="lbl">Today</div><div class="val" id="ch-today">—</div></div>
-    <div class="stat-card purple"><div class="stat-icon">📆</div><div class="lbl">This Week</div><div class="val" id="ch-week">—</div></div>
-    <div class="stat-card amber"><div class="stat-icon">🏆</div><div class="lbl">Top Service</div><div class="val val-sm" id="ch-top">—</div></div>
+    <div class="stat-card blue"><div class="stat-icon">ð¥</div><div class="lbl">Total</div><div class="val" id="ch-total">â</div></div>
+    <div class="stat-card green"><div class="stat-icon">ð</div><div class="lbl">Today</div><div class="val" id="ch-today">â</div></div>
+    <div class="stat-card purple"><div class="stat-icon">ð</div><div class="lbl">This Week</div><div class="val" id="ch-week">â</div></div>
+    <div class="stat-card amber"><div class="stat-icon">ð</div><div class="lbl">Top Service</div><div class="val val-sm" id="ch-top">â</div></div>
   </div>
   <div class="date-bar">
     <span class="db-lbl">Period:</span>
@@ -619,23 +606,23 @@ a:hover{text-decoration:underline}
     <input class="date-input" type="date" id="ch-to-date" onchange="applyTabDate('ch')"/>
   </div>
   <div class="toolbar">
-    <input class="srch" id="ch-s" type="text" placeholder="Search name, email…" oninput="renderChat()"/>
-    <a class="btn-export ml" href="/leads/export.csv" download>⬇ Export CSV</a>
-    <button class="btn-refresh" onclick="loadChat()">↻ Refresh</button>
+    <input class="srch" id="ch-s" type="text" placeholder="Search name, emailâ¦" oninput="renderChat()"/>
+    <a class="btn-export ml" href="/leads/export.csv" download>â¬ Export CSV</a>
+    <button class="btn-refresh" onclick="loadChat()">â» Refresh</button>
   </div>
   <div class="tw"><table>
     <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Service</th><th>Notes</th><th>Captured</th></tr></thead>
-    <tbody id="ch-tbody"><tr><td colspan="6" class="empty"><span class="empty-icon">💬</span>Loading…</td></tr></tbody>
+    <tbody id="ch-tbody"><tr><td colspan="6" class="empty"><span class="empty-icon">ð¬</span>Loadingâ¦</td></tr></tbody>
   </table></div>
 </div>
 
 <!-- OUTBOUND -->
 <div id="s-outbound" class="section">
   <div class="stats-row">
-    <div class="stat-card blue"><div class="stat-icon">🔍</div><div class="lbl">Total Found</div><div class="val" id="ob-total">—</div></div>
-    <div class="stat-card green"><div class="stat-icon">✅</div><div class="lbl">Emailed</div><div class="val" id="ob-emailed">—</div></div>
-    <div class="stat-card purple"><div class="stat-icon">📨</div><div class="lbl">Email Found</div><div class="val" id="ob-found">—</div></div>
-    <div class="stat-card amber"><div class="stat-icon">❓</div><div class="lbl">No Email</div><div class="val" id="ob-noemail">—</div></div>
+    <div class="stat-card blue"><div class="stat-icon">ð</div><div class="lbl">Total Found</div><div class="val" id="ob-total">â</div></div>
+    <div class="stat-card green"><div class="stat-icon">â</div><div class="lbl">Emailed</div><div class="val" id="ob-emailed">â</div></div>
+    <div class="stat-card purple"><div class="stat-icon">ð¨</div><div class="lbl">Email Found</div><div class="val" id="ob-found">â</div></div>
+    <div class="stat-card amber"><div class="stat-icon">â</div><div class="lbl">No Email</div><div class="val" id="ob-noemail">â</div></div>
   </div>
   <div class="date-bar">
     <span class="db-lbl">Period:</span>
@@ -652,38 +639,38 @@ a:hover{text-decoration:underline}
   </div>
   <!-- Hot leads panel -->
   <div id="ob-hot-wrap" style="display:none;padding:0 32px 16px">
-    <div class="sec-heading" style="padding:4px 0 10px">🔥 Hot Leads — Need Attention</div>
+    <div class="sec-heading" style="padding:4px 0 10px">ð¥ Hot Leads â Need Attention</div>
     <div class="hot-panel" id="ob-hot"></div>
   </div>
   <div class="toolbar">
     <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap">Status:</span>
     <button class="filter-btn active" onclick="obFilter(this,'all')">All</button>
-    <button class="filter-btn" onclick="obFilter(this,'emailed')">✅ Emailed</button>
-    <button class="filter-btn" onclick="obFilter(this,'email_found')">📨 Email Found</button>
-    <button class="filter-btn" onclick="obFilter(this,'found')">🔍 Found</button>
-    <button class="filter-btn" onclick="obFilter(this,'no_email')">❌ No Email</button>
+    <button class="filter-btn" onclick="obFilter(this,'emailed')">â Emailed</button>
+    <button class="filter-btn" onclick="obFilter(this,'email_found')">ð¨ Email Found</button>
+    <button class="filter-btn" onclick="obFilter(this,'found')">ð Found</button>
+    <button class="filter-btn" onclick="obFilter(this,'no_email')">â No Email</button>
     <div class="db-sep" style="height:22px;background:var(--border);width:1px;margin:0 4px"></div>
     <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap">Source:</span>
     <select id="ob-source-sel" class="source-select" onchange="obSourceFilter(this.value)">
       <option value="all">All Sources</option>
     </select>
-    <input class="srch ml" id="ob-s" type="text" placeholder="Search business…" oninput="renderOutbound()"/>
-    <button class="btn-export" onclick="exportObCsv()">⬇ Export CSV</button>
-    <button class="btn-refresh" onclick="loadOutbound()">↻ Refresh</button>
+    <input class="srch ml" id="ob-s" type="text" placeholder="Search businessâ¦" oninput="renderOutbound()"/>
+    <button class="btn-export" onclick="exportObCsv()">â¬ Export CSV</button>
+    <button class="btn-refresh" onclick="loadOutbound()">â» Refresh</button>
   </div>
   <div class="tw"><table>
     <thead><tr><th>Business</th><th>Contact</th><th>Status</th><th>Industry</th><th>Email Preview</th><th>Date</th></tr></thead>
-    <tbody id="ob-tbody"><tr><td colspan="6" class="empty"><span class="empty-icon">📧</span>Loading…</td></tr></tbody>
+    <tbody id="ob-tbody"><tr><td colspan="6" class="empty"><span class="empty-icon">ð§</span>Loadingâ¦</td></tr></tbody>
   </table></div>
 </div>
 
 <!-- CALLS -->
 <div id="s-calls" class="section">
   <div class="stats-row">
-    <div class="stat-card blue"><div class="stat-icon">📞</div><div class="lbl">Total Calls</div><div class="val" id="ca-total">—</div></div>
-    <div class="stat-card green"><div class="stat-icon">✅</div><div class="lbl">Answered</div><div class="val" id="ca-answered">—</div></div>
-    <div class="stat-card purple"><div class="stat-icon">⏱</div><div class="lbl">Avg Duration</div><div class="val val-sm" id="ca-duration">—</div></div>
-    <div class="stat-card amber"><div class="stat-icon">💰</div><div class="lbl">Total Cost</div><div class="val val-sm" id="ca-cost">—</div></div>
+    <div class="stat-card blue"><div class="stat-icon">ð</div><div class="lbl">Total Calls</div><div class="val" id="ca-total">â</div></div>
+    <div class="stat-card green"><div class="stat-icon">â</div><div class="lbl">Answered</div><div class="val" id="ca-answered">â</div></div>
+    <div class="stat-card purple"><div class="stat-icon">â±</div><div class="lbl">Avg Duration</div><div class="val val-sm" id="ca-duration">â</div></div>
+    <div class="stat-card amber"><div class="stat-icon">ð°</div><div class="lbl">Total Cost</div><div class="val val-sm" id="ca-cost">â</div></div>
   </div>
   <div class="date-bar">
     <span class="db-lbl">Period:</span>
@@ -700,23 +687,23 @@ a:hover{text-decoration:underline}
   </div>
   <div class="toolbar">
     <button class="filter-btn active" onclick="caFilter(this,'all')">All</button>
-    <button class="filter-btn" onclick="caFilter(this,'ended')">✅ Answered</button>
-    <button class="filter-btn" onclick="caFilter(this,'missed')">❌ Missed</button>
-    <button class="btn-refresh ml" onclick="loadCalls()">↻ Refresh</button>
+    <button class="filter-btn" onclick="caFilter(this,'ended')">â Answered</button>
+    <button class="filter-btn" onclick="caFilter(this,'missed')">â Missed</button>
+    <button class="btn-refresh ml" onclick="loadCalls()">â» Refresh</button>
   </div>
   <div class="tw"><table>
     <thead><tr><th>Caller</th><th>Date</th><th>Duration</th><th>Status</th><th>Reason</th><th>Cost</th></tr></thead>
-    <tbody id="ca-tbody"><tr><td colspan="6" class="empty"><span class="empty-icon">📞</span>Loading…</td></tr></tbody>
+    <tbody id="ca-tbody"><tr><td colspan="6" class="empty"><span class="empty-icon">ð</span>Loadingâ¦</td></tr></tbody>
   </table></div>
 </div>
 
 <!-- CRM -->
 <div id="s-crm" class="section">
   <div class="stats-row">
-    <div class="stat-card blue"><div class="stat-icon">👥</div><div class="lbl">Total Contacts</div><div class="val" id="crm-total">—</div><div class="sub">In HubSpot</div></div>
-    <div class="stat-card green"><div class="stat-icon">🤝</div><div class="lbl">Opportunities</div><div class="val" id="crm-opp">—</div><div class="sub">Replied / Connected</div></div>
-    <div class="stat-card amber"><div class="stat-icon">🔥</div><div class="lbl">In Progress</div><div class="val" id="crm-inprog">—</div><div class="sub">Opened / Clicked</div></div>
-    <div class="stat-card purple"><div class="stat-icon">💼</div><div class="lbl">Open Deals</div><div class="val" id="crm-deals">—</div><div class="sub">In pipeline</div></div>
+    <div class="stat-card blue"><div class="stat-icon">ð¥</div><div class="lbl">Total Contacts</div><div class="val" id="crm-total">â</div><div class="sub">In HubSpot</div></div>
+    <div class="stat-card green"><div class="stat-icon">ð¤</div><div class="lbl">Opportunities</div><div class="val" id="crm-opp">â</div><div class="sub">Replied / Connected</div></div>
+    <div class="stat-card amber"><div class="stat-icon">ð¥</div><div class="lbl">In Progress</div><div class="val" id="crm-inprog">â</div><div class="sub">Opened / Clicked</div></div>
+    <div class="stat-card purple"><div class="stat-icon">ð¼</div><div class="lbl">Open Deals</div><div class="val" id="crm-deals">â</div><div class="sub">In pipeline</div></div>
   </div>
 
   <!-- Pipeline stages -->
@@ -738,17 +725,17 @@ a:hover{text-decoration:underline}
     <input class="date-input" type="date" id="crm-to-date" onchange="applyTabDate('crm')"/>
   </div>
   <div class="toolbar">
-    <input class="srch" id="crm-s" type="text" placeholder="Search contacts…" oninput="renderCrmContacts()"/>
+    <input class="srch" id="crm-s" type="text" placeholder="Search contactsâ¦" oninput="renderCrmContacts()"/>
     <button class="filter-btn active" onclick="crmFilter(this,'all')">All</button>
-    <button class="filter-btn" onclick="crmFilter(this,'CONNECTED')">🤝 Connected</button>
-    <button class="filter-btn" onclick="crmFilter(this,'IN_PROGRESS')">🔥 In Progress</button>
-    <button class="filter-btn" onclick="crmFilter(this,'OPEN')">👁 Opened</button>
-    <button class="filter-btn" onclick="crmFilter(this,'NEW')">🆕 New</button>
-    <button class="btn-refresh ml" onclick="loadCrm()">↻ Refresh</button>
+    <button class="filter-btn" onclick="crmFilter(this,'CONNECTED')">ð¤ Connected</button>
+    <button class="filter-btn" onclick="crmFilter(this,'IN_PROGRESS')">ð¥ In Progress</button>
+    <button class="filter-btn" onclick="crmFilter(this,'OPEN')">ð Opened</button>
+    <button class="filter-btn" onclick="crmFilter(this,'NEW')">ð New</button>
+    <button class="btn-refresh ml" onclick="loadCrm()">â» Refresh</button>
   </div>
   <div class="tw"><table>
     <thead><tr><th>Name</th><th>Email</th><th>Company</th><th>Phone</th><th>CRM Status</th><th>Stage</th><th>Last Updated</th></tr></thead>
-    <tbody id="crm-tbody"><tr><td colspan="7" class="empty"><span class="empty-icon">🏢</span>Loading…</td></tr></tbody>
+    <tbody id="crm-tbody"><tr><td colspan="7" class="empty"><span class="empty-icon">ð¢</span>Loadingâ¦</td></tr></tbody>
   </table></div>
 </div>
 
@@ -770,18 +757,18 @@ a:hover{text-decoration:underline}
 
   <!-- Funnel KPI cards -->
   <div class="kpi-grid">
-    <div class="kpi-card blue"><div class="kv" id="kpi-sent">—</div><div class="kl">Emails Sent</div><div class="ks" id="kpi-sent-sub"></div></div>
-    <div class="kpi-card amber"><div class="kv" id="kpi-open">—</div><div class="kl">Open Rate</div><div class="ks" id="kpi-open-sub"></div></div>
-    <div class="kpi-card purple"><div class="kv" id="kpi-click">—</div><div class="kl">Click Rate</div><div class="ks" id="kpi-click-sub"></div></div>
-    <div class="kpi-card green"><div class="kv" id="kpi-reply">—</div><div class="kl">Reply Rate</div><div class="ks" id="kpi-reply-sub"></div></div>
-    <div class="kpi-card blue"><div class="kv" id="kpi-fu1">—</div><div class="kl">1st Follow-ups</div><div class="ks" id="kpi-fu1-sub"></div></div>
-    <div class="kpi-card purple"><div class="kv" id="kpi-fu2">—</div><div class="kl">2nd Follow-ups</div><div class="ks" id="kpi-fu2-sub"></div></div>
+    <div class="kpi-card blue"><div class="kv" id="kpi-sent">â</div><div class="kl">Emails Sent</div><div class="ks" id="kpi-sent-sub"></div></div>
+    <div class="kpi-card amber"><div class="kv" id="kpi-open">â</div><div class="kl">Open Rate</div><div class="ks" id="kpi-open-sub"></div></div>
+    <div class="kpi-card purple"><div class="kv" id="kpi-click">â</div><div class="kl">Click Rate</div><div class="ks" id="kpi-click-sub"></div></div>
+    <div class="kpi-card green"><div class="kv" id="kpi-reply">â</div><div class="kl">Reply Rate</div><div class="ks" id="kpi-reply-sub"></div></div>
+    <div class="kpi-card blue"><div class="kv" id="kpi-fu1">â</div><div class="kl">1st Follow-ups</div><div class="ks" id="kpi-fu1-sub"></div></div>
+    <div class="kpi-card purple"><div class="kv" id="kpi-fu2">â</div><div class="kl">2nd Follow-ups</div><div class="ks" id="kpi-fu2-sub"></div></div>
   </div>
 
   <!-- Daily activity trend chart -->
   <div style="padding:4px 32px 16px">
     <div class="chart-card">
-      <div class="chart-title">📈 Daily Activity — Sent · Opened · Replied</div>
+      <div class="chart-title">ð Daily Activity â Sent Â· Opened Â· Replied</div>
       <div style="position:relative;height:200px"><canvas id="kpi-activity-chart"></canvas></div>
     </div>
   </div>
@@ -790,12 +777,12 @@ a:hover{text-decoration:underline}
   <div class="kpi-tables">
     <!-- Source performance chart -->
     <div class="kpi-table-wrap">
-      <div class="kpi-table-title">📡 Source Performance</div>
+      <div class="kpi-table-title">ð¡ Source Performance</div>
       <div style="padding:16px;position:relative;min-height:260px"><canvas id="kpi-source-chart"></canvas></div>
     </div>
     <!-- A/B comparison chart -->
     <div class="kpi-table-wrap">
-      <div class="kpi-table-title">🔬 Email Variant A vs B</div>
+      <div class="kpi-table-title">ð¬ Email Variant A vs B</div>
       <div style="padding:16px;position:relative;height:260px"><canvas id="kpi-ab-chart"></canvas></div>
     </div>
   </div>
@@ -819,9 +806,9 @@ a:hover{text-decoration:underline}
     <div class="agent-status-card" id="ag-status-card">
       <div class="agent-title-row">
         <span class="agent-dot" id="ag-dot"></span>
-        <span class="agent-title" id="ag-title">Checking…</span>
+        <span class="agent-title" id="ag-title">Checkingâ¦</span>
       </div>
-      <div class="agent-elapsed" id="ag-elapsed">—</div>
+      <div class="agent-elapsed" id="ag-elapsed">â</div>
       <div class="agent-meta" id="ag-meta"></div>
       <div class="ag-marks"><span>0m</span><span>15m</span><span>30m</span><span>45m</span><span>60m</span><span>75m</span><span>90m</span></div>
       <div class="ag-track"><div class="ag-fill" id="ag-fill"></div></div>
@@ -833,11 +820,11 @@ a:hover{text-decoration:underline}
         <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text)">Manual Trigger</div>
         <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:20px">
           The agent runs automatically every day at midnight UTC.<br>
-          Use this to kick off an extra run anytime — useful after code changes or to test new cities.
+          Use this to kick off an extra run anytime â useful after code changes or to test new cities.
         </div>
       </div>
       <button class="trigger-btn" id="ag-trigger-btn" onclick="triggerAgentRun()">
-        ▶ Trigger Run Now
+        â¶ Trigger Run Now
       </button>
       <div style="font-size:11px;color:var(--muted);margin-top:10px" id="ag-trigger-msg"></div>
     </div>
@@ -847,11 +834,11 @@ a:hover{text-decoration:underline}
   <div style="margin:24px 0 0;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;gap:16px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:14px">
-        <span style="font-size:24px">🏥</span>
+        <span style="font-size:24px">ð¥</span>
         <div>
           <div style="font-weight:700;font-size:15px">Nonprofit &amp; FQHC Lead Search</div>
           <div style="font-size:12px;color:var(--muted);margin-top:3px">
-            Targets: ProPublica · HRSA Health Centers · Indeed Jobs &nbsp;·&nbsp; CA, AZ, WA, UT, TX, MO, MT, NM, ND, SD
+            Targets: ProPublica Â· HRSA Health Centers Â· Indeed Jobs &nbsp;Â·&nbsp; CA, AZ, WA, UT, TX, MO, MT, NM, ND, SD
           </div>
         </div>
       </div>
@@ -859,38 +846,20 @@ a:hover{text-decoration:underline}
         <span id="np-status-pill" style="font-size:12px;color:var(--muted)"></span>
         <button id="np-run-btn" onclick="triggerNonprofitSearch()"
           style="background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .2s;white-space:nowrap">
-          ▶ Run Nonprofit Search
+          â¶ Run Nonprofit Search
         </button>
       </div>
     </div>
     <div id="np-run-detail" style="display:none;padding:0 20px 14px;font-size:12px;color:var(--muted)"></div>
   </div>
 
-  <!-- Inbound Landing Page -->
-  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-    <div style="display:flex;align-items:center;gap:14px">
-      <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#10b981,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🌐</div>
-      <div>
-        <div style="font-weight:700;font-size:15px">Inbound Landing Page</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:3px">
-          Google Ads destination · Form → auto email → dashboard · Calendly booking
-        </div>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
-      <a href="/landing.html" target="_blank"
-        style="background:#10b981;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap">
-        🌐 View Landing Page
-      </a>
-    </div>
-  </div>
 
   <!-- Run history -->
   <div style="padding:20px 0 8px;font-size:14px;font-weight:700;color:var(--text)">Run History (Regular Agent)</div>
   <div class="agent-history-card">
     <table>
       <thead><tr><th>#</th><th>Status</th><th>Duration</th><th>Commit</th><th>Started</th></tr></thead>
-      <tbody id="ag-history-body"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+      <tbody id="ag-history-body"><tr><td colspan="5" class="empty">Loadingâ¦</td></tr></tbody>
     </table>
   </div>
 </div>
@@ -901,28 +870,28 @@ a:hover{text-decoration:underline}
   <!-- Loading -->
   <div id="ga-loading" style="text-align:center;padding:80px 32px;color:var(--muted)">
     <div style="width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 14px"></div>
-    <div style="font-size:14px">Loading Google Ads data…</div>
+    <div style="font-size:14px">Loading Google Ads dataâ¦</div>
   </div>
 
   <!-- Not configured -->
   <div id="ga-setup" style="display:none;padding:48px 32px">
     <div style="max-width:600px;margin:0 auto;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center">
-      <div style="font-size:48px">📊</div>
+      <div style="font-size:48px">ð</div>
       <h2 style="margin:16px 0 8px;font-size:20px">Connect Google Ads</h2>
       <p style="color:var(--muted);font-size:14px;margin-bottom:24px">Add 5 environment variables to your Railway project and live campaign data appears here automatically.</p>
       <div id="ga-missing-tags" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:28px"></div>
       <ol style="list-style:none;text-align:left;counter-reset:s">
         <li style="counter-increment:s;display:flex;gap:14px;padding:14px 16px;margin-bottom:10px;background:var(--surface);border-radius:10px;font-size:13px;line-height:1.6">
           <span style="min-width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">1</span>
-          <div><strong style="display:block;margin-bottom:3px">Get your Developer Token</strong><span style="color:var(--muted)">Google Ads → Tools &amp; Settings → API Center → Apply for basic access (approved instantly)</span></div>
+          <div><strong style="display:block;margin-bottom:3px">Get your Developer Token</strong><span style="color:var(--muted)">Google Ads â Tools &amp; Settings â API Center â Apply for basic access (approved instantly)</span></div>
         </li>
         <li style="counter-increment:s;display:flex;gap:14px;padding:14px 16px;margin-bottom:10px;background:var(--surface);border-radius:10px;font-size:13px;line-height:1.6">
           <span style="min-width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">2</span>
-          <div><strong style="display:block;margin-bottom:3px">Create OAuth2 Credentials</strong><span style="color:var(--muted)">console.cloud.google.com → APIs &amp; Services → Credentials → Create OAuth 2.0 Client (Web app). Add <code style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px;color:var(--green)">https://developers.google.com/oauthplayground</code> as a redirect URI.</span></div>
+          <div><strong style="display:block;margin-bottom:3px">Create OAuth2 Credentials</strong><span style="color:var(--muted)">console.cloud.google.com â APIs &amp; Services â Credentials â Create OAuth 2.0 Client (Web app). Add <code style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px;color:var(--green)">https://developers.google.com/oauthplayground</code> as a redirect URI.</span></div>
         </li>
         <li style="counter-increment:s;display:flex;gap:14px;padding:14px 16px;margin-bottom:10px;background:var(--surface);border-radius:10px;font-size:13px;line-height:1.6">
           <span style="min-width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">3</span>
-          <div><strong style="display:block;margin-bottom:3px">Get a Refresh Token</strong><span style="color:var(--muted)">Go to developers.google.com/oauthplayground → ⚙ → Use your credentials → scope: <code style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px;color:var(--green)">https://www.googleapis.com/auth/adwords</code> → Authorize → Exchange for tokens.</span></div>
+          <div><strong style="display:block;margin-bottom:3px">Get a Refresh Token</strong><span style="color:var(--muted)">Go to developers.google.com/oauthplayground â â â Use your credentials â scope: <code style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px;color:var(--green)">https://www.googleapis.com/auth/adwords</code> â Authorize â Exchange for tokens.</span></div>
         </li>
         <li style="counter-increment:s;display:flex;gap:14px;padding:14px 16px;background:var(--surface);border-radius:10px;font-size:13px;line-height:1.6">
           <span style="min-width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">4</span>
@@ -934,9 +903,9 @@ a:hover{text-decoration:underline}
 
   <!-- Error -->
   <div id="ga-error" style="display:none;text-align:center;padding:80px 32px;color:var(--red)">
-    <div style="font-size:36px">⚠️</div>
+    <div style="font-size:36px">â ï¸</div>
     <p id="ga-error-msg" style="margin-top:12px;font-size:14px;max-width:480px;margin-left:auto;margin-right:auto"></p>
-    <button onclick="loadGoogleAds(gaCurrentDays,true)" style="margin-top:18px;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 20px;cursor:pointer;font-size:13px;font-weight:600">↺ Retry</button>
+    <button onclick="loadGoogleAds(gaCurrentDays,true)" style="margin-top:18px;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 20px;cursor:pointer;font-size:13px;font-weight:600">âº Retry</button>
   </div>
 
   <!-- Data -->
@@ -952,25 +921,25 @@ a:hover{text-decoration:underline}
         <button class="filter-btn" id="ga-r7"  onclick="loadGoogleAds(7)">7 days</button>
         <button class="filter-btn active" id="ga-r14" onclick="loadGoogleAds(14)">14 days</button>
         <button class="filter-btn" id="ga-r30" onclick="loadGoogleAds(30)">30 days</button>
-        <button onclick="loadGoogleAds(gaCurrentDays,true)" class="filter-btn">↺ Refresh</button>
+        <button onclick="loadGoogleAds(gaCurrentDays,true)" class="filter-btn">âº Refresh</button>
       </div>
     </div>
 
     <!-- Metric cards -->
     <div class="kpi-grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))">
-      <div class="kpi-card blue">  <div class="kv" id="ga-impressions">—</div><div class="kl">Impressions</div></div>
-      <div class="kpi-card blue">  <div class="kv" id="ga-clicks">—</div>     <div class="kl">Clicks</div></div>
-      <div class="kpi-card amber">  <div class="kv" id="ga-ctr">—</div>       <div class="kl">CTR</div></div>
-      <div class="kpi-card green"> <div class="kv" id="ga-spend">—</div>      <div class="kl">Spend</div></div>
-      <div class="kpi-card purple"><div class="kv" id="ga-conversions">—</div><div class="kl">Conversions</div></div>
-      <div class="kpi-card amber">  <div class="kv" id="ga-cpc">—</div>       <div class="kl">Avg CPC</div></div>
-      <div class="kpi-card green"> <div class="kv" id="ga-convrate">—</div>   <div class="kl">Conv. Rate</div></div>
+      <div class="kpi-card blue">  <div class="kv" id="ga-impressions">â</div><div class="kl">Impressions</div></div>
+      <div class="kpi-card blue">  <div class="kv" id="ga-clicks">â</div>     <div class="kl">Clicks</div></div>
+      <div class="kpi-card amber">  <div class="kv" id="ga-ctr">â</div>       <div class="kl">CTR</div></div>
+      <div class="kpi-card green"> <div class="kv" id="ga-spend">â</div>      <div class="kl">Spend</div></div>
+      <div class="kpi-card purple"><div class="kv" id="ga-conversions">â</div><div class="kl">Conversions</div></div>
+      <div class="kpi-card amber">  <div class="kv" id="ga-cpc">â</div>       <div class="kl">Avg CPC</div></div>
+      <div class="kpi-card green"> <div class="kv" id="ga-convrate">â</div>   <div class="kl">Conv. Rate</div></div>
     </div>
 
     <!-- Trend chart -->
     <div style="padding:4px 32px 16px">
       <div class="chart-card">
-        <div class="chart-title">📈 Daily Trend — Impressions · Clicks · Spend</div>
+        <div class="chart-title">ð Daily Trend â Impressions Â· Clicks Â· Spend</div>
         <div style="position:relative;height:220px"><canvas id="ga-chart"></canvas></div>
       </div>
     </div>
@@ -1018,21 +987,21 @@ a:hover{text-decoration:underline}
 
 <!-- COMMAND CENTER -->
 <button id="cmd-fab" onclick="toggleCommandPanel()">
-  ⌘ Commands
+  â Commands
   <span class="cmd-badge" id="cmd-badge">0</span>
 </button>
 
 <div id="cmd-panel">
   <div class="cp-head">
-    <h3>⌘ Agent Command Center</h3>
+    <h3>â Agent Command Center</h3>
     <button class="cp-close" onclick="toggleCommandPanel()">&times;</button>
   </div>
 
   <div class="cp-quick">
-    <button class="cp-chip" onclick="cpSearchCity()">🔍 Search City</button>
-    <button class="cp-chip" onclick="cpQueue('run-schedule',{},'📅 Run today\'s schedule')">📅 Run Schedule</button>
-    <button class="cp-chip" onclick="cpQueue('send-followups',{},'📤 Send follow-up emails')">📤 Follow-ups</button>
-    <button class="cp-chip" onclick="cpQueue('sync-now',{},'🔄 Sync leads to dashboard')">🔄 Sync Now</button>
+    <button class="cp-chip" onclick="cpSearchCity()">ð Search City</button>
+    <button class="cp-chip" onclick="cpQueue('run-schedule',{},'ð Run today\'s schedule')">ð Run Schedule</button>
+    <button class="cp-chip" onclick="cpQueue('send-followups',{},'ð¤ Send follow-up emails')">ð¤ Follow-ups</button>
+    <button class="cp-chip" onclick="cpQueue('sync-now',{},'ð Sync leads to dashboard')">ð Sync Now</button>
   </div>
 
   <div class="cp-city-form" id="cp-city-form">
@@ -1049,8 +1018,8 @@ a:hover{text-decoration:underline}
   </div>
 
   <div class="cp-input-row">
-    <input type="text" id="cp-text-input" placeholder="Type a command…" onkeydown="if(event.key==='Enter')cpSendText()"/>
-    <button class="cp-send" onclick="cpSendText()">➤</button>
+    <input type="text" id="cp-text-input" placeholder="Type a commandâ¦" onkeydown="if(event.key==='Enter')cpSendText()"/>
+    <button class="cp-send" onclick="cpSendText()">â¤</button>
   </div>
 </div>
 
